@@ -1,16 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/mode-toggle";
-import { LogOut, Store } from "lucide-react";
+import { LogOut, Store, Users } from "lucide-react";
+import Link from "next/link";
+import { User } from "@/lib/schemas";
 
 interface NavbarProps {
   logoutAction: () => Promise<void>;
+  currentUser?: User | null;
 }
 
-export function Navbar({ logoutAction }: NavbarProps) {
+export function Navbar({ logoutAction, currentUser }: NavbarProps) {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between px-6">
-        <div className="flex items-center space-x-2">
+        <Link className="flex items-center space-x-2" href="/">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <Store className="h-4 w-4 text-primary-foreground" />
           </div>
@@ -20,6 +23,17 @@ export function Navbar({ logoutAction }: NavbarProps) {
               Point of Sale System
             </p>
           </div>
+        </Link>
+
+        <div className="flex items-center space-x-4">
+          {currentUser?.role === "superadmin" && (
+            <Link href="/admin/users">
+              <Button variant="ghost" size="sm">
+                <Users className="h-4 w-4 mr-2" />
+                Users
+              </Button>
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center space-x-2">

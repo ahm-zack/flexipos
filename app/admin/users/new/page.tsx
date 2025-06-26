@@ -1,0 +1,43 @@
+import { CreateUserForm } from "@/components/admin/users/create-user-form";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
+interface NewUserPageProps {
+  searchParams: Promise<{ error?: string }>;
+}
+
+export default async function NewUserPage({ searchParams }: NewUserPageProps) {
+  const params = await searchParams;
+
+  return (
+    <div className="container mx-auto py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-4 mb-8">
+          <Link href="/admin/users">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Users
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Create New User</h1>
+            <p className="text-muted-foreground">
+              Add a new user to the system and assign their role
+            </p>
+          </div>
+        </div>
+
+        {params.error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800 text-sm">
+              {decodeURIComponent(params.error)}
+            </p>
+          </div>
+        )}
+
+        <CreateUserForm />
+      </div>
+    </div>
+  );
+}
