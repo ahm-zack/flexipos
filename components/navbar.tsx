@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ModeToggle } from "@/components/ui/mode-toggle";
 import { LogOut, Store } from "lucide-react";
 
 interface NavbarProps {
@@ -21,7 +22,8 @@ export function Navbar({ logoutAction }: NavbarProps) {
           </div>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center space-x-2">
+          <ModeToggle />
           <form action={logoutAction}>
             <Button
               type="submit"
