@@ -44,9 +44,10 @@ import { toast } from "sonner";
 
 interface UsersTableProps {
   users: User[];
+  currentUserId: string;
 }
 
-export function UsersTable({ users }: UsersTableProps) {
+export function UsersTable({ users, currentUserId }: UsersTableProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -140,7 +141,14 @@ export function UsersTable({ users }: UsersTableProps) {
             ) : (
               users.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell className="font-medium">
+                    {user.name}
+                    {user.id === currentUserId && (
+                      <Badge variant="outline" className="ml-2 text-xs">
+                        You
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
                     <Badge variant={getRoleBadgeVariant(user.role)}>
@@ -163,27 +171,43 @@ export function UsersTable({ users }: UsersTableProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setSelectedRole(user.role);
-                            setShowRoleDialog(true);
-                          }}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Change Role
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowDeleteDialog(true);
-                          }}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
+                        {/* Hide role change for current user */}
+                        {user.id !== currentUserId && (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setSelectedRole(user.role);
+                                setShowRoleDialog(true);
+                              }}
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Change Role
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
+                        {/* Hide delete for current user */}
+                        {user.id !== currentUserId && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowDeleteDialog(true);
+                            }}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        )}
+                        {/* Show message if it's current user */}
+                        {user.id === currentUserId && (
+                          <DropdownMenuItem disabled>
+                            <span className="text-muted-foreground text-sm">
+                              Cannot modify your own account
+                            </span>
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

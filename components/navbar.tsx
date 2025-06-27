@@ -36,6 +36,11 @@ export function Navbar({ logoutAction, currentUser }: NavbarProps) {
           )}
         </div>
 
+        <div>
+          <span className="font-bold">Welcome: </span>
+          {currentUser?.name}
+        </div>
+
         <div className="flex items-center space-x-2">
           <ModeToggle />
           <form action={logoutAction}>

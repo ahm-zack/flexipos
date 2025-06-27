@@ -1,13 +1,23 @@
-import { CreateUserForm } from "@/components/admin/users/create-user-form";
+import { CreateUserForm } from "@/modules/user-management/components/create-user-form";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { requireSuperAdmin } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 interface NewUserPageProps {
   searchParams: Promise<{ error?: string }>;
 }
 
 export default async function NewUserPage({ searchParams }: NewUserPageProps) {
+  // Check if user is authorized (super admin only)
+  const { authorized, error } = await requireSuperAdmin();
+
+  if (!authorized) {
+    console.error("Unauthorized access attempt to admin/users/new:", error);
+    redirect("/unauthorized");
+  }
+
   const params = await searchParams;
 
   return (

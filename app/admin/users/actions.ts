@@ -3,10 +3,19 @@
 import { revalidatePath } from 'next/cache';
 import { userService } from '@/lib/user-service';
 import { CreateUserSchema, AppRoleEnum } from '@/lib/schemas';
-import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { requireSuperAdmin } from '@/lib/auth';
 
 export async function createUserAction(formData: FormData) {
   try {
+    // First, verify the current user is authorized (super admin only)
+    const { authorized, error: authCheckError } = await requireSuperAdmin();
+    
+    if (!authorized) {
+      console.error('Unauthorized create user attempt:', authCheckError);
+      return { success: false, error: 'Unauthorized: Only super admins can create users' };
+    }
+
     // Extract form data
     const userData = {
       email: formData.get('email') as string,
@@ -27,11 +36,15 @@ export async function createUserAction(formData: FormData) {
       return { success: false, error: 'Password must be at least 6 characters long' };
     }
 
-    // Create Supabase auth user with the provided password
-    const supabase = await createClient();
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Create Supabase auth user with the provided password using admin client
+    const adminClient = createAdminClient();
+    const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email: validatedData.email,
       password: userData.password,
+      email_confirm: true, // Skip email confirmation for admin-created users
+      app_metadata: {
+        user_role: validatedData.role // Set role in custom claims immediately
+      }
     });
 
     if (authError) {
@@ -54,7 +67,7 @@ export async function createUserAction(formData: FormData) {
     revalidatePath('/admin/users');
     return { 
       success: true, 
-      message: 'User created successfully with the provided password' 
+      message: `User ${validatedData.email} created successfully with role ${validatedData.role}. User can now log in immediately.` 
     };
   } catch (error) {
     console.error('Error creating user:', error);
@@ -65,6 +78,19 @@ export async function createUserAction(formData: FormData) {
 
 export async function updateUserRoleAction(userId: string, role: string) {
   try {
+    // First, verify the current user is authorized (super admin only)
+    const { authorized, user: currentUser, error: authCheckError } = await requireSuperAdmin();
+    
+    if (!authorized) {
+      console.error('Unauthorized update role attempt:', authCheckError);
+      return { success: false, error: 'Unauthorized: Only super admins can update user roles' };
+    }
+
+    // Prevent users from changing their own role
+    if (currentUser?.id === userId) {
+      return { success: false, error: 'Cannot change your own role' };
+    }
+
     // Validate role
     const validatedRole = AppRoleEnum.parse(role);
 
@@ -86,7 +112,26 @@ export async function updateUserRoleAction(userId: string, role: string) {
 
 export async function deleteUserAction(userId: string) {
   try {
-    // Delete user
+    // First, verify the current user is authorized (super admin only)
+    const { authorized, user: currentUser, error: authError } = await requireSuperAdmin();
+    
+    if (!authorized) {
+      console.error('Unauthorized delete attempt:', authError);
+      return { success: false, error: 'Unauthorized: Only super admins can delete users' };
+    }
+
+    // Prevent users from deleting themselves
+    if (currentUser?.id === userId) {
+      return { success: false, error: 'Cannot delete your own account' };
+    }
+
+    // Get the user to be deleted to check if they exist
+    const userToDeleteResult = await userService.getUserById(userId);
+    if (!userToDeleteResult.success || !userToDeleteResult.data) {
+      return { success: false, error: 'User not found' };
+    }
+
+    // Delete user from both database and authentication
     const result = await userService.deleteUser(userId);
 
     if (!result.success) {
@@ -94,7 +139,10 @@ export async function deleteUserAction(userId: string) {
     }
 
     revalidatePath('/admin/users');
-    return { success: true, message: 'User deleted successfully' };
+    return { 
+      success: true, 
+      message: `User ${userToDeleteResult.data.email} deleted successfully from both database and authentication system` 
+    };
   } catch (error) {
     console.error('Error deleting user:', error);
     const message = error instanceof Error ? error.message : 'Failed to delete user';
