@@ -5,8 +5,11 @@ import { Providers } from "@/modules/providers";
 import { Navbar } from "@/components/navbar";
 import { logout } from "./logout/actions";
 import { createClient } from "@/utils/supabase/server";
-import { userService } from "@/lib/user-service";
+import { drizzleUserService } from "@/lib/user-service-drizzle";
 import { Toaster } from "@/components/ui/sonner";
+
+// Force dynamic rendering since we use cookies for auth
+export const dynamic = "force-dynamic";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +42,7 @@ export default async function RootLayout({
 
     // Only try to get user data if there's an authenticated user and no auth error
     if (user?.email && !authError) {
-      const userResult = await userService.getUserByEmail(user.email);
+      const userResult = await drizzleUserService.getUserByEmail(user.email);
       if (userResult.success && userResult.data) {
         currentUser = userResult.data;
       }

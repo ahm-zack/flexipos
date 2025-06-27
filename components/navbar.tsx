@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { LogOut, Store, Users } from "lucide-react";
 import Link from "next/link";
-import { User } from "@/lib/schemas";
+import { User } from "@/lib/db";
 
 interface NavbarProps {
   logoutAction: () => Promise<void>;

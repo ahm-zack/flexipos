@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { userService } from '@/lib/user-service';
+import { drizzleUserService } from '@/lib/user-service-drizzle';
 import { requireSuperAdmin } from '@/lib/auth';
 
 /**
@@ -21,7 +21,7 @@ export async function POST() {
     }
 
     // Initialize custom claims for all users
-    const result = await userService.initializeCustomClaims();
+    const result = await drizzleUserService.initializeCustomClaims();
 
     if (!result.success) {
       return NextResponse.json(

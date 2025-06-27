@@ -28,6 +28,7 @@ import {
 import { MoreHorizontal, Trash2, Edit } from "lucide-react";
 import { User } from "@/lib/db";
 import { useDeleteUser } from "../hooks/use-users";
+import { EditUserDialog } from "./edit-user-dialog";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -46,12 +47,19 @@ const roleColors = {
 
 export function UsersTable({ users, currentUserId }: UsersTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const deleteUserMutation = useDeleteUser();
 
   const handleDeleteClick = (user: User) => {
     setUserToDelete(user);
     setDeleteDialogOpen(true);
+  };
+
+  const handleEditClick = (user: User) => {
+    setUserToEdit(user);
+    setEditDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
@@ -132,7 +140,9 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleEditClick(user)}
+                          >
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
@@ -182,6 +192,12 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EditUserDialog
+        user={userToEdit}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
     </>
   );
 }

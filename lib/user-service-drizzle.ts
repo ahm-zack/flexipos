@@ -41,6 +41,24 @@ export class DrizzleUserService {
   }
 
   /**
+   * Get user by email with type safety
+   */
+  async getUserByEmail(email: string): Promise<ApiResponse<User>> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.email, email));
+
+      if (!user) {
+        return { success: false, error: 'User not found' };
+      }
+
+      return { success: true, data: user };
+    } catch (error) {
+      console.error('Error fetching user by email:', error);
+      return { success: false, error: 'Failed to fetch user' };
+    }
+  }
+
+  /**
    * Create a new user with full type safety
    */
   async createUser(userData: NewUser): Promise<ApiResponse<User>> {
@@ -112,20 +130,33 @@ export class DrizzleUserService {
   }
 
   /**
-   * Get user by email with type safety
+   * Initialize custom claims for all existing users
+   * This should be run once after implementing RBAC
    */
-  async getUserByEmail(email: string): Promise<ApiResponse<User>> {
+  async initializeCustomClaims(): Promise<ApiResponse<{ synced: number }>> {
     try {
-      const [user] = await db.select().from(users).where(eq(users.email, email));
+      // Get all users from the database using Drizzle
+      const allUsers = await db.select({ id: users.id, role: users.role }).from(users);
 
-      if (!user) {
-        return { success: false, error: 'User not found' };
+      let syncedCount = 0;
+      
+      // Sync each user's role to custom claims
+      for (const user of allUsers) {
+        try {
+          await this.syncRoleToCustomClaims(user.id, user.role);
+          syncedCount++;
+        } catch (error) {
+          console.error(`Failed to sync user ${user.id}:`, error);
+        }
       }
 
-      return { success: true, data: user };
+      return { 
+        success: true, 
+        data: { synced: syncedCount } 
+      };
     } catch (error) {
-      console.error('Error fetching user by email:', error);
-      return { success: false, error: 'Failed to fetch user' };
+      console.error('Error initializing custom claims:', error);
+      return { success: false, error: 'Failed to initialize custom claims' };
     }
   }
 

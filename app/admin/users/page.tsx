@@ -2,6 +2,9 @@ import { requireSuperAdmin } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { UsersPageContent } from "@/modules/user-management/components/users-page-content";
 
+// Force dynamic rendering since we use cookies for auth
+export const dynamic = "force-dynamic";
+
 export default async function UsersPage() {
   // Check if user is authorized (super admin only)
   const { authorized, user: currentUser, error } = await requireSuperAdmin();

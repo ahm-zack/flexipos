@@ -5,6 +5,9 @@ import { ArrowLeft } from "lucide-react";
 import { requireSuperAdmin } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
+// Force dynamic rendering since we use cookies for auth
+export const dynamic = "force-dynamic";
+
 interface NewUserPageProps {
   searchParams: Promise<{ error?: string }>;
 }
