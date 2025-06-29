@@ -13,7 +13,7 @@ export function Navbar({ logoutAction, currentUser }: NavbarProps) {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between px-6">
-        <Link className="flex items-center space-x-2" href="/">
+        <Link className="flex items-center space-x-2" href="/admin/pizza">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <Store className="h-4 w-4 text-primary-foreground" />
           </div>

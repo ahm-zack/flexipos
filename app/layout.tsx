@@ -2,10 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/modules/providers";
-import { Navbar } from "@/components/navbar";
-import { logout } from "./logout/actions";
-import { createClient } from "@/utils/supabase/server";
-import { drizzleUserService } from "@/lib/user-service-drizzle";
 import { Toaster } from "@/components/ui/sonner";
 
 // Force dynamic rendering since we use cookies for auth
@@ -31,36 +27,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Get current user for navbar
-  let currentUser = null;
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    // Only try to get user data if there's an authenticated user and no auth error
-    if (user?.email && !authError) {
-      const userResult = await drizzleUserService.getUserByEmail(user.email);
-      if (userResult.success && userResult.data) {
-        currentUser = userResult.data;
-      }
-      // Don't log errors for users not found in our users table - this is expected
-      // for users who haven't been added to the system yet
-    }
-  } catch (error) {
-    // Only log unexpected errors, not user-not-found cases
-    console.error("Unexpected error getting current user:", error);
-  }
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <Navbar logoutAction={logout} currentUser={currentUser} />
           {children}
           <Toaster />
         </Providers>
