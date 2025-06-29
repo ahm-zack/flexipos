@@ -1,6 +1,12 @@
 import { requireSuperAdmin } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { UsersPageContent } from "@/modules/user-management/components/users-page-content";
+import { drizzleUserService } from "@/lib/user-service-drizzle";
+import {
+  HydrationBoundary,
+  QueryClient,
+  dehydrate,
+} from "@tanstack/react-query";
 
 // Force dynamic rendering since we use cookies for auth
 export const dynamic = "force-dynamic";
@@ -14,5 +20,24 @@ export default async function UsersPage() {
     redirect("/unauthorized");
   }
 
-  return <UsersPageContent currentUserId={currentUser?.id || ""} />;
+  // Create a new QueryClient for SSR
+  const queryClient = new QueryClient();
+
+  // Prefetch users data on the server
+  await queryClient.prefetchQuery({
+    queryKey: ["users", "list"],
+    queryFn: async () => {
+      const result = await drizzleUserService.getUsers();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch users");
+      }
+      return result.data;
+    },
+  });
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <UsersPageContent currentUserId={currentUser?.id || ""} />
+    </HydrationBoundary>
+  );
 }

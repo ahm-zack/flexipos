@@ -21,14 +21,14 @@ export default function UnauthorizedPage() {
         </div>
 
         <div className="space-y-4">
-          <Link href="/private">
+          <Link href="/admin/menu">
             <Button className="w-full">
               <Home className="h-4 w-4 mr-2" />
               Go to Dashboard
             </Button>
           </Link>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 pt-4">
             If you believe you should have access to this page, please contact
             your system administrator.
           </p>

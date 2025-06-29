@@ -12,6 +12,7 @@ import {
   Coffee,
   Users,
   BarChart3,
+  ChefHat,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -49,6 +50,11 @@ const data = {
           title: "🍔 Burger",
           url: "/admin/menu/burger",
           icon: Beef,
+        },
+        {
+          title: "🥗 Appetizers",
+          url: "/admin/menu/appetizers",
+          icon: ChefHat,
         },
         {
           title: "🌯 Shawerma",
