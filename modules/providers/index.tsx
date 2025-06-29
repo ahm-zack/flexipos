@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ThemeProvider } from "./components/theme-provider";
 import { QueryProvider } from "./components/query-provider";
+import { CartProvider } from "../cart";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -17,7 +18,7 @@ export function Providers({ children }: ProvidersProps) {
         enableSystem
         disableTransitionOnChange
       >
-        {children}
+        <CartProvider>{children}</CartProvider>
       </ThemeProvider>
     </QueryProvider>
   );

@@ -22,10 +22,8 @@ export function DynamicBreadcrumb() {
   const getBreadcrumbItems = (path: string): BreadcrumbItem[] => {
     const segments = path.split("/").filter(Boolean);
 
-    // Base breadcrumb always starts with Dashboard
-    const items: BreadcrumbItem[] = [
-      { label: "Dashboard", href: "/admin/menu" },
-    ];
+    // Start with empty breadcrumb items array
+    const items: BreadcrumbItem[] = [];
 
     // Map path segments to breadcrumb items
     if (segments.length > 0) {
@@ -85,8 +83,8 @@ export function DynamicBreadcrumb() {
 
   const breadcrumbItems = getBreadcrumbItems(pathname);
 
-  // Don't show breadcrumb if there's only one item or if we're on the root
-  if (breadcrumbItems.length <= 1) {
+  // Don't show breadcrumb if there are no items or if we're on the root admin page
+  if (breadcrumbItems.length === 0 || pathname === "/admin") {
     return null;
   }
 
