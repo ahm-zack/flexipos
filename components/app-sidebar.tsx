@@ -13,6 +13,7 @@ import {
   Users,
   BarChart3,
   ChefHat,
+  Package,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -75,6 +76,11 @@ const data = {
     },
   ],
   navSecondary: [
+    {
+      title: "Items Management",
+      url: "/admin/items",
+      icon: Package,
+    },
     {
       title: "Users",
       url: "/admin/users",

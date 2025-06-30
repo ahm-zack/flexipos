@@ -60,18 +60,6 @@ export function NavMain({
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
-
-        {/* Create Item Button */}
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            asChild
-            className="h-10 text-sm font-medium border border-border hover:bg-muted/50 mt-3"
-          >
-            <a href="#" className="flex items-center justify-center">
-              <span>Create Item</span>
-            </a>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>
   );
