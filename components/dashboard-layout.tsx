@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getCurrentUser } from "@/lib/auth";
 import { drizzleUserService } from "@/lib/user-service-drizzle";
-import { CartContainer } from "@/modules/cart";
+import { ConditionalCartContainer } from "@/components/conditional-cart-container";
 import React from "react";
 
 interface DashboardLayoutProps {
@@ -56,8 +56,8 @@ export async function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
 
-        {/* Floating Cart */}
-        <CartContainer />
+        {/* Conditional Cart - Hidden on management pages */}
+        <ConditionalCartContainer />
       </SidebarInset>
     </SidebarProvider>
   );
