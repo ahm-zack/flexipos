@@ -19,7 +19,7 @@ import { EditPizzaForm } from "./edit-pizza-form";
 import { usePizzas, useDeletePizza } from "../hooks/use-pizzas";
 import type { Pizza } from "@/lib/db/schema";
 
-export function PizzaMenuContent() {
+export function PizzaManagementView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pizzaToDelete, setPizzaToDelete] = useState<Pizza | null>(null);
@@ -89,9 +89,11 @@ export function PizzaMenuContent() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-center">🍕 Pizza Menu</h1>
+          <h1 className="text-4xl font-bold mb-2 text-center">
+            🍕 Pizza Management
+          </h1>
           <p className="text-muted-foreground text-center mb-6">
-            Discover our delicious pizza selection
+            Manage your pizza menu items
           </p>
 
           {/* Search and Actions */}
@@ -130,12 +132,13 @@ export function PizzaMenuContent() {
           </div>
         )}
 
-        {/* Pizza Grid */}
+        {/* Pizza Grid - Admin View (With management actions, NO cart actions) */}
         <PizzaGrid
           pizzas={filteredPizzas}
           onEdit={handleEdit}
           onDelete={handleDeleteClick}
-          showActions={true}
+          showActions={true} // Full management actions in admin view
+          showCartActions={false} // No cart actions in admin view
           isLoading={isLoading}
         />
 

@@ -21,6 +21,7 @@ interface PizzaCardProps {
   onEdit?: (pizza: Pizza) => void;
   onDelete?: (pizza: Pizza) => void;
   showActions?: boolean;
+  showCartActions?: boolean;
 }
 
 export function PizzaCard({
@@ -28,6 +29,7 @@ export function PizzaCard({
   onEdit,
   onDelete,
   showActions = true,
+  showCartActions = true,
 }: PizzaCardProps) {
   const { addItem } = useCart();
   const [isAdding, setIsAdding] = useState(false);
@@ -167,14 +169,16 @@ export function PizzaCard({
               />
             </div>
 
-            <Button
-              onClick={handleAddToCart}
-              disabled={isAdding}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              {isAdding ? "Adding..." : "Add to Cart"}
-            </Button>
+            {showCartActions && (
+              <Button
+                onClick={handleAddToCart}
+                disabled={isAdding}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                {isAdding ? "Adding..." : "Add to Cart"}
+              </Button>
+            )}
           </div>
         </div>
       </div>

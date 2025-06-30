@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ItemsSearchBar } from "./items-search-bar";
 import { CreateItemButton } from "./create-item-button";
 import { ItemsGrid } from "./items-grid";
+import { PizzaManagementView } from "@/modules/pizza-feature";
 import { type MenuItem } from "./item-card";
 
 // Sample data - in real app this would come from API/database
@@ -49,49 +51,108 @@ export function ItemsPageContent() {
       item.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateItem = () => {
-    console.log("Create new item");
-    // TODO: Implement create item functionality
-  };
-
-  const handleEditItem = (item: MenuItem) => {
-    console.log("Edit item:", item);
-    // TODO: Implement edit item functionality
-  };
-
-  const handleDeleteItem = (itemId: string) => {
-    console.log("Delete item:", itemId);
-    // TODO: Implement delete item functionality
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header with Search and Create Button */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Items Management</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your menu items, pricing, and availability
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Items Management</h1>
+        <p className="text-muted-foreground">
+          Manage all your menu items in one place
+        </p>
       </div>
 
-      {/* Search Bar and Create Button */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <ItemsSearchBar
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          placeholder="Search items by name, description, or category..."
-        />
-        <CreateItemButton onClick={handleCreateItem} />
-      </div>
+      <Tabs defaultValue="pizzas" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
+          <TabsTrigger value="pizzas">Pizzas</TabsTrigger>
+          <TabsTrigger value="burgers">Burgers</TabsTrigger>
+          <TabsTrigger value="beverages">Beverages</TabsTrigger>
+          <TabsTrigger value="other">Other</TabsTrigger>
+        </TabsList>
 
-      {/* Items Grid */}
-      <ItemsGrid
-        items={filteredItems}
-        onEditItem={handleEditItem}
-        onDeleteItem={handleDeleteItem}
-      />
+        <TabsContent value="pizzas" className="mt-6">
+          <PizzaManagementView />
+        </TabsContent>
+
+        <TabsContent value="burgers" className="mt-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">Burger Management</h2>
+                <p className="text-muted-foreground">
+                  Manage your burger menu items
+                </p>
+              </div>
+              <CreateItemButton onClick={() => console.log("Create burger")} />
+            </div>
+            <ItemsSearchBar
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              placeholder="Search burgers..."
+            />
+            <ItemsGrid
+              items={filteredItems.filter((item) => item.category === "Burger")}
+              onEditItem={(item) => console.log("Edit item:", item)}
+              onDeleteItem={(id) => console.log("Delete item:", id)}
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="beverages" className="mt-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">Beverage Management</h2>
+                <p className="text-muted-foreground">
+                  Manage your beverage menu items
+                </p>
+              </div>
+              <CreateItemButton
+                onClick={() => console.log("Create beverage")}
+              />
+            </div>
+            <ItemsSearchBar
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              placeholder="Search beverages..."
+            />
+            <ItemsGrid
+              items={filteredItems.filter(
+                (item) => item.category === "Beverages"
+              )}
+              onEditItem={(item) => console.log("Edit item:", item)}
+              onDeleteItem={(id) => console.log("Delete item:", id)}
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="other" className="mt-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">Other Items</h2>
+                <p className="text-muted-foreground">
+                  Manage all other menu items
+                </p>
+              </div>
+              <CreateItemButton
+                onClick={() => console.log("Create other item")}
+              />
+            </div>
+            <ItemsSearchBar
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              placeholder="Search other items..."
+            />
+            <ItemsGrid
+              items={filteredItems.filter(
+                (item) =>
+                  !["Pizza", "Burger", "Beverages"].includes(item.category)
+              )}
+              onEditItem={(item) => console.log("Edit item:", item)}
+              onDeleteItem={(id) => console.log("Delete item:", id)}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

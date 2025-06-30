@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { PizzaMenuContent } from "@/modules/pizza-management";
+import { PizzaCashierView } from "@/modules/pizza-feature";
 
 export default async function PizzaPage() {
   return (
@@ -10,9 +10,8 @@ export default async function PizzaPage() {
             <div className="mb-8 text-center">
               <div className="h-10 bg-gray-200 rounded w-64 mx-auto animate-pulse mb-2" />
               <div className="h-4 bg-gray-100 rounded w-96 mx-auto animate-pulse mb-6" />
-              <div className="flex justify-between items-center">
+              <div className="flex justify-center">
                 <div className="h-10 bg-gray-200 rounded w-64 animate-pulse" />
-                <div className="h-10 bg-gray-200 rounded w-32 animate-pulse" />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -41,7 +40,7 @@ export default async function PizzaPage() {
         </div>
       }
     >
-      <PizzaMenuContent />
+      <PizzaCashierView />
     </Suspense>
   );
 }

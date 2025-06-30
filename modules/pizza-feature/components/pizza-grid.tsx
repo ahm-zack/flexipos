@@ -8,6 +8,7 @@ interface PizzaGridProps {
   onEdit?: (pizza: Pizza) => void;
   onDelete?: (pizza: Pizza) => void;
   showActions?: boolean;
+  showCartActions?: boolean;
   isLoading?: boolean;
 }
 
@@ -16,6 +17,7 @@ export function PizzaGrid({
   onEdit,
   onDelete,
   showActions = true,
+  showCartActions = true,
   isLoading = false,
 }: PizzaGridProps) {
   if (isLoading) {
@@ -70,6 +72,7 @@ export function PizzaGrid({
           onEdit={onEdit}
           onDelete={onDelete}
           showActions={showActions}
+          showCartActions={showCartActions}
         />
       ))}
     </div>

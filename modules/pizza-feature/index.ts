@@ -1,14 +1,14 @@
 // Components
 export { PizzaCard } from './components/pizza-card';
 export { PizzaGrid } from './components/pizza-grid';
-export { PizzaMenuContent } from './components/pizza-menu-content';
+export { PizzaCashierView } from './components/pizza-cashier-view';
+export { PizzaManagementView } from './components/pizza-management-view';
 export { CreatePizzaForm } from './components/create-pizza-form';
 export { EditPizzaForm } from './components/edit-pizza-form';
 
 // Hooks
 export {
   usePizzas,
-  usePizza,
   useCreatePizza,
   useUpdatePizza,
   useDeletePizza,

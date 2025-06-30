@@ -7,8 +7,6 @@ export const pizzaKeys = {
   all: ['pizzas'] as const,
   lists: () => [...pizzaKeys.all, 'list'] as const,
   list: (filters: string) => [...pizzaKeys.lists(), { filters }] as const,
-  details: () => [...pizzaKeys.all, 'detail'] as const,
-  detail: (id: string) => [...pizzaKeys.details(), id] as const,
 };
 
 // API functions
@@ -24,17 +22,7 @@ const fetchPizzas = async (): Promise<Pizza[]> => {
   return data.data;
 };
 
-const fetchPizzaById = async (id: string): Promise<Pizza> => {
-  const response = await fetch(`/api/pizzas/${id}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch pizza');
-  }
-  const data = await response.json();
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to fetch pizza');
-  }
-  return data.data;
-};
+
 
 const createPizza = async (pizzaData: CreatePizza): Promise<Pizza> => {
   const response = await fetch('/api/pizzas', {
@@ -103,14 +91,7 @@ export const usePizzas = () => {
   });
 };
 
-export const usePizza = (id: string) => {
-  return useQuery({
-    queryKey: pizzaKeys.detail(id),
-    queryFn: () => fetchPizzaById(id),
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
+
 
 export const useCreatePizza = () => {
   const queryClient = useQueryClient();
@@ -128,9 +109,8 @@ export const useUpdatePizza = () => {
   
   return useMutation({
     mutationFn: updatePizza,
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: pizzaKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: pizzaKeys.detail(data.id) });
     },
   });
 };
