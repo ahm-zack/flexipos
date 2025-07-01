@@ -33,10 +33,9 @@ export function PizzaCard({
 
     const cartItem: Omit<CartItem, "quantity"> = {
       id: pizza.id,
-      name: pizza.nameEn,
+      name: `${pizza.type} Pizza - ${pizza.nameAr} بيتزا`,
       price: parseFloat(pizza.priceWithVat),
       category: "Pizza",
-      description: `${pizza.type} Pizza`,
     };
 
     try {

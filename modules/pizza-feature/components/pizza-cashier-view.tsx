@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { PizzaGridSkeleton } from "@/components/ui/pizza-skeleton";
 import { PizzaGrid } from "./pizza-grid";
 import { usePizzas } from "../hooks/use-pizzas";
 
@@ -62,27 +63,17 @@ export function PizzaCashierView() {
           </div>
         </div>
 
-        {/* Results Count */}
-        {!isLoading && pizzas && (
-          <div className="mb-6 text-sm text-muted-foreground text-center">
-            {searchTerm ? (
-              <>
-                Showing {filteredPizzas.length} of {pizzas.length} pizzas
-                {searchTerm && <span> matching &quot;{searchTerm}&quot;</span>}
-              </>
-            ) : (
-              <>Showing all {pizzas.length} pizzas</>
-            )}
-          </div>
-        )}
-
         {/* Pizza Grid - Cashier View (No management actions) */}
-        <PizzaGrid
-          pizzas={filteredPizzas}
-          showActions={false} // No edit/delete actions in cashier view
-          showCartActions={true} // Show cart actions in cashier view
-          isLoading={isLoading}
-        />
+        {isLoading ? (
+          <PizzaGridSkeleton count={6} />
+        ) : (
+          <PizzaGrid
+            pizzas={filteredPizzas}
+            showActions={false} // No edit/delete actions in cashier view
+            showCartActions={true} // Show cart actions in cashier view
+            isLoading={isLoading}
+          />
+        )}
       </div>
     </div>
   );

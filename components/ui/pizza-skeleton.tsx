@@ -1,0 +1,42 @@
+import { Skeleton } from "@/components/ui/skeleton";
+
+export function PizzaCardSkeleton() {
+  return (
+    <div className="bg-card rounded-lg shadow-lg overflow-hidden">
+      {/* Image skeleton */}
+      <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
+        <Skeleton className="w-full h-full" />
+      </div>
+
+      {/* Content skeleton */}
+      <div className="p-6">
+        <div className="space-y-4">
+          {/* Title skeleton */}
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-5 w-2/3" />
+          </div>
+
+          {/* Price skeleton */}
+          <Skeleton className="h-8 w-1/3" />
+
+          {/* Buttons skeleton */}
+          <div className="flex gap-3 pt-2">
+            <Skeleton className="h-9 flex-1" />
+            <Skeleton className="h-9 flex-1" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function PizzaGridSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: count }).map((_, index) => (
+        <PizzaCardSkeleton key={index} />
+      ))}
+    </div>
+  );
+}
