@@ -51,9 +51,9 @@ export function PieCard({
   };
 
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-200">
+    <div className="bg-card rounded-lg shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-200 h-[480px] flex flex-col">
       {/* Pie Image */}
-      <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900 dark:to-orange-900 flex items-center justify-center relative">
+      <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900 dark:to-orange-900 flex items-center justify-center relative flex-shrink-0">
         {pie.imageUrl && !imageError ? (
           <Image
             src={pie.imageUrl}
@@ -68,25 +68,27 @@ export function PieCard({
       </div>
 
       {/* Pie Details */}
-      <div className="p-6">
-        <div className="space-y-4">
+      <div className="p-6 flex-1 flex flex-col">
+        <div className="space-y-4 flex-1 flex flex-col">
           {/* Bilingual Title */}
-          <div>
-            <h3 className="text-xl font-bold text-foreground">
+          <div className="flex-shrink-0">
+            <h3 className="text-xl font-bold text-foreground line-clamp-1">
               {pie.type} Pie
             </h3>
-            <p className="text-lg text-muted-foreground mt-1">{pie.nameAr}</p>
+            <p className="text-lg text-muted-foreground mt-1 line-clamp-1">
+              {pie.nameAr}
+            </p>
           </div>
 
           {/* Size Badge */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <Badge variant="secondary" className="capitalize">
               {pie.size}
             </Badge>
           </div>
 
           {/* Price Display */}
-          <div className="text-2xl font-bold">
+          <div className="text-2xl font-bold flex-shrink-0">
             <PriceDisplay
               price={parseFloat(pie.priceWithVat)}
               symbolSize={18}
@@ -96,7 +98,7 @@ export function PieCard({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-2 mt-auto">
             {showActions && (
               <>
                 {onEdit && (

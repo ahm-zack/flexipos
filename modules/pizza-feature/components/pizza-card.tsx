@@ -49,9 +49,9 @@ export function PizzaCard({
   };
 
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-200">
+    <div className="bg-card rounded-lg shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-200 h-[480px] flex flex-col">
       {/* Pizza Image */}
-      <div className="aspect-video bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900 dark:to-red-900 flex items-center justify-center relative">
+      <div className="aspect-video bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900 dark:to-red-900 flex items-center justify-center relative flex-shrink-0">
         {pizza.imageUrl && !imageError ? (
           <Image
             src={pizza.imageUrl}
@@ -66,18 +66,20 @@ export function PizzaCard({
       </div>
 
       {/* Pizza Details */}
-      <div className="p-6">
-        <div className="space-y-4">
+      <div className="p-6 flex-1 flex flex-col">
+        <div className="space-y-4 flex-1 flex flex-col">
           {/* Pizza Type as Title */}
-          <div>
-            <h3 className="text-xl font-bold text-foreground">
+          <div className="flex-shrink-0">
+            <h3 className="text-xl font-bold text-foreground line-clamp-1">
               {pizza.type} Pizza
             </h3>
-            <p className="text-lg text-muted-foreground mt-1">{pizza.nameAr}</p>
+            <p className="text-lg text-muted-foreground mt-1 line-clamp-1">
+              {pizza.nameAr}
+            </p>
           </div>
 
           {/* Price */}
-          <div className="text-2xl font-bold">
+          <div className="text-2xl font-bold flex-shrink-0 flex-1 flex items-start">
             <PriceDisplay
               price={parseFloat(pizza.priceWithVat)}
               symbolSize={18}
@@ -87,7 +89,7 @@ export function PizzaCard({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-2 mt-auto">
             {showActions && (
               <>
                 {onEdit && (
