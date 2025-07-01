@@ -106,3 +106,117 @@ export const UpdatePizzaSchema = z.object({
 });
 
 export type UpdatePizza = z.infer<typeof UpdatePizzaSchema>;
+
+// Pie enums
+export const PieTypeEnum = z.enum([
+  'Akkawi Cheese',
+  'Halloumi Cheese', 
+  'Cream Cheese',
+  'Zaatar',
+  'Labneh & Vegetables',
+  'Muhammara + Akkawi Cheese + Zaatar',
+  'Akkawi Cheese + Zaatar',
+  'Labneh + Zaatar',
+  'Halloumi Cheese + Zaatar',
+  'Sweet Cheese + Akkawi + Mozzarella'
+]);
+export const PieSizeEnum = z.enum(['small', 'medium', 'large']);
+
+export type PieType = z.infer<typeof PieTypeEnum>;
+export type PieSize = z.infer<typeof PieSizeEnum>;
+
+// Pie schema
+export const PieSchema = z.object({
+  id: z.string().uuid(),
+  type: PieTypeEnum,
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  size: PieSizeEnum,
+  imageUrl: z.string().url('Valid image URL is required'),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+
+export type Pie = z.infer<typeof PieSchema>;
+
+// Create pie schema
+export const CreatePieSchema = z.object({
+  type: PieTypeEnum,
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  size: PieSizeEnum,
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+});
+
+export type CreatePie = z.infer<typeof CreatePieSchema>;
+
+// Update pie schema
+export const UpdatePieSchema = z.object({
+  type: PieTypeEnum.optional(),
+  nameAr: z.string().min(1).optional(),
+  nameEn: z.string().min(1).optional(),
+  size: PieSizeEnum.optional(),
+  imageUrl: z.string().url().optional(),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ).optional(),
+});
+
+export type UpdatePie = z.infer<typeof UpdatePieSchema>;
+
+// Form validation schemas for pie forms
+export const createPieFormSchema = z.object({
+  type: z.enum([
+    'Akkawi Cheese',
+    'Halloumi Cheese', 
+    'Cream Cheese',
+    'Zaatar',
+    'Labneh & Vegetables',
+    'Muhammara + Akkawi Cheese + Zaatar',
+    'Akkawi Cheese + Zaatar',
+    'Labneh + Zaatar',
+    'Halloumi Cheese + Zaatar',
+    'Sweet Cheese + Akkawi + Mozzarella'
+  ], {
+    required_error: "Please select a pie type",
+  }),
+  nameAr: z.string().min(1, "Arabic name is required"),
+  nameEn: z.string().min(1, "English name is required"),
+  size: z.enum(['small', 'medium', 'large'], {
+    required_error: "Please select a pie size",
+  }),
+  priceWithVat: z.string().min(1, "Price is required").refine(
+    (val) => !isNaN(Number(val)) && Number(val) > 0,
+    "Price must be a valid positive number"
+  ),
+  image: z.instanceof(File).optional(),
+});
+
+export const editPieFormSchema = createPieFormSchema.extend({
+  id: z.string().uuid("Invalid pie ID"),
+  imageUrl: z.string().optional(),
+});
+
+export type CreatePieFormData = z.infer<typeof createPieFormSchema>;
+export type EditPieFormData = z.infer<typeof editPieFormSchema>;

@@ -12,7 +12,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function uploadMenuImage(file: File, category: string): Promise<string | null> {
   try {
-    console.log('Starting upload:', { fileName: file.name, size: file.size, type: file.type });
+    console.log('Starting upload:', { fileName: file.name, size: file.size, type: file.type, category });
     
     // Validate file type
     if (!file.type.startsWith('image/')) {
@@ -25,16 +25,42 @@ export async function uploadMenuImage(file: File, category: string): Promise<str
       console.error('File too large:', file.size);
       return null;
     }
+
+    // Determine bucket name based on category
+    const bucketName = category === 'pies' ? 'pie-images' : 
+                      category === 'pizzas' ? 'pizza-images' : 
+                      'menu-items-images';
+
+    // First, check if bucket exists and create if needed
+    const { data: buckets } = await supabase.storage.listBuckets();
+    console.log('Available buckets:', buckets);
+    
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      console.log(`Creating ${bucketName} bucket...`);
+      const { data: bucketData, error: bucketError } = await supabase.storage.createBucket(bucketName, {
+        public: true,
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'],
+        fileSizeLimit: 5242880 // 5MB
+      });
+      
+      if (bucketError) {
+        console.error('Failed to create bucket:', bucketError);
+        return null;
+      }
+      console.log('Bucket created successfully:', bucketData);
+    }
     
     // Create a unique filename
     const fileExt = file.name.split('.').pop();
-    const fileName = `${category}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
     
-    console.log('Uploading to:', fileName);
+    console.log('Uploading to bucket:', bucketName, 'filename:', fileName);
     
     // Upload the file
     const { data, error } = await supabase.storage
-      .from('menu-items-images')
+      .from(bucketName)
       .upload(fileName, file, {
         cacheControl: '3600',
         upsert: false,
@@ -44,13 +70,13 @@ export async function uploadMenuImage(file: File, category: string): Promise<str
     console.log('Upload response:', { data, error });
 
     if (error) {
-      console.error('Upload error:', error);
+      console.error('Upload error details:', JSON.stringify(error, null, 2));
       return null;
     }
 
     // Get the public URL
     const { data: urlData } = supabase.storage
-      .from('menu-items-images')
+      .from(bucketName)
       .getPublicUrl(fileName);
 
     console.log('Public URL:', urlData.publicUrl);
@@ -63,12 +89,24 @@ export async function uploadMenuImage(file: File, category: string): Promise<str
 
 export async function deleteMenuImage(imageUrl: string): Promise<boolean> {
   try {
-    // Extract filename from URL
-    const fileName = imageUrl.split('/menu-items-images/').pop();
+    // Determine bucket from URL and extract filename
+    let bucketName = 'menu-items-images';
+    let fileName = '';
+    
+    if (imageUrl.includes('/pie-images/')) {
+      bucketName = 'pie-images';
+      fileName = imageUrl.split('/pie-images/').pop() || '';
+    } else if (imageUrl.includes('/pizza-images/')) {
+      bucketName = 'pizza-images';
+      fileName = imageUrl.split('/pizza-images/').pop() || '';
+    } else {
+      fileName = imageUrl.split('/menu-items-images/').pop() || '';
+    }
+    
     if (!fileName) return false;
 
     const { error } = await supabase.storage
-      .from('menu-items-images')
+      .from(bucketName)
       .remove([fileName]);
 
     return !error;

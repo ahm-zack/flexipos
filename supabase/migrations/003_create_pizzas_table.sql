@@ -36,10 +36,10 @@ CREATE INDEX idx_pizzas_crust ON pizzas(crust);
 CREATE INDEX idx_pizzas_extras ON pizzas(extras);
 CREATE INDEX idx_pizzas_created_at ON pizzas(created_at);
 
--- Insert sample pizza data
+-- Insert sample pizza data with placeholder images
 INSERT INTO pizzas (type, name_ar, name_en, crust, image_url, extras, price_with_vat) VALUES
-  ('Margherita', 'مارجريتا', 'Margherita Pizza', 'original', 'https://example.supabase.co/storage/v1/object/public/pizza-images/margherita.jpg', NULL, 24.99),
-  ('Vegetable', 'بيتزا الخضار', 'Vegetable Pizza', 'thin', 'https://example.supabase.co/storage/v1/object/public/pizza-images/vegetable.jpg', 'vegetables', 28.50),
-  ('Pepperoni', 'بيبروني', 'Pepperoni Pizza', 'original', 'https://example.supabase.co/storage/v1/object/public/pizza-images/pepperoni.jpg', 'Pepperoni', 32.75),
-  ('Mortadella', 'مورتاديلا', 'Mortadella Pizza', 'original', 'https://example.supabase.co/storage/v1/object/public/pizza-images/mortadella.jpg', 'Mortadella', 35.00),
-  ('Chicken', 'بيتزا الدجاج', 'Chicken Pizza', 'thin', 'https://example.supabase.co/storage/v1/object/public/pizza-images/chicken.jpg', 'Chicken', 38.25);
+  ('Margherita', 'مارجريتا', 'Margherita Pizza', 'original', 'https://via.placeholder.com/300x200/FF6B6B/FFFFFF?text=Margherita+Pizza', NULL, 24.99),
+  ('Vegetable', 'بيتزا الخضار', 'Vegetable Pizza', 'thin', 'https://via.placeholder.com/300x200/4ECDC4/FFFFFF?text=Vegetable+Pizza', 'vegetables', 28.50),
+  ('Pepperoni', 'بيبروني', 'Pepperoni Pizza', 'original', 'https://via.placeholder.com/300x200/45B7D1/FFFFFF?text=Pepperoni+Pizza', 'Pepperoni', 32.75),
+  ('Mortadella', 'مورتاديلا', 'Mortadella Pizza', 'original', 'https://via.placeholder.com/300x200/F9CA24/FFFFFF?text=Mortadella+Pizza', 'Mortadella', 35.00),
+  ('Chicken', 'بيتزا الدجاج', 'Chicken Pizza', 'thin', 'https://via.placeholder.com/300x200/A55A3C/FFFFFF?text=Chicken+Pizza', 'Chicken', 38.25);

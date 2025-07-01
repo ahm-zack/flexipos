@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,29 +22,22 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
-import { useUpdatePizza } from "../hooks/use-pizzas";
+import { useCreatePie } from "../hooks/use-pies";
 import { uploadMenuImage } from "@/lib/image-upload";
-import type { Pizza } from "@/lib/db/schema";
-import type { UpdatePizza } from "@/lib/schemas";
+import type { CreatePie } from "@/lib/schemas";
 
-interface EditPizzaFormProps {
-  pizza: Pizza | null;
+interface CreatePieFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditPizzaForm({
-  pizza,
-  open,
-  onOpenChange,
-}: EditPizzaFormProps) {
-  const [formData, setFormData] = useState<UpdatePizza>({
-    type: "Margherita",
+export function CreatePieForm({ open, onOpenChange }: CreatePieFormProps) {
+  const [formData, setFormData] = useState<CreatePie>({
+    type: "Akkawi Cheese",
     nameAr: "",
     nameEn: "",
-    crust: "original",
+    size: "medium",
     imageUrl: "",
-    extras: undefined,
     priceWithVat: "",
   });
 
@@ -52,42 +45,25 @@ export function EditPizzaForm({
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
 
-  const updatePizzaMutation = useUpdatePizza();
+  const createPieMutation = useCreatePie();
 
-  // Update form data when pizza changes
-  useEffect(() => {
-    if (pizza) {
-      setFormData({
-        type: pizza.type,
-        nameAr: pizza.nameAr,
-        nameEn: pizza.nameEn,
-        crust: pizza.crust || "original",
-        imageUrl: pizza.imageUrl || "",
-        extras: pizza.extras || undefined,
-        priceWithVat: pizza.priceWithVat,
-      });
-
-      // Set preview to existing image if available
-      if (pizza.imageUrl) {
-        setPreviewUrl(pizza.imageUrl);
-      } else {
-        setPreviewUrl("");
-      }
-
-      // Reset file selection when pizza changes
-      setSelectedFile(null);
-    }
-  }, [pizza]);
+  const resetForm = () => {
+    setFormData({
+      type: "Akkawi Cheese",
+      nameAr: "",
+      nameEn: "",
+      size: "medium",
+      imageUrl: "",
+      priceWithVat: "",
+    });
+    setSelectedFile(null);
+    setPreviewUrl("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (
-      !pizza ||
-      !formData.nameEn ||
-      !formData.nameAr ||
-      !formData.priceWithVat
-    ) {
+    if (!formData.nameEn || !formData.nameAr || !formData.priceWithVat) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -95,46 +71,42 @@ export function EditPizzaForm({
     setIsUploading(true);
 
     try {
-      let imageUrl = formData.imageUrl || "";
+      let imageUrl = "";
 
-      // Upload new image if selected
+      // Upload image if selected
       if (selectedFile) {
-        const uploadedUrl = await uploadMenuImage(selectedFile, "pizzas");
+        const uploadedUrl = await uploadMenuImage(selectedFile, "pies");
         if (uploadedUrl) {
           imageUrl = uploadedUrl;
         } else {
-          // Continue without new image if upload fails
-          console.warn("Image upload failed, keeping existing image");
+          // Continue without image if upload fails
+          console.warn("Image upload failed, continuing without image");
           toast.warning(
-            "Image upload failed, but pizza will be updated with existing data"
+            "Image upload failed, but pie will be created without image"
           );
         }
       }
 
-      // Update pizza data
-      const pizzaData: UpdatePizza = {
+      // Create pie data
+      const pieData: CreatePie = {
         ...formData,
         imageUrl,
       };
 
-      await updatePizzaMutation.mutateAsync({
-        id: pizza.id,
-        data: pizzaData,
-      });
-
-      toast.success("Pizza updated successfully!");
-      setSelectedFile(null);
+      await createPieMutation.mutateAsync(pieData);
+      toast.success("Pie created successfully!");
+      resetForm();
       onOpenChange(false);
     } catch (error) {
-      toast.error("Failed to update pizza");
-      console.error("Error updating pizza:", error);
+      toast.error("Failed to create pie");
+      console.error("Error creating pie:", error);
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleInputChange = (
-    field: keyof UpdatePizza,
+    field: keyof CreatePie,
     value: string | undefined
   ) => {
     setFormData((prev) => ({
@@ -171,63 +143,59 @@ export function EditPizzaForm({
 
   const removeImage = () => {
     setSelectedFile(null);
-
-    // If pizza has an existing image, revert to that, otherwise clear preview
-    if (pizza?.imageUrl) {
-      setPreviewUrl(pizza.imageUrl);
-    } else {
-      setPreviewUrl("");
-    }
-
-    // Reset file input
-    const fileInput = document.getElementById(
-      "editPizzaImageFile"
-    ) as HTMLInputElement;
-    if (fileInput) fileInput.value = "";
-  };
-
-  const clearExistingImage = () => {
     setPreviewUrl("");
-    setSelectedFile(null);
-    setFormData((prev) => ({ ...prev, imageUrl: "" }));
-
     // Reset file input
-    const fileInput = document.getElementById(
-      "editPizzaImageFile"
-    ) as HTMLInputElement;
+    const fileInput = document.getElementById("imageFile") as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
-
-  if (!pizza) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edit Pizza</DialogTitle>
+          <DialogTitle>Create New Pie</DialogTitle>
           <DialogDescription>
-            Update the details for &quot;{pizza.nameEn}&quot;.
+            Add a new pie to your menu. Fill in all the details below.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
-            {/* Pizza Type */}
+            {/* Pie Type */}
             <div className="space-y-2">
-              <Label htmlFor="type">Pizza Type *</Label>
+              <Label htmlFor="type">Pie Type *</Label>
               <Select
                 value={formData.type}
                 onValueChange={(value) => handleInputChange("type", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select pizza type" />
+                  <SelectValue placeholder="Select pie type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Margherita">Margherita</SelectItem>
-                  <SelectItem value="Pepperoni">Pepperoni</SelectItem>
-                  <SelectItem value="Vegetable">Vegetable</SelectItem>
-                  <SelectItem value="Mortadella">Mortadella</SelectItem>
-                  <SelectItem value="Chicken">Chicken</SelectItem>
+                  <SelectItem value="Akkawi Cheese">Akkawi Cheese</SelectItem>
+                  <SelectItem value="Halloumi Cheese">
+                    Halloumi Cheese
+                  </SelectItem>
+                  <SelectItem value="Cream Cheese">Cream Cheese</SelectItem>
+                  <SelectItem value="Zaatar">Zaatar</SelectItem>
+                  <SelectItem value="Labneh & Vegetables">
+                    Labneh & Vegetables
+                  </SelectItem>
+                  <SelectItem value="Muhammara + Akkawi Cheese + Zaatar">
+                    Muhammara + Akkawi Cheese + Zaatar
+                  </SelectItem>
+                  <SelectItem value="Akkawi Cheese + Zaatar">
+                    Akkawi Cheese + Zaatar
+                  </SelectItem>
+                  <SelectItem value="Labneh + Zaatar">
+                    Labneh + Zaatar
+                  </SelectItem>
+                  <SelectItem value="Halloumi Cheese + Zaatar">
+                    Halloumi Cheese + Zaatar
+                  </SelectItem>
+                  <SelectItem value="Sweet Cheese + Akkawi + Mozzarella">
+                    Sweet Cheese + Akkawi + Mozzarella
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -239,7 +207,7 @@ export function EditPizzaForm({
                 id="nameEn"
                 value={formData.nameEn}
                 onChange={(e) => handleInputChange("nameEn", e.target.value)}
-                placeholder="e.g., Margherita Pizza"
+                placeholder="e.g., Classic Apple Pie"
               />
             </div>
 
@@ -250,35 +218,35 @@ export function EditPizzaForm({
                 id="nameAr"
                 value={formData.nameAr}
                 onChange={(e) => handleInputChange("nameAr", e.target.value)}
-                placeholder="e.g., بيتزا مارغريتا"
+                placeholder="e.g., فطيرة التفاح الكلاسيكية"
                 dir="rtl"
               />
             </div>
 
-            {/* Crust */}
+            {/* Size */}
             <div className="space-y-2">
-              <Label htmlFor="crust">Crust Type *</Label>
+              <Label htmlFor="size">Size *</Label>
               <Select
-                value={formData.crust}
-                onValueChange={(value) => handleInputChange("crust", value)}
+                value={formData.size}
+                onValueChange={(value) => handleInputChange("size", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select crust type" />
+                  <SelectValue placeholder="Select size" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="original">Original</SelectItem>
-                  <SelectItem value="thin">Thin</SelectItem>
-                  <SelectItem value="thick">Thick</SelectItem>
+                  <SelectItem value="small">Small</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="large">Large</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Image Upload */}
             <div className="space-y-2">
-              <Label htmlFor="editPizzaImageFile">Pizza Image (Optional)</Label>
+              <Label htmlFor="imageFile">Pie Image (Optional)</Label>
               <div className="space-y-3">
                 <Input
-                  id="editPizzaImageFile"
+                  id="imageFile"
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
@@ -290,40 +258,17 @@ export function EditPizzaForm({
                   <div className="relative w-full h-48 border-2 border-dashed border-gray-200 rounded-lg overflow-hidden">
                     <Image
                       src={previewUrl}
-                      alt="Pizza preview"
+                      alt="Pie preview"
                       fill
                       className="object-cover"
                     />
-                    <div className="absolute top-2 right-2 flex gap-2">
-                      {/* Remove new selection (revert to original) */}
-                      {selectedFile && (
-                        <button
-                          type="button"
-                          onClick={removeImage}
-                          className="p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors z-10"
-                          title="Revert to original image"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
-
-                      {/* Clear image completely */}
-                      <button
-                        type="button"
-                        onClick={clearExistingImage}
-                        className="p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
-                        title="Remove image"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-
-                    {/* Indicator for new vs existing image */}
-                    {selectedFile && (
-                      <div className="absolute bottom-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                        New Image
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
                 )}
 
@@ -372,13 +317,13 @@ export function EditPizzaForm({
             </Button>
             <Button
               type="submit"
-              disabled={updatePizzaMutation.isPending || isUploading}
+              disabled={createPieMutation.isPending || isUploading}
             >
               {isUploading
                 ? "Uploading..."
-                : updatePizzaMutation.isPending
-                ? "Updating..."
-                : "Update Pizza"}
+                : createPieMutation.isPending
+                ? "Creating..."
+                : "Create Pie"}
             </Button>
           </DialogFooter>
         </form>

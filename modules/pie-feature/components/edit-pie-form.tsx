@@ -22,29 +22,24 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
-import { useUpdatePizza } from "../hooks/use-pizzas";
+import { useUpdatePie } from "../hooks/use-pies";
 import { uploadMenuImage } from "@/lib/image-upload";
-import type { Pizza } from "@/lib/db/schema";
-import type { UpdatePizza } from "@/lib/schemas";
+import type { Pie } from "@/lib/db/schema";
+import type { UpdatePie } from "@/lib/schemas";
 
-interface EditPizzaFormProps {
-  pizza: Pizza | null;
+interface EditPieFormProps {
+  pie: Pie | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditPizzaForm({
-  pizza,
-  open,
-  onOpenChange,
-}: EditPizzaFormProps) {
-  const [formData, setFormData] = useState<UpdatePizza>({
-    type: "Margherita",
+export function EditPieForm({ pie, open, onOpenChange }: EditPieFormProps) {
+  const [formData, setFormData] = useState<UpdatePie>({
+    type: "Akkawi Cheese",
+    size: "medium",
     nameAr: "",
     nameEn: "",
-    crust: "original",
     imageUrl: "",
-    extras: undefined,
     priceWithVat: "",
   });
 
@@ -52,38 +47,37 @@ export function EditPizzaForm({
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
 
-  const updatePizzaMutation = useUpdatePizza();
+  const updatePieMutation = useUpdatePie();
 
-  // Update form data when pizza changes
+  // Update form data when pie changes
   useEffect(() => {
-    if (pizza) {
+    if (pie) {
       setFormData({
-        type: pizza.type,
-        nameAr: pizza.nameAr,
-        nameEn: pizza.nameEn,
-        crust: pizza.crust || "original",
-        imageUrl: pizza.imageUrl || "",
-        extras: pizza.extras || undefined,
-        priceWithVat: pizza.priceWithVat,
+        type: pie.type,
+        size: pie.size,
+        nameAr: pie.nameAr,
+        nameEn: pie.nameEn,
+        imageUrl: pie.imageUrl || "",
+        priceWithVat: pie.priceWithVat,
       });
 
       // Set preview to existing image if available
-      if (pizza.imageUrl) {
-        setPreviewUrl(pizza.imageUrl);
+      if (pie.imageUrl) {
+        setPreviewUrl(pie.imageUrl);
       } else {
         setPreviewUrl("");
       }
 
-      // Reset file selection when pizza changes
+      // Reset file selection when pie changes
       setSelectedFile(null);
     }
-  }, [pizza]);
+  }, [pie]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (
-      !pizza ||
+      !pie ||
       !formData.nameEn ||
       !formData.nameAr ||
       !formData.priceWithVat
@@ -99,42 +93,42 @@ export function EditPizzaForm({
 
       // Upload new image if selected
       if (selectedFile) {
-        const uploadedUrl = await uploadMenuImage(selectedFile, "pizzas");
+        const uploadedUrl = await uploadMenuImage(selectedFile, "pies");
         if (uploadedUrl) {
           imageUrl = uploadedUrl;
         } else {
           // Continue without new image if upload fails
           console.warn("Image upload failed, keeping existing image");
           toast.warning(
-            "Image upload failed, but pizza will be updated with existing data"
+            "Image upload failed, but pie will be updated with existing data"
           );
         }
       }
 
-      // Update pizza data
-      const pizzaData: UpdatePizza = {
+      // Update pie data
+      const pieData: UpdatePie = {
         ...formData,
         imageUrl,
       };
 
-      await updatePizzaMutation.mutateAsync({
-        id: pizza.id,
-        data: pizzaData,
+      await updatePieMutation.mutateAsync({
+        id: pie.id,
+        data: pieData,
       });
 
-      toast.success("Pizza updated successfully!");
+      toast.success("Pie updated successfully!");
       setSelectedFile(null);
       onOpenChange(false);
     } catch (error) {
-      toast.error("Failed to update pizza");
-      console.error("Error updating pizza:", error);
+      toast.error("Failed to update pie");
+      console.error("Error updating pie:", error);
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleInputChange = (
-    field: keyof UpdatePizza,
+    field: keyof UpdatePie,
     value: string | undefined
   ) => {
     setFormData((prev) => ({
@@ -172,16 +166,16 @@ export function EditPizzaForm({
   const removeImage = () => {
     setSelectedFile(null);
 
-    // If pizza has an existing image, revert to that, otherwise clear preview
-    if (pizza?.imageUrl) {
-      setPreviewUrl(pizza.imageUrl);
+    // If pie has an existing image, revert to that, otherwise clear preview
+    if (pie?.imageUrl) {
+      setPreviewUrl(pie.imageUrl);
     } else {
       setPreviewUrl("");
     }
 
     // Reset file input
     const fileInput = document.getElementById(
-      "editPizzaImageFile"
+      "editImageFile"
     ) as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
@@ -193,41 +187,60 @@ export function EditPizzaForm({
 
     // Reset file input
     const fileInput = document.getElementById(
-      "editPizzaImageFile"
+      "editImageFile"
     ) as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
 
-  if (!pizza) return null;
+  if (!pie) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edit Pizza</DialogTitle>
+          <DialogTitle>Edit Pie</DialogTitle>
           <DialogDescription>
-            Update the details for &quot;{pizza.nameEn}&quot;.
+            Update the details for &quot;{pie.nameEn}&quot;.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
-            {/* Pizza Type */}
+            {/* Pie Type */}
             <div className="space-y-2">
-              <Label htmlFor="type">Pizza Type *</Label>
+              <Label htmlFor="type">Pie Type *</Label>
               <Select
                 value={formData.type}
                 onValueChange={(value) => handleInputChange("type", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select pizza type" />
+                  <SelectValue placeholder="Select pie type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Margherita">Margherita</SelectItem>
-                  <SelectItem value="Pepperoni">Pepperoni</SelectItem>
-                  <SelectItem value="Vegetable">Vegetable</SelectItem>
-                  <SelectItem value="Mortadella">Mortadella</SelectItem>
-                  <SelectItem value="Chicken">Chicken</SelectItem>
+                  <SelectItem value="Akkawi Cheese">Akkawi Cheese</SelectItem>
+                  <SelectItem value="Halloumi Cheese">
+                    Halloumi Cheese
+                  </SelectItem>
+                  <SelectItem value="Cream Cheese">Cream Cheese</SelectItem>
+                  <SelectItem value="Zaatar">Zaatar</SelectItem>
+                  <SelectItem value="Labneh & Vegetables">
+                    Labneh & Vegetables
+                  </SelectItem>
+                  <SelectItem value="Muhammara + Akkawi Cheese + Zaatar">
+                    Muhammara + Akkawi Cheese + Zaatar
+                  </SelectItem>
+                  <SelectItem value="Akkawi Cheese + Zaatar">
+                    Akkawi Cheese + Zaatar
+                  </SelectItem>
+                  <SelectItem value="Labneh + Zaatar">
+                    Labneh + Zaatar
+                  </SelectItem>
+                  <SelectItem value="Halloumi Cheese + Zaatar">
+                    Halloumi Cheese + Zaatar
+                  </SelectItem>
+                  <SelectItem value="Sweet Cheese + Akkawi + Mozzarella">
+                    Sweet Cheese + Akkawi + Mozzarella
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -239,7 +252,7 @@ export function EditPizzaForm({
                 id="nameEn"
                 value={formData.nameEn}
                 onChange={(e) => handleInputChange("nameEn", e.target.value)}
-                placeholder="e.g., Margherita Pizza"
+                placeholder="e.g., Classic Apple Pie"
               />
             </div>
 
@@ -250,35 +263,35 @@ export function EditPizzaForm({
                 id="nameAr"
                 value={formData.nameAr}
                 onChange={(e) => handleInputChange("nameAr", e.target.value)}
-                placeholder="e.g., بيتزا مارغريتا"
+                placeholder="e.g., فطيرة التفاح الكلاسيكية"
                 dir="rtl"
               />
             </div>
 
-            {/* Crust */}
+            {/* Size */}
             <div className="space-y-2">
-              <Label htmlFor="crust">Crust Type *</Label>
+              <Label htmlFor="size">Size *</Label>
               <Select
-                value={formData.crust}
-                onValueChange={(value) => handleInputChange("crust", value)}
+                value={formData.size}
+                onValueChange={(value) => handleInputChange("size", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select crust type" />
+                  <SelectValue placeholder="Select size" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="original">Original</SelectItem>
-                  <SelectItem value="thin">Thin</SelectItem>
-                  <SelectItem value="thick">Thick</SelectItem>
+                  <SelectItem value="small">Small</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="large">Large</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Image Upload */}
             <div className="space-y-2">
-              <Label htmlFor="editPizzaImageFile">Pizza Image (Optional)</Label>
+              <Label htmlFor="editImageFile">Pie Image (Optional)</Label>
               <div className="space-y-3">
                 <Input
-                  id="editPizzaImageFile"
+                  id="editImageFile"
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
@@ -290,7 +303,7 @@ export function EditPizzaForm({
                   <div className="relative w-full h-48 border-2 border-dashed border-gray-200 rounded-lg overflow-hidden">
                     <Image
                       src={previewUrl}
-                      alt="Pizza preview"
+                      alt="Pie preview"
                       fill
                       className="object-cover"
                     />
@@ -372,13 +385,13 @@ export function EditPizzaForm({
             </Button>
             <Button
               type="submit"
-              disabled={updatePizzaMutation.isPending || isUploading}
+              disabled={updatePieMutation.isPending || isUploading}
             >
               {isUploading
                 ? "Uploading..."
-                : updatePizzaMutation.isPending
+                : updatePieMutation.isPending
                 ? "Updating..."
-                : "Update Pizza"}
+                : "Update Pie"}
             </Button>
           </DialogFooter>
         </form>

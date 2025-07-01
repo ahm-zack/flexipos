@@ -14,6 +14,15 @@ const menuCategories = [
     textColor: "text-white",
   },
   {
+    id: "pies",
+    name: "Pies",
+    description: "Manage pie menu items",
+    href: "/admin/items/pies",
+    colors:
+      "bg-gradient-to-br from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700",
+    textColor: "text-white",
+  },
+  {
     id: "burgers",
     name: "Burgers",
     description: "Manage burger menu items",

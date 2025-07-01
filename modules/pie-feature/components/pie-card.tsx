@@ -4,26 +4,27 @@ import { useState } from "react";
 import Image from "next/image";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { PriceDisplay } from "@/components/currency";
 import { useCart } from "@/modules/cart";
-import type { Pizza } from "@/lib/db/schema";
+import type { Pie } from "@/lib/db/schema";
 import type { CartItem } from "@/modules/cart/types/cart.types";
 
-interface PizzaCardProps {
-  pizza: Pizza;
-  onEdit?: (pizza: Pizza) => void;
-  onDelete?: (pizza: Pizza) => void;
+interface PieCardProps {
+  pie: Pie;
+  onEdit?: (pie: Pie) => void;
+  onDelete?: (pie: Pie) => void;
   showActions?: boolean;
   showCartActions?: boolean;
 }
 
-export function PizzaCard({
-  pizza,
+export function PieCard({
+  pie,
   onEdit,
   onDelete,
   showActions = true,
   showCartActions = true,
-}: PizzaCardProps) {
+}: PieCardProps) {
   const { addItem } = useCart();
   const [isAdding, setIsAdding] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -32,10 +33,11 @@ export function PizzaCard({
     setIsAdding(true);
 
     const cartItem: Omit<CartItem, "quantity"> = {
-      id: pizza.id,
-      name: `${pizza.type} Pizza - ${pizza.nameAr} بيتزا`,
-      price: parseFloat(pizza.priceWithVat),
-      category: "Pizza",
+      id: pie.id,
+      name: `${pie.type} Pie - ${pie.nameAr} فطيرة`,
+      price: parseFloat(pie.priceWithVat),
+      category: "Pie",
+      description: `${pie.size} ${pie.type} Pie`,
     };
 
     try {
@@ -50,36 +52,43 @@ export function PizzaCard({
 
   return (
     <div className="bg-card rounded-lg shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-200">
-      {/* Pizza Image */}
-      <div className="aspect-video bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900 dark:to-red-900 flex items-center justify-center relative">
-        {pizza.imageUrl && !imageError ? (
+      {/* Pie Image */}
+      <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900 dark:to-orange-900 flex items-center justify-center relative">
+        {pie.imageUrl && !imageError ? (
           <Image
-            src={pizza.imageUrl}
-            alt={pizza.nameEn}
+            src={pie.imageUrl}
+            alt={pie.nameEn}
             fill
             className="object-cover"
             onError={() => setImageError(true)}
           />
         ) : (
-          <div className="text-6xl">🍕</div>
+          <div className="text-6xl">🥧</div>
         )}
       </div>
 
-      {/* Pizza Details */}
+      {/* Pie Details */}
       <div className="p-6">
         <div className="space-y-4">
-          {/* Pizza Type as Title */}
+          {/* Bilingual Title */}
           <div>
             <h3 className="text-xl font-bold text-foreground">
-              {pizza.type} Pizza
+              {pie.type} Pie
             </h3>
-            <p className="text-lg text-muted-foreground mt-1">{pizza.nameAr}</p>
+            <p className="text-lg text-muted-foreground mt-1">{pie.nameAr}</p>
           </div>
 
-          {/* Price */}
+          {/* Size Badge */}
+          <div className="flex gap-2">
+            <Badge variant="secondary" className="capitalize">
+              {pie.size}
+            </Badge>
+          </div>
+
+          {/* Price Display */}
           <div className="text-2xl font-bold">
             <PriceDisplay
-              price={parseFloat(pizza.priceWithVat)}
+              price={parseFloat(pie.priceWithVat)}
               symbolSize={18}
               variant="primary"
               className="text-2xl font-bold"
@@ -92,7 +101,7 @@ export function PizzaCard({
               <>
                 {onEdit && (
                   <Button
-                    onClick={() => onEdit(pizza)}
+                    onClick={() => onEdit(pie)}
                     variant="outline"
                     size="sm"
                     className="flex items-center gap-2 flex-1"
@@ -103,7 +112,7 @@ export function PizzaCard({
                 )}
                 {onDelete && (
                   <Button
-                    onClick={() => onDelete(pizza)}
+                    onClick={() => onDelete(pie)}
                     variant="outline"
                     size="sm"
                     className="flex items-center gap-2 flex-1 text-red-600 hover:text-red-700 hover:border-red-300"
