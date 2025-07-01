@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +21,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Upload, X } from "lucide-react";
 import { useCreatePizza } from "../hooks/use-pizzas";
+import { uploadMenuImage } from "@/lib/image-upload";
 import type { CreatePizza } from "@/lib/schemas";
 
 interface CreatePizzaFormProps {
@@ -39,6 +42,10 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
     priceWithVat: "",
   });
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
+
   const createPizzaMutation = useCreatePizza();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,8 +56,32 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
       return;
     }
 
+    setIsUploading(true);
+
     try {
-      await createPizzaMutation.mutateAsync(formData);
+      let imageUrl = "";
+
+      // Upload image if file is selected
+      if (selectedFile) {
+        toast.info("Uploading image...");
+        const uploadedUrl = await uploadMenuImage(selectedFile, "pizzas");
+
+        if (!uploadedUrl) {
+          toast.error("Failed to upload image");
+          setIsUploading(false);
+          return;
+        }
+
+        imageUrl = uploadedUrl;
+      }
+
+      // Create pizza with image URL
+      const pizzaData = {
+        ...formData,
+        imageUrl: imageUrl || formData.imageUrl, // Use uploaded URL or keep existing
+      };
+
+      await createPizzaMutation.mutateAsync(pizzaData);
       toast.success("Pizza created successfully!");
       onOpenChange(false);
 
@@ -64,9 +95,13 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
         extras: undefined,
         priceWithVat: "",
       });
+      setSelectedFile(null);
+      setPreviewUrl("");
     } catch (error) {
       toast.error("Failed to create pizza");
       console.error("Error creating pizza:", error);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -78,6 +113,40 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select an image file");
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should be less than 5MB");
+        return;
+      }
+
+      setSelectedFile(file);
+
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewUrl(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedFile(null);
+    setPreviewUrl("");
+    // Reset file input
+    const fileInput = document.getElementById("imageFile") as HTMLInputElement;
+    if (fileInput) fileInput.value = "";
   };
 
   return (
@@ -135,16 +204,52 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
               />
             </div>
 
-            {/* Image URL */}
+            {/* Image Upload */}
             <div className="space-y-2">
-              <Label htmlFor="imageUrl">Image URL (Optional)</Label>
-              <Input
-                id="imageUrl"
-                type="url"
-                value={formData.imageUrl}
-                onChange={(e) => handleInputChange("imageUrl", e.target.value)}
-                placeholder="https://example.supabase.co/storage/v1/object/public/pizza-images/pizza.jpg"
-              />
+              <Label htmlFor="imageFile">Pizza Image (Optional)</Label>
+              <div className="space-y-3">
+                <Input
+                  id="imageFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="cursor-pointer"
+                />
+
+                {/* Image Preview */}
+                {previewUrl && (
+                  <div className="relative w-full h-48 border-2 border-dashed border-gray-200 rounded-lg overflow-hidden">
+                    <Image
+                      src={previewUrl}
+                      alt="Pizza preview"
+                      fill
+                      className="object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Upload Instructions */}
+                {!previewUrl && (
+                  <div className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg">
+                    <div className="text-center">
+                      <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-500">
+                        Click to upload or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        PNG, JPG up to 5MB
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Price */}
@@ -169,11 +274,19 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={isUploading}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={createPizzaMutation.isPending}>
-              {createPizzaMutation.isPending ? "Creating..." : "Create Pizza"}
+            <Button
+              type="submit"
+              disabled={createPizzaMutation.isPending || isUploading}
+            >
+              {isUploading
+                ? "Uploading..."
+                : createPizzaMutation.isPending
+                ? "Creating..."
+                : "Create Pizza"}
             </Button>
           </DialogFooter>
         </form>
