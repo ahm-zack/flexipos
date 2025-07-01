@@ -7,7 +7,10 @@ export function ConditionalCartContainer() {
   const pathname = usePathname();
 
   // Hide cart on management pages
-  const isManagementPage = pathname.includes("/admin/items");
+  const isManagementPage =
+    pathname.includes("/admin/items") ||
+    pathname.includes("/admin/users") ||
+    pathname.includes("/admin/reports");
 
   if (isManagementPage) {
     return null;
