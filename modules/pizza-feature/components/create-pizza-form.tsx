@@ -135,49 +135,6 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
               />
             </div>
 
-            {/* Crust Type */}
-            <div className="space-y-2">
-              <Label htmlFor="crust">Crust Type</Label>
-              <Select
-                value={formData.crust || "original"}
-                onValueChange={(value) => handleInputChange("crust", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select crust type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="original">Original</SelectItem>
-                  <SelectItem value="thin">Thin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Extras */}
-            <div className="space-y-2">
-              <Label htmlFor="extras">Extras (Optional)</Label>
-              <Select
-                value={formData.extras || "none"}
-                onValueChange={(value) =>
-                  handleInputChange(
-                    "extras",
-                    value === "none" ? undefined : value
-                  )
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select extras (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No extras</SelectItem>
-                  <SelectItem value="cheese">Cheese</SelectItem>
-                  <SelectItem value="vegetables">Vegetables</SelectItem>
-                  <SelectItem value="Pepperoni">Pepperoni</SelectItem>
-                  <SelectItem value="Mortadella">Mortadella</SelectItem>
-                  <SelectItem value="Chicken">Chicken</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Image URL */}
             <div className="space-y-2">
               <Label htmlFor="imageUrl">Image URL (Optional)</Label>
