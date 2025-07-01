@@ -23,6 +23,15 @@ const menuCategories = [
     textColor: "text-white",
   },
   {
+    id: "sandwiches",
+    name: "Sandwiches",
+    description: "Manage sandwich menu items",
+    href: "/admin/items/sandwiches",
+    colors:
+      "bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700",
+    textColor: "text-white",
+  },
+  {
     id: "burgers",
     name: "Burgers",
     description: "Manage burger menu items",

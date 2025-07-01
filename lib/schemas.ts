@@ -220,3 +220,103 @@ export const editPieFormSchema = createPieFormSchema.extend({
 
 export type CreatePieFormData = z.infer<typeof createPieFormSchema>;
 export type EditPieFormData = z.infer<typeof editPieFormSchema>;
+
+// Sandwich enums
+export const SandwichTypeEnum = z.enum([
+  'Beef Sandwich with Cheese',
+  'Chicken Sandwich with Cheese', 
+  'Muhammara Sandwich with Cheese'
+]);
+export const SandwichSizeEnum = z.enum(['small', 'medium', 'large']);
+
+export type SandwichType = z.infer<typeof SandwichTypeEnum>;
+export type SandwichSize = z.infer<typeof SandwichSizeEnum>;
+
+// Sandwich schema
+export const SandwichSchema = z.object({
+  id: z.string().uuid(),
+  type: SandwichTypeEnum,
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  size: SandwichSizeEnum,
+  imageUrl: z.string().url('Valid image URL is required'),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+
+export type Sandwich = z.infer<typeof SandwichSchema>;
+
+// Create sandwich schema
+export const CreateSandwichSchema = z.object({
+  type: SandwichTypeEnum,
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  size: SandwichSizeEnum,
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+});
+
+export type CreateSandwich = z.infer<typeof CreateSandwichSchema>;
+
+// Update sandwich schema
+export const UpdateSandwichSchema = z.object({
+  type: SandwichTypeEnum.optional(),
+  nameAr: z.string().min(1).optional(),
+  nameEn: z.string().min(1).optional(),
+  size: SandwichSizeEnum.optional(),
+  imageUrl: z.string().url().optional(),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ).optional(),
+});
+
+export type UpdateSandwich = z.infer<typeof UpdateSandwichSchema>;
+
+// Form validation schemas for sandwich forms
+export const createSandwichFormSchema = z.object({
+  type: z.enum([
+    'Beef Sandwich with Cheese',
+    'Chicken Sandwich with Cheese', 
+    'Muhammara Sandwich with Cheese'
+  ], {
+    required_error: "Please select a sandwich type",
+  }),
+  nameAr: z.string().min(1, "Arabic name is required"),
+  nameEn: z.string().min(1, "English name is required"),
+  size: z.enum(['small', 'medium', 'large'], {
+    required_error: "Please select a sandwich size",
+  }),
+  priceWithVat: z.string().min(1, "Price is required").refine(
+    (val) => !isNaN(Number(val)) && Number(val) > 0,
+    "Price must be a valid positive number"
+  ),
+  image: z.instanceof(File).optional(),
+});
+
+export const editSandwichFormSchema = createSandwichFormSchema.extend({
+  id: z.string().uuid("Invalid sandwich ID"),
+  imageUrl: z.string().optional(),
+});
+
+export type CreateSandwichFormData = z.infer<typeof createSandwichFormSchema>;
+export type EditSandwichFormData = z.infer<typeof editSandwichFormSchema>;

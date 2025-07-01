@@ -28,7 +28,8 @@ export async function uploadMenuImage(file: File, category: string): Promise<str
 
     // Determine bucket name based on category
     const bucketName = category === 'pies' ? 'pie-images' : 
-                      category === 'pizzas' ? 'pizza-images' : 
+                      category === 'pizzas' ? 'pizza-images' :
+                      category === 'sandwiches' ? 'sandwich-images' :
                       'menu-items-images';
 
     // First, check if bucket exists and create if needed
@@ -99,6 +100,9 @@ export async function deleteMenuImage(imageUrl: string): Promise<boolean> {
     } else if (imageUrl.includes('/pizza-images/')) {
       bucketName = 'pizza-images';
       fileName = imageUrl.split('/pizza-images/').pop() || '';
+    } else if (imageUrl.includes('/sandwich-images/')) {
+      bucketName = 'sandwich-images';
+      fileName = imageUrl.split('/sandwich-images/').pop() || '';
     } else {
       fileName = imageUrl.split('/menu-items-images/').pop() || '';
     }

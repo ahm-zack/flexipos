@@ -29,6 +29,16 @@ export const pieTypeEnum = pgEnum('pie_type', [
 // Define pie size enum
 export const pieSizeEnum = pgEnum('pie_size', ['small', 'medium', 'large']);
 
+// Define sandwich type enum
+export const sandwichTypeEnum = pgEnum('sandwich_type', [
+  'Beef Sandwich with Cheese',
+  'Chicken Sandwich with Cheese', 
+  'Muhammara Sandwich with Cheese'
+]);
+
+// Define sandwich size enum
+export const sandwichSizeEnum = pgEnum('sandwich_size', ['small', 'medium', 'large']);
+
 // Users table schema
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
@@ -83,3 +93,22 @@ export type Pie = typeof pies.$inferSelect;
 export type NewPie = typeof pies.$inferInsert;
 export type PieType = typeof pieTypeEnum.enumValues[number];
 export type PieSize = typeof pieSizeEnum.enumValues[number];
+
+// Sandwich table schema
+export const sandwiches = pgTable('sandwiches', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  type: sandwichTypeEnum('type').notNull(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  size: sandwichSizeEnum('size').notNull(),
+  imageUrl: text('image_url').notNull(),
+  priceWithVat: decimal('price_with_vat', { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Export sandwich types
+export type Sandwich = typeof sandwiches.$inferSelect;
+export type NewSandwich = typeof sandwiches.$inferInsert;
+export type SandwichType = typeof sandwichTypeEnum.enumValues[number];
+export type SandwichSize = typeof sandwichSizeEnum.enumValues[number];

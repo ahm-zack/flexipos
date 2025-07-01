@@ -14,6 +14,7 @@ import {
   BarChart3,
   ChefHat,
   Package,
+  Zap,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -48,6 +49,11 @@ const data = {
           icon: Cookie,
         },
         {
+          title: "🥪 Sandwich",
+          url: "/admin/menu/sandwich",
+          icon: Sandwich,
+        },
+        {
           title: "🍔 Burger",
           url: "/admin/menu/burger",
           icon: Beef,
@@ -60,7 +66,7 @@ const data = {
         {
           title: "🌯 Shawerma",
           url: "/admin/menu/shawerma",
-          icon: Sandwich,
+          icon: Zap,
         },
         {
           title: "🍟 Side Order",

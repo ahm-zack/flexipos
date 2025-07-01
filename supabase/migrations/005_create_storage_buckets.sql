@@ -50,3 +50,28 @@ USING (bucket_id = 'pizza-images' AND auth.role() = 'authenticated');
 CREATE POLICY "Users can delete pizza images" ON storage.objects 
 FOR DELETE TO authenticated 
 USING (bucket_id = 'pizza-images' AND auth.role() = 'authenticated');
+
+-- Create sandwich-images bucket
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'sandwich-images',
+  'sandwich-images',
+  true, 
+  5242880, -- 5MB in bytes
+  '{"image/png","image/jpeg","image/jpg","image/webp"}'
+) ON CONFLICT (id) DO NOTHING;
+
+-- Create policy for sandwich-images bucket (allow public read, authenticated upload)
+CREATE POLICY "Sandwich images are publicly accessible" ON storage.objects FOR SELECT TO public USING (bucket_id = 'sandwich-images');
+
+CREATE POLICY "Authenticated users can upload sandwich images" ON storage.objects 
+FOR INSERT TO authenticated 
+WITH CHECK (bucket_id = 'sandwich-images' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Users can update their sandwich images" ON storage.objects 
+FOR UPDATE TO authenticated 
+USING (bucket_id = 'sandwich-images' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Users can delete sandwich images" ON storage.objects 
+FOR DELETE TO authenticated 
+USING (bucket_id = 'sandwich-images' AND auth.role() = 'authenticated');
