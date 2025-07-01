@@ -39,6 +39,20 @@ export const sandwichTypeEnum = pgEnum('sandwich_type', [
 // Define sandwich size enum
 export const sandwichSizeEnum = pgEnum('sandwich_size', ['small', 'medium', 'large']);
 
+// Define mini pie type enum (Party Only)
+export const miniPieTypeEnum = pgEnum('mini_pie_type', [
+  'Mini Zaatar Pie',
+  'Mini Cheese Pie',
+  'Mini Spinach Pie',
+  'Mini Meat Pie (Ba\'lakiya style)',
+  'Mini Halloumi Cheese Pie', 
+  'Mini Hot Dog Pie',
+  'Mini Pizza Pie'
+]);
+
+// Define mini pie size enum (typically small for party pies)
+export const miniPieSizeEnum = pgEnum('mini_pie_size', ['small', 'medium', 'large']);
+
 // Users table schema
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
@@ -112,3 +126,22 @@ export type Sandwich = typeof sandwiches.$inferSelect;
 export type NewSandwich = typeof sandwiches.$inferInsert;
 export type SandwichType = typeof sandwichTypeEnum.enumValues[number];
 export type SandwichSize = typeof sandwichSizeEnum.enumValues[number];
+
+// Mini Pie table schema
+export const miniPies = pgTable('mini_pies', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  type: miniPieTypeEnum('type').notNull(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  size: miniPieSizeEnum('size').notNull(),
+  imageUrl: text('image_url').notNull(),
+  priceWithVat: decimal('price_with_vat', { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Export mini pie types
+export type MiniPie = typeof miniPies.$inferSelect;
+export type NewMiniPie = typeof miniPies.$inferInsert;
+export type MiniPieType = typeof miniPieTypeEnum.enumValues[number];
+export type MiniPieSize = typeof miniPieSizeEnum.enumValues[number];

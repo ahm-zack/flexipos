@@ -320,3 +320,113 @@ export const editSandwichFormSchema = createSandwichFormSchema.extend({
 
 export type CreateSandwichFormData = z.infer<typeof createSandwichFormSchema>;
 export type EditSandwichFormData = z.infer<typeof editSandwichFormSchema>;
+
+// Mini Pie enums
+export const MiniPieTypeEnum = z.enum([
+  'Mini Zaatar Pie',
+  'Mini Cheese Pie',
+  'Mini Spinach Pie',
+  'Mini Meat Pie (Ba\'lakiya style)',
+  'Mini Halloumi Cheese Pie', 
+  'Mini Hot Dog Pie',
+  'Mini Pizza Pie'
+]);
+export const MiniPieSizeEnum = z.enum(['small', 'medium', 'large']);
+
+export type MiniPieType = z.infer<typeof MiniPieTypeEnum>;
+export type MiniPieSize = z.infer<typeof MiniPieSizeEnum>;
+
+// Mini Pie schema
+export const MiniPieSchema = z.object({
+  id: z.string().uuid(),
+  type: MiniPieTypeEnum,
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  size: MiniPieSizeEnum,
+  imageUrl: z.string().url('Valid image URL is required'),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+
+export type MiniPie = z.infer<typeof MiniPieSchema>;
+
+// Create mini pie schema
+export const CreateMiniPieSchema = z.object({
+  type: MiniPieTypeEnum,
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  size: MiniPieSizeEnum,
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+});
+
+export type CreateMiniPie = z.infer<typeof CreateMiniPieSchema>;
+
+// Update mini pie schema
+export const UpdateMiniPieSchema = z.object({
+  type: MiniPieTypeEnum.optional(),
+  nameAr: z.string().min(1).optional(),
+  nameEn: z.string().min(1).optional(),
+  size: MiniPieSizeEnum.optional(),
+  imageUrl: z.string().url().optional(),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ).optional(),
+});
+
+export type UpdateMiniPie = z.infer<typeof UpdateMiniPieSchema>;
+
+// Form validation schemas for mini pie forms
+export const createMiniPieFormSchema = z.object({
+  type: z.enum([
+    'Mini Zaatar Pie',
+    'Mini Cheese Pie',
+    'Mini Spinach Pie',
+    'Mini Meat Pie (Ba\'lakiya style)',
+    'Mini Halloumi Cheese Pie', 
+    'Mini Hot Dog Pie',
+    'Mini Pizza Pie'
+  ], {
+    required_error: "Please select a mini pie type",
+  }),
+  nameAr: z.string().min(1, "Arabic name is required"),
+  nameEn: z.string().min(1, "English name is required"),
+  size: z.enum(['small', 'medium', 'large'], {
+    required_error: "Please select a mini pie size",
+  }),
+  priceWithVat: z.string().min(1, "Price is required").refine(
+    (val) => !isNaN(Number(val)) && Number(val) > 0,
+    "Price must be a valid positive number"
+  ),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ),
+});
+
+export const editMiniPieFormSchema = createMiniPieFormSchema.extend({
+  id: z.string().uuid("Invalid mini pie ID"),
+});
+
+export type CreateMiniPieFormData = z.infer<typeof createMiniPieFormSchema>;
+export type EditMiniPieFormData = z.infer<typeof editMiniPieFormSchema>;

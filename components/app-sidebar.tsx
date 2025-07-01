@@ -54,6 +54,11 @@ const data = {
           icon: Sandwich,
         },
         {
+          title: "🥧 Mini Pie",
+          url: "/admin/menu/mini-pie",
+          icon: Cookie,
+        },
+        {
           title: "🍔 Burger",
           url: "/admin/menu/burger",
           icon: Beef,

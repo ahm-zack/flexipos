@@ -32,6 +32,15 @@ const menuCategories = [
     textColor: "text-white",
   },
   {
+    id: "mini-pies",
+    name: "Mini Pies",
+    description: "Manage mini pie menu items (Party Only)",
+    href: "/admin/items/mini-pies",
+    colors:
+      "bg-gradient-to-br from-pink-400 to-pink-600 hover:from-pink-500 hover:to-pink-700",
+    textColor: "text-white",
+  },
+  {
     id: "burgers",
     name: "Burgers",
     description: "Manage burger menu items",

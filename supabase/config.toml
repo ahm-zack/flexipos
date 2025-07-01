@@ -115,11 +115,11 @@ file_size_limit = "5MiB"
 allowed_mime_types = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
 objects_path = "./storage/sandwich-images"
 
-[storage.buckets.sandwich-images]
+[storage.buckets.mini-pie-images]
 public = true
 file_size_limit = "5MiB"
 allowed_mime_types = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
-objects_path = "./storage/sandwich-images"
+objects_path = "./storage/mini-pie-images"
 
 [auth]
 enabled = true
