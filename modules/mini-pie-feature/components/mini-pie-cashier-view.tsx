@@ -49,11 +49,8 @@ export function MiniPieCashierView() {
           <h1 className="text-4xl font-bold mb-2 text-center">
             🥧 Mini Pie Menu
           </h1>
-          <p className="text-muted-foreground text-center mb-2">
-            Discover our delicious mini pie selection - perfect for parties!
-          </p>
-          <p className="text-purple-700 font-medium text-center mb-6">
-            ✨ Party Only Items ✨
+          <p className="text-muted-foreground text-center mb-6">
+            Discover our delicious mini pie selection
           </p>
 
           {/* Search Bar */}
@@ -78,7 +75,6 @@ export function MiniPieCashierView() {
             miniPies={filteredMiniPies}
             showActions={false} // No edit/delete actions in cashier view
             showCartActions={true} // Show cart actions in cashier view
-            isLoading={isLoading}
           />
         )}
       </div>

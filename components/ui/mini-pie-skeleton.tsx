@@ -2,25 +2,32 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function MiniPieCardSkeleton() {
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden h-[480px] flex flex-col">
+    <div className="bg-card rounded-lg shadow-lg overflow-hidden">
       {/* Image skeleton */}
-      <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex-shrink-0">
+      <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
         <Skeleton className="w-full h-full" />
       </div>
 
       {/* Content skeleton */}
-      <div className="p-6 flex-1 flex flex-col">
-        <div className="space-y-4 flex-1 flex flex-col">
+      <div className="p-6">
+        <div className="space-y-4">
+          {/* Title skeleton */}
           <div className="space-y-2">
             <Skeleton className="h-6 w-3/4" />
             <Skeleton className="h-5 w-2/3" />
           </div>
+
+          {/* Size and crust skeleton */}
           <div className="flex gap-2">
             <Skeleton className="h-6 w-16" />
             <Skeleton className="h-6 w-20" />
           </div>
+
+          {/* Price skeleton */}
           <Skeleton className="h-8 w-1/3" />
-          <div className="flex gap-3 pt-2 mt-auto">
+
+          {/* Buttons skeleton */}
+          <div className="flex gap-3 pt-2">
             <Skeleton className="h-9 flex-1" />
             <Skeleton className="h-9 flex-1" />
           </div>

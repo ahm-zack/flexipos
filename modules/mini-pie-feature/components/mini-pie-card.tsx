@@ -37,7 +37,6 @@ export function MiniPieCard({
       name: `${miniPie.type} - ${miniPie.nameAr} فطيرة صغيرة`,
       price: parseFloat(miniPie.priceWithVat),
       category: "Mini Pie",
-      description: `${miniPie.size} ${miniPie.type}`,
     };
 
     try {
@@ -93,8 +92,8 @@ export function MiniPieCard({
             </Badge>
           </div>
 
-          {/* Price Display */}
-          <div className="text-2xl font-bold flex-shrink-0">
+          {/* Price */}
+          <div className="text-2xl font-bold flex-shrink-0 flex-1 flex items-start">
             <PriceDisplay
               price={parseFloat(miniPie.priceWithVat)}
               symbolSize={18}
