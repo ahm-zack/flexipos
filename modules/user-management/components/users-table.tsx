@@ -1,16 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +19,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MoreHorizontal, Trash2, Edit } from "lucide-react";
+import {
+  MoreHorizontal,
+  Trash2,
+  Edit,
+  Mail,
+  Calendar,
+  Clock,
+} from "lucide-react";
 import { User } from "@/lib/db";
 import { useDeleteUser } from "../hooks/use-users";
 import { EditUserDialog } from "./edit-user-dialog";
@@ -38,14 +39,16 @@ interface UsersTableProps {
 }
 
 const roleColors = {
-  superadmin: "bg-red-100 text-red-800",
-  admin: "bg-blue-100 text-blue-800",
-  manager: "bg-purple-100 text-purple-800",
-  cashier: "bg-green-100 text-green-800",
-  kitchen: "bg-orange-100 text-orange-800",
+  superadmin: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  admin: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  manager:
+    "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  cashier: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  kitchen:
+    "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
 };
 
-export function UsersTable({ users, currentUserId }: UsersTableProps) {
+export function UsersCards({ users, currentUserId }: UsersTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
@@ -79,89 +82,117 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
 
   const isCurrentUser = (userId: string) => userId === currentUserId;
 
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  if (users.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-6xl mb-4">👥</div>
+        <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+          No users found
+        </h3>
+        <p className="text-muted-foreground">
+          Create your first user to get started.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Updated</TableHead>
-              <TableHead className="w-[70px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="text-center text-muted-foreground"
-                >
-                  No users found
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {user.name}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {users.map((user) => (
+          <Card
+            key={user.id}
+            className="hover:shadow-lg transition-all duration-200"
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-primary text-white">
+                      {getInitials(user.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-sm truncate">
+                        {user.name}
+                      </h3>
                       {isCurrentUser(user.id) && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge
+                          variant="outline"
+                          className="text-xs px-1.5 py-0.5"
+                        >
                           You
                         </Badge>
                       )}
                     </div>
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge className={roleColors[user.role]}>{user.role}</Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                    <Badge className={`${roleColors[user.role]} text-xs`}>
+                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    </Badge>
+                  </div>
+                </div>
+                {!isCurrentUser(user.id) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEditClick(user)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => handleDeleteClick(user)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Mail className="h-4 w-4" />
+                  <span className="truncate">{user.email}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    Created{" "}
                     {formatDistanceToNow(new Date(user.createdAt), {
                       addSuffix: true,
                     })}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span>
+                    Updated{" "}
                     {formatDistanceToNow(new Date(user.updatedAt), {
                       addSuffix: true,
                     })}
-                  </TableCell>
-                  <TableCell>
-                    {!isCurrentUser(user.id) && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleEditClick(user)}
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => handleDeleteClick(user)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

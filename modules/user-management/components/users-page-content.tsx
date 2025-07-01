@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus, RefreshCw } from "lucide-react";
 import { useUsers } from "../hooks/use-users";
-import { UsersTable } from "./users-table";
+import { UsersCards } from "./users-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface UsersPageContentProps {
@@ -50,20 +50,13 @@ export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col items-center justify-center sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">
-            Manage system users and their roles (Super Admin Access)
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => refetch()} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-          <Link href="/admin/users/new">
-            <Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Link href="/admin/users/new" className="w-full sm:w-auto">
+            <Button className="w-full">
               <Plus className="h-4 w-4 mr-2" />
               Add User
             </Button>
@@ -71,7 +64,7 @@ export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
         </div>
       </div>
 
-      <UsersTable users={users || []} currentUserId={currentUserId} />
+      <UsersCards users={users || []} currentUserId={currentUserId} />
     </div>
   );
 }
