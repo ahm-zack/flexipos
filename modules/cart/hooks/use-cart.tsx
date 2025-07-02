@@ -34,6 +34,7 @@ function cartReducer(
 ): { cart: Cart; isOpen: boolean } {
   switch (action.type) {
     case "ADD_ITEM": {
+      const wasEmpty = state.cart.items.length === 0;
       const existingItem = state.cart.items.find(
         (item) => item.id === action.payload.id
       );
@@ -52,7 +53,15 @@ function cartReducer(
       }
 
       const newCart = calculateCartTotals({ ...state.cart, items: newItems });
-      return { ...state, cart: newCart };
+
+      // Auto-open cart when first item is added to empty cart
+      const shouldAutoOpen = wasEmpty && !state.isOpen;
+
+      return {
+        ...state,
+        cart: newCart,
+        isOpen: shouldAutoOpen || state.isOpen,
+      };
     }
 
     case "REMOVE_ITEM": {
@@ -60,7 +69,15 @@ function cartReducer(
         (item) => item.id !== action.payload
       );
       const newCart = calculateCartTotals({ ...state.cart, items: newItems });
-      return { ...state, cart: newCart };
+
+      // Auto-close cart when it becomes empty
+      const shouldAutoClose = newCart.items.length === 0;
+
+      return {
+        ...state,
+        cart: newCart,
+        isOpen: shouldAutoClose ? false : state.isOpen,
+      };
     }
 
     case "UPDATE_QUANTITY": {
@@ -70,7 +87,15 @@ function cartReducer(
           (item) => item.id !== action.payload.id
         );
         const newCart = calculateCartTotals({ ...state.cart, items: newItems });
-        return { ...state, cart: newCart };
+
+        // Auto-close cart when it becomes empty
+        const shouldAutoClose = newCart.items.length === 0;
+
+        return {
+          ...state,
+          cart: newCart,
+          isOpen: shouldAutoClose ? false : state.isOpen,
+        };
       }
 
       const newItems = state.cart.items.map((item) =>
@@ -83,7 +108,7 @@ function cartReducer(
     }
 
     case "CLEAR_CART":
-      return { ...state, cart: initialCart };
+      return { ...state, cart: initialCart, isOpen: false };
 
     case "LOAD_CART":
       return { ...state, cart: action.payload };
