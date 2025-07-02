@@ -35,7 +35,7 @@ export function PieCard({
 
     const cartItem: Omit<CartItem, "quantity"> = {
       id: pie.id,
-      name: `${pie.type} Pie - ${pie.nameAr} فطيرة`,
+      name: `${pie.type} Pie - ${pie.nameAr}`,
       price: parseFloat(pie.priceWithVat),
       category: "Pie",
       description: `${pie.size} ${pie.type} Pie`,
@@ -76,9 +76,9 @@ export function PieCard({
             <h3 className="text-xl font-bold text-foreground line-clamp-1">
               {pie.type} Pie
             </h3>
-            <p className="text-lg text-muted-foreground mt-1 line-clamp-1">
+            <h3 className="text-lg text-muted-foreground mt-1 line-clamp-1">
               {pie.nameAr}
-            </p>
+            </h3>
           </div>
 
           {/* Size Badge */}

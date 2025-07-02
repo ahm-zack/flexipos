@@ -35,7 +35,7 @@ export function PizzaCard({
 
     const cartItem: Omit<CartItem, "quantity"> = {
       id: pizza.id,
-      name: `${pizza.type} Pizza - ${pizza.nameAr} بيتزا`,
+      name: `${pizza.type} Pizza - ${pizza.nameAr}`,
       price: parseFloat(pizza.priceWithVat),
       category: "Pizza",
     };
@@ -73,11 +73,11 @@ export function PizzaCard({
           {/* Pizza Type as Title */}
           <div className="flex-shrink-0">
             <h3 className="text-xl font-bold text-foreground line-clamp-1">
-              {pizza.type} Pizza
+              {pizza.type}
             </h3>
-            <p className="text-lg text-muted-foreground mt-1 line-clamp-1">
+            <h3 className="text-lg text-muted-foreground mt-1 line-clamp-1">
               {pizza.nameAr}
-            </p>
+            </h3>
           </div>
 
           {/* Size Badge */}

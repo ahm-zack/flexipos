@@ -35,7 +35,7 @@ export function SandwichCard({
 
     const cartItem: Omit<CartItem, "quantity"> = {
       id: sandwich.id,
-      name: `${sandwich.type} - ${sandwich.nameAr} ساندويتش`,
+      name: `${sandwich.type} - ${sandwich.nameAr}`,
       price: parseFloat(sandwich.priceWithVat),
       category: "Sandwich",
       description: `${sandwich.size} ${sandwich.type}`,
@@ -76,9 +76,9 @@ export function SandwichCard({
             <h3 className="text-xl font-bold text-foreground line-clamp-1">
               {sandwich.type}
             </h3>
-            <p className="text-lg text-muted-foreground mt-1 line-clamp-1">
+            <h3 className="text-lg text-muted-foreground mt-1 line-clamp-1">
               {sandwich.nameAr}
-            </p>
+            </h3>
           </div>
 
           {/* Size Badge */}

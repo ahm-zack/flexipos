@@ -35,7 +35,7 @@ export function MiniPieCard({
 
     const cartItem: Omit<CartItem, "quantity"> = {
       id: miniPie.id,
-      name: `${miniPie.type} - ${miniPie.nameAr} فطيرة صغيرة`,
+      name: `${miniPie.type} - ${miniPie.nameAr}`,
       price: parseFloat(miniPie.priceWithVat),
       category: "Mini Pie",
     };
@@ -75,9 +75,9 @@ export function MiniPieCard({
             <h3 className="text-xl font-bold text-foreground line-clamp-1">
               {miniPie.type}
             </h3>
-            <p className="text-lg text-muted-foreground mt-1 line-clamp-1">
+            <h3 className="text-lg text-muted-foreground mt-1 line-clamp-1">
               {miniPie.nameAr}
-            </p>
+            </h3>
           </div>
 
           {/* Size Badge */}
