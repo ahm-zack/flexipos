@@ -74,6 +74,13 @@ export function CreateMiniPieForm({
 
     setIsUploading(true);
 
+    // Show loading toast with spinner
+    const toastId = toast.loading("Creating mini pie...", {
+      description: selectedFile
+        ? "Uploading image and saving mini pie..."
+        : "Saving mini pie data...",
+    });
+
     try {
       let imageUrl = "";
 
@@ -86,7 +93,10 @@ export function CreateMiniPieForm({
           // Continue without image if upload fails
           console.warn("Image upload failed, continuing without image");
           toast.warning(
-            "Image upload failed, but mini pie will be created without image"
+            "Image upload failed, but mini pie will be created without image",
+            {
+              id: toastId,
+            }
           );
         }
       }
@@ -98,13 +108,21 @@ export function CreateMiniPieForm({
       };
 
       await createMiniPieMutation.mutateAsync(miniPieData);
-      toast.success("Mini pie created successfully!");
+
+      toast.success("Mini pie created successfully!", {
+        id: toastId,
+        description: "Your new mini pie has been added to the menu",
+      });
+
       onOpenChange(false);
 
       // Reset form
       resetForm();
     } catch (error) {
-      toast.error("Failed to create mini pie");
+      toast.error("Failed to create mini pie", {
+        id: toastId,
+        description: "Please try again or contact support",
+      });
       console.error("Error creating mini pie:", error);
     } finally {
       setIsUploading(false);

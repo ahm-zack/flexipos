@@ -71,6 +71,13 @@ export function CreatePieForm({ open, onOpenChange }: CreatePieFormProps) {
 
     setIsUploading(true);
 
+    // Show loading toast with spinner
+    const toastId = toast.loading("Creating pie...", {
+      description: selectedFile
+        ? "Uploading image and saving pie..."
+        : "Saving pie data...",
+    });
+
     try {
       let imageUrl = "";
 
@@ -83,7 +90,10 @@ export function CreatePieForm({ open, onOpenChange }: CreatePieFormProps) {
           // Continue without image if upload fails
           console.warn("Image upload failed, continuing without image");
           toast.warning(
-            "Image upload failed, but pie will be created without image"
+            "Image upload failed, but pie will be created without image",
+            {
+              id: toastId,
+            }
           );
         }
       }
@@ -95,11 +105,19 @@ export function CreatePieForm({ open, onOpenChange }: CreatePieFormProps) {
       };
 
       await createPieMutation.mutateAsync(pieData);
-      toast.success("Pie created successfully!");
+
+      toast.success("Pie created successfully!", {
+        id: toastId,
+        description: "Your new pie has been added to the menu",
+      });
+
       resetForm();
       onOpenChange(false);
     } catch (error) {
-      toast.error("Failed to create pie");
+      toast.error("Failed to create pie", {
+        id: toastId,
+        description: "Please try again or contact support",
+      });
       console.error("Error creating pie:", error);
     } finally {
       setIsUploading(false);

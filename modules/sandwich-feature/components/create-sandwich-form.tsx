@@ -72,6 +72,13 @@ export function CreateSandwichForm({
 
     setIsUploading(true);
 
+    // Show loading toast with spinner
+    const toastId = toast.loading("Creating sandwich...", {
+      description: selectedFile
+        ? "Uploading image and saving sandwich..."
+        : "Saving sandwich data...",
+    });
+
     try {
       // Upload image if selected
       if (selectedFile) {
@@ -80,7 +87,10 @@ export function CreateSandwichForm({
           // Continue without image if upload fails
           console.warn("Image upload failed, continuing without image");
           toast.warning(
-            "Image upload failed, but sandwich will be created without image"
+            "Image upload failed, but sandwich will be created without image",
+            {
+              id: toastId,
+            }
           );
         }
       }
@@ -92,11 +102,19 @@ export function CreateSandwichForm({
       };
 
       await createSandwichMutation.mutateAsync(sandwichData);
-      toast.success("Sandwich created successfully!");
+
+      toast.success("Sandwich created successfully!", {
+        id: toastId,
+        description: "Your new sandwich has been added to the menu",
+      });
+
       resetForm();
       onOpenChange(false);
     } catch (error) {
-      toast.error("Failed to create sandwich");
+      toast.error("Failed to create sandwich", {
+        id: toastId,
+        description: "Please try again or contact support",
+      });
       console.error("Error creating sandwich:", error);
     } finally {
       setIsUploading(false);

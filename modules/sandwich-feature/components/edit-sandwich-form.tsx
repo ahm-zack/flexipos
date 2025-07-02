@@ -168,23 +168,6 @@ export function EditSandwichForm({
     }
   };
 
-  const removeImage = () => {
-    setSelectedFile(null);
-
-    // If sandwich has an existing image, revert to that, otherwise clear preview
-    if (sandwich?.imageUrl) {
-      setPreviewUrl(sandwich.imageUrl);
-    } else {
-      setPreviewUrl("");
-    }
-
-    // Reset file input
-    const fileInput = document.getElementById(
-      "editImageFile"
-    ) as HTMLInputElement;
-    if (fileInput) fileInput.value = "";
-  };
-
   const clearExistingImage = () => {
     setPreviewUrl("");
     setSelectedFile(null);
@@ -297,19 +280,7 @@ export function EditSandwichForm({
                       fill
                       className="object-cover"
                     />
-                    <div className="absolute top-2 right-2 flex gap-2">
-                      {/* Remove new selection (revert to original) */}
-                      {selectedFile && (
-                        <button
-                          type="button"
-                          onClick={removeImage}
-                          className="p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors z-10"
-                          title="Revert to original image"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
-
+                    <div className="absolute top-2 right-2">
                       {/* Clear image completely */}
                       <button
                         type="button"

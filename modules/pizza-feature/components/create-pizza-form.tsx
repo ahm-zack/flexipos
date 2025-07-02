@@ -59,16 +59,24 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
 
     setIsUploading(true);
 
+    // Show loading toast with spinner
+    const toastId = toast.loading("Creating pizza...", {
+      description: selectedFile
+        ? "Uploading image and saving pizza..."
+        : "Saving pizza data...",
+    });
+
     try {
       let imageUrl = "";
 
       // Upload image if file is selected
       if (selectedFile) {
-        toast.info("Uploading image...");
         const uploadedUrl = await uploadMenuImage(selectedFile, "pizzas");
 
         if (!uploadedUrl) {
-          toast.error("Failed to upload image");
+          toast.error("Failed to upload image", {
+            id: toastId,
+          });
           setIsUploading(false);
           return;
         }
@@ -83,7 +91,12 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
       };
 
       await createPizzaMutation.mutateAsync(pizzaData);
-      toast.success("Pizza created successfully!");
+
+      toast.success("Pizza created successfully!", {
+        id: toastId,
+        description: "Your new pizza has been added to the menu",
+      });
+
       onOpenChange(false);
 
       // Reset form
@@ -99,7 +112,10 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
       setSelectedFile(null);
       setPreviewUrl("");
     } catch (error) {
-      toast.error("Failed to create pizza");
+      toast.error("Failed to create pizza", {
+        id: toastId,
+        description: "Please try again or contact support",
+      });
       console.error("Error creating pizza:", error);
     } finally {
       setIsUploading(false);
