@@ -17,10 +17,9 @@ export function MiniPieCardSkeleton() {
             <Skeleton className="h-5 w-2/3" />
           </div>
 
-          {/* Size and crust skeleton */}
+          {/* Size badge skeleton */}
           <div className="flex gap-2">
             <Skeleton className="h-6 w-16" />
-            <Skeleton className="h-6 w-20" />
           </div>
 
           {/* Price skeleton */}
@@ -28,6 +27,7 @@ export function MiniPieCardSkeleton() {
 
           {/* Buttons skeleton */}
           <div className="flex gap-3 pt-2">
+            <Skeleton className="h-9 flex-1" />
             <Skeleton className="h-9 flex-1" />
             <Skeleton className="h-9 flex-1" />
           </div>

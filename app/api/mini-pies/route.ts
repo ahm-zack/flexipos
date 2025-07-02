@@ -7,13 +7,16 @@ export async function GET() {
     const result = await miniPieService.getMiniPies();
     
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return NextResponse.json(result, { status: 500 });
     }
 
-    return NextResponse.json(result.data);
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error in GET /api/mini-pies:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -25,7 +28,7 @@ export async function POST(request: NextRequest) {
     const validationResult = createMiniPieFormSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: validationResult.error.issues },
+        { success: false, error: "Invalid data", details: validationResult.error.issues },
         { status: 400 }
       );
     }
@@ -42,12 +45,15 @@ export async function POST(request: NextRequest) {
     const result = await miniPieService.createMiniPie(miniPieData);
     
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return NextResponse.json(result, { status: 500 });
     }
 
-    return NextResponse.json(result.data, { status: 201 });
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error("Error in POST /api/mini-pies:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

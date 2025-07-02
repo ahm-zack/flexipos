@@ -9,7 +9,7 @@ import {
 export default async function MiniPieMenuPage() {
   const queryClient = new QueryClient();
   await queryClient.prefetchQuery({
-    queryKey: ["mini-pies", "list"],
+    queryKey: ["miniPies", "list"],
     queryFn: async () => {
       const result = await miniPieService.getMiniPies();
       if (!result.success) {

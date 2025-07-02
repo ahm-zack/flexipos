@@ -104,7 +104,10 @@ export function EditMiniPieForm({
         imageUrl,
       };
 
-      await updateMiniPieMutation.mutateAsync(updateData);
+      await updateMiniPieMutation.mutateAsync({
+        id: miniPie.id,
+        data: updateData,
+      });
 
       toast.success("Mini pie updated successfully!");
       onOpenChange(false);

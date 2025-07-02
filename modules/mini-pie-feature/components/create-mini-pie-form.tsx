@@ -94,13 +94,15 @@ export function CreateMiniPieForm({
       // Create mini pie data
       const miniPieData: CreateMiniPieFormData = {
         ...formData,
-        imageUrl,
+        imageUrl: imageUrl || formData.imageUrl, // Use uploaded URL or keep existing
       };
 
       await createMiniPieMutation.mutateAsync(miniPieData);
       toast.success("Mini pie created successfully!");
-      resetForm();
       onOpenChange(false);
+
+      // Reset form
+      resetForm();
     } catch (error) {
       toast.error("Failed to create mini pie");
       console.error("Error creating mini pie:", error);

@@ -11,13 +11,17 @@ export async function GET(
     const result = await miniPieService.getMiniPieById(id);
     
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 404 });
+      const status = result.error === 'Mini pie not found' ? 404 : 500;
+      return NextResponse.json(result, { status });
     }
 
-    return NextResponse.json(result.data);
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error in GET /api/mini-pies/[id]:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -33,7 +37,7 @@ export async function PUT(
     const validationResult = editMiniPieFormSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: validationResult.error.issues },
+        { success: false, error: "Invalid data", details: validationResult.error.issues },
         { status: 400 }
       );
     }
@@ -50,13 +54,25 @@ export async function PUT(
     const result = await miniPieService.updateMiniPie(id, miniPieData);
     
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      const status = result.error === 'Mini pie not found' ? 404 : 500;
+      return NextResponse.json(result, { status });
     }
 
-    return NextResponse.json(result.data);
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error in PUT /api/mini-pies/[id]:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    
+    if (error instanceof Error && error.name === 'ZodError') {
+      return NextResponse.json(
+        { success: false, error: 'Invalid data format' },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -69,12 +85,16 @@ export async function DELETE(
     const result = await miniPieService.deleteMiniPie(id);
     
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      const status = result.error === 'Mini pie not found' ? 404 : 500;
+      return NextResponse.json(result, { status });
     }
 
-    return NextResponse.json({ message: "Mini pie deleted successfully" });
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error in DELETE /api/mini-pies/[id]:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
