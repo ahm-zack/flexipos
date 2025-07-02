@@ -7,7 +7,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { getCurrentUser } from "@/lib/auth";
-import { drizzleUserService } from "@/lib/user-service-drizzle";
+import { getUserByEmail } from "@/lib/user-service-drizzle";
 import { ConditionalCartContainer } from "@/components/conditional-cart-container";
 import React from "react";
 
@@ -22,9 +22,7 @@ export async function DashboardLayout({ children }: DashboardLayoutProps) {
   // Get full user data from database if authenticated
   let fullUserData = null;
   if (currentUser?.email) {
-    const userResult = await drizzleUserService.getUserByEmail(
-      currentUser.email
-    );
+    const userResult = await getUserByEmail(currentUser.email);
     if (userResult.success && userResult.data) {
       fullUserData = userResult.data;
     }

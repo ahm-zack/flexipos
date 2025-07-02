@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { AppRole } from '@/lib/schemas';
+import { getUserByEmail } from '@/lib/user-service-drizzle';
 
 export interface AuthUser {
   id: string;
@@ -24,10 +25,50 @@ export async function getCurrentUser(): Promise<{ user: AuthUser | null; error?:
     const userRole = authUser.app_metadata?.user_role as AppRole;
     
     if (!userRole) {
-      // Fallback: If no custom claim exists, this might be a legacy user
-      // In production, you'd want to sync the role or force re-authentication
-      console.warn('User has no role in custom claims:', authUser.id);
-      return { user: null, error: 'User role not found in JWT claims' };
+      // AUTO-FIX: If no custom claim exists, try to sync from database
+      console.warn('⚠️ User has no role in custom claims, attempting auto-sync:', authUser.id);
+      
+      try {
+        // Get user role from database
+        const userResult = await getUserByEmail(authUser.email || '');
+        
+        if (userResult.success && userResult.data?.role) {
+          // CRITICAL: Directly sync to Supabase Auth admin API
+          console.log('🔄 Auto-syncing role to custom claims...');
+          
+          const { createAdminClient } = await import('@/utils/supabase/admin');
+          const adminClient = createAdminClient();
+          
+          const { error: syncError } = await adminClient.auth.admin.updateUserById(authUser.id, {
+            app_metadata: {
+              user_role: userResult.data.role,
+              role_synced_at: new Date().toISOString()
+            }
+          });
+
+          if (syncError) {
+            console.error('❌ Failed to sync role to JWT:', syncError);
+            throw syncError;
+          }
+          
+          console.log('✅ Role synced successfully to JWT. User needs to refresh session.');
+          
+          // Return the user with the role from database
+          // Note: The JWT will have the updated role after refresh/re-authentication
+          return {
+            user: {
+              id: authUser.id,
+              email: authUser.email || '',
+              role: userResult.data.role,
+            }
+          };
+        }
+      } catch (syncError) {
+        console.error('❌ Failed to auto-sync user role:', syncError);
+      }
+      
+      // If auto-sync fails, return error
+      return { user: null, error: 'User role not found in JWT claims. Please log out and log back in.' };
     }
 
     return {

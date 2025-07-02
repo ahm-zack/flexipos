@@ -21,7 +21,7 @@ export default function UnauthorizedPage() {
         </div>
 
         <div className="space-y-4">
-          <Link href="/admin/menu">
+          <Link href="/admin/menu/pizza">
             <Button className="w-full">
               <Home className="h-4 w-4 mr-2" />
               Go to Dashboard

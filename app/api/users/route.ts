@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { drizzleUserService } from '@/lib/user-service-drizzle';
+import { getUsers, createUser } from '@/lib/user-service-drizzle';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { CreateUserSchema } from '@/lib/schemas';
@@ -17,7 +17,7 @@ export async function GET() {
       );
     }
 
-    const result = await drizzleUserService.getUsers();
+    const result = await getUsers();
     
     if (!result.success) {
       return NextResponse.json(result, { status: 500 });
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user in database using Drizzle
-    const dbResult = await drizzleUserService.createUser({
+    const dbResult = await createUser({
       id: authData.user.id,
       email: validatedData.email,
       name: validatedData.name,

@@ -1,7 +1,7 @@
 import { requireSuperAdmin } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { UsersPageContent } from "@/modules/user-management/components/users-page-content";
-import { drizzleUserService } from "@/lib/user-service-drizzle";
+import { getUsers } from "@/lib/user-service-drizzle";
 import {
   HydrationBoundary,
   QueryClient,
@@ -27,7 +27,7 @@ export default async function UsersPage() {
   await queryClient.prefetchQuery({
     queryKey: ["users", "list"],
     queryFn: async () => {
-      const result = await drizzleUserService.getUsers();
+      const result = await getUsers();
       if (!result.success) {
         throw new Error(result.error || "Failed to fetch users");
       }
