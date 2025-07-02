@@ -59,13 +59,13 @@ export function DynamicBreadcrumb() {
     const segmentMap: Record<string, string> = {
       // Menu categories
       menu: "Menu",
-      pizza: "🍕 Pizza",
-      pie: "🥧 Pie",
-      burger: "🍔 Burger",
-      appetizers: "🥗 Appetizers",
-      shawerma: "🌯 Shawerma",
-      "side-order": "🍟 Side Order",
-      beverages: "☕ Beverages",
+      pizza: "Pizza",
+      pie: "Pie",
+      burger: "Burger",
+      appetizers: "Appetizers",
+      shawerma: "Shawerma",
+      "side-order": "Side Order",
+      beverages: "Beverages",
 
       // Other sections
       users: "👥 Users",
