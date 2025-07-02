@@ -34,7 +34,6 @@ const data = {
   navMain: [
     {
       title: "Menu",
-      url: "/admin/menu",
       icon: UtensilsCrossed,
       isActive: true,
       items: [
@@ -119,16 +118,17 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild className="h-16 text-lg">
-              <a href="/admin/menu">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-12 items-center justify-center rounded-lg">
-                  <Command className="size-6" />
-                </div>
-                <div className="grid flex-1 text-left text-base leading-tight">
-                  <span className="truncate font-semibold text-lg">Lazaza</span>
-                  <span className="truncate text-sm font-medium">POS</span>
-                </div>
-              </a>
+            <SidebarMenuButton
+              size="lg"
+              className="h-16 text-lg cursor-default"
+            >
+              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-12 items-center justify-center rounded-lg">
+                <Command className="size-6" />
+              </div>
+              <div className="grid flex-1 text-left text-base leading-tight">
+                <span className="truncate font-semibold text-lg">Lazaza</span>
+                <span className="truncate text-sm font-medium">POS</span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

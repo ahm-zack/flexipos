@@ -15,7 +15,7 @@ export function NavMain({
 }: {
   items: {
     title: string;
-    url: string;
+    url?: string;
     icon: LucideIcon;
     isActive?: boolean;
     items?: {
@@ -29,19 +29,11 @@ export function NavMain({
   return (
     <SidebarGroup>
       <SidebarMenu>
-        {/* Menu Link - clickable instead of label */}
+        {/* Menu Label - non-clickable section header */}
         <SidebarMenuItem>
-          <SidebarMenuButton
-            asChild
-            className={cn(
-              "h-12 text-lg font-semibold",
-              pathname === "/admin/menu" && "bg-accent text-accent-foreground"
-            )}
-          >
-            <a href="/admin/menu">
-              <span>{items[0]?.title}</span>
-            </a>
-          </SidebarMenuButton>
+          <div className="h-12 text-lg font-semibold flex items-center px-3 text-sidebar-foreground/70">
+            <span>{items[0]?.title}</span>
+          </div>
         </SidebarMenuItem>
 
         {/* Individual category links */}
