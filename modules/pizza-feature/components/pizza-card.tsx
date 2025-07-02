@@ -6,6 +6,7 @@ import { Edit, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceDisplay } from "@/components/currency";
 import { useCart } from "@/modules/cart";
+import { getReliableImageUrl } from "@/lib/image-utils";
 import type { Pizza } from "@/lib/db/schema";
 import type { CartItem } from "@/modules/cart/types/cart.types";
 
@@ -54,7 +55,7 @@ export function PizzaCard({
       <div className="aspect-video bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900 dark:to-red-900 flex items-center justify-center relative flex-shrink-0">
         {pizza.imageUrl && !imageError ? (
           <Image
-            src={pizza.imageUrl}
+            src={getReliableImageUrl(pizza.imageUrl, "pizza")}
             alt={pizza.nameEn}
             fill
             className="object-cover"

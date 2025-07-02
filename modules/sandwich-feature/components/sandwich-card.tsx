@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PriceDisplay } from "@/components/currency";
 import { useCart } from "@/modules/cart";
+import { getReliableImageUrl } from "@/lib/image-utils";
 import type { Sandwich } from "@/lib/db/schema";
 import type { CartItem } from "@/modules/cart/types/cart.types";
 
@@ -56,7 +57,7 @@ export function SandwichCard({
       <div className="aspect-video bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900 dark:to-orange-900 flex items-center justify-center relative flex-shrink-0">
         {sandwich.imageUrl && !imageError ? (
           <Image
-            src={sandwich.imageUrl}
+            src={getReliableImageUrl(sandwich.imageUrl, "sandwich")}
             alt={sandwich.nameEn}
             fill
             className="object-cover"

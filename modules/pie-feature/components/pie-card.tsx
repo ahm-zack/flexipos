@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PriceDisplay } from "@/components/currency";
 import { useCart } from "@/modules/cart";
+import { getReliableImageUrl } from "@/lib/image-utils";
 import type { Pie } from "@/lib/db/schema";
 import type { CartItem } from "@/modules/cart/types/cart.types";
 
@@ -56,7 +57,7 @@ export function PieCard({
       <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900 dark:to-orange-900 flex items-center justify-center relative flex-shrink-0">
         {pie.imageUrl && !imageError ? (
           <Image
-            src={pie.imageUrl}
+            src={getReliableImageUrl(pie.imageUrl, "pie")}
             alt={pie.nameEn}
             fill
             className="object-cover"

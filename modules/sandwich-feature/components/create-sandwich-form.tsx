@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -239,7 +240,7 @@ export function CreateSandwichForm({
                 {previewUrl && (
                   <div className="relative w-full h-48 border-2 border-dashed border-gray-200 rounded-lg overflow-hidden">
                     <Image
-                      src={previewUrl}
+                      src={getReliableImageUrl(previewUrl, "sandwich")}
                       alt="Sandwich preview"
                       fill
                       className="object-cover"
