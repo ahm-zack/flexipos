@@ -9,6 +9,7 @@ import { useCart } from "@/modules/cart";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import type { Pizza } from "@/lib/db/schema";
 import type { CartItem } from "@/modules/cart/types/cart.types";
+import { Badge } from "@/components/ui/badge";
 
 interface PizzaCardProps {
   pizza: Pizza;
@@ -52,7 +53,7 @@ export function PizzaCard({
   return (
     <div className="bg-card rounded-lg shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-200 h-[480px] flex flex-col">
       {/* Pizza Image */}
-      <div className="aspect-video bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900 dark:to-red-900 flex items-center justify-center relative flex-shrink-0">
+      <div className="aspect-video bg-card flex items-center justify-center relative flex-shrink-0">
         {pizza.imageUrl && !imageError ? (
           <Image
             src={getReliableImageUrl(pizza.imageUrl, "pizza")}
@@ -77,6 +78,13 @@ export function PizzaCard({
             <p className="text-lg text-muted-foreground mt-1 line-clamp-1">
               {pizza.nameAr}
             </p>
+          </div>
+
+          {/* Size Badge */}
+          <div className="flex gap-2 flex-shrink-0">
+            <Badge variant="secondary" className="capitalize">
+              {pizza.crust}
+            </Badge>
           </div>
 
           {/* Price */}

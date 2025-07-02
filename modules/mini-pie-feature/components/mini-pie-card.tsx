@@ -53,7 +53,7 @@ export function MiniPieCard({
   return (
     <div className="bg-card rounded-lg shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-200 h-[480px] flex flex-col">
       {/* Mini Pie Image */}
-      <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900 dark:to-orange-900 flex items-center justify-center relative flex-shrink-0">
+      <div className="aspect-video bg-card flex items-center justify-center relative flex-shrink-0">
         {miniPie.imageUrl && !imageError ? (
           <Image
             src={getReliableImageUrl(miniPie.imageUrl, "mini-pie")}
