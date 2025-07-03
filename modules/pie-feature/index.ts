@@ -1,5 +1,4 @@
 // Main pie feature exports
-export { PieCard } from './components/pie-card';
 export { PieGrid } from './components/pie-grid';
 export { PieCashierView } from './components/pie-cashier-view';
 export { PieManagementView } from './components/pie-management-view';

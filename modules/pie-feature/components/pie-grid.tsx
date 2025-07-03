@@ -1,6 +1,7 @@
 "use client";
 
-import { PieCard } from "./pie-card";
+import { PieCashierCard } from "./pie-cashier-card";
+import { PieManagementCard } from "./pie-management-card";
 import type { Pie } from "@/lib/db/schema";
 
 interface PieGridProps {
@@ -22,11 +23,11 @@ export function PieGrid({
 }: PieGridProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {Array.from({ length: 6 }).map((_, index) => (
           <div key={index} className="animate-pulse">
-            <div className="bg-gray-200 aspect-video rounded-t-lg"></div>
-            <div className="bg-gray-100 p-6 rounded-b-lg">
+            <div className="bg-gray-200 aspect-[4/3] rounded-t-2xl"></div>
+            <div className="bg-gray-100 p-6 rounded-b-2xl">
               <div className="h-4 bg-gray-300 rounded mb-2"></div>
               <div className="h-4 bg-gray-300 rounded mb-4 w-3/4"></div>
               <div className="h-8 bg-gray-300 rounded"></div>
@@ -54,17 +55,24 @@ export function PieGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {pies.map((pie) => (
-        <PieCard
-          key={pie.id}
-          pie={pie}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          showActions={showActions}
-          showCartActions={showCartActions}
-        />
-      ))}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {pies.map((pie) => {
+        // Use dedicated card components based on view type
+        if (!showActions && showCartActions) {
+          // Cashier view - only cart actions, no management actions
+          return <PieCashierCard key={pie.id} pie={pie} />;
+        } else {
+          // Management view - with edit/delete actions (default)
+          return (
+            <PieManagementCard
+              key={pie.id}
+              pie={pie}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          );
+        }
+      })}
     </div>
   );
 }

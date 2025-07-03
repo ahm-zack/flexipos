@@ -2,7 +2,6 @@
 // Centralized exports for all sandwich-related components and hooks
 
 // Components
-export { SandwichCard } from './components/sandwich-card';
 export { SandwichGrid } from './components/sandwich-grid';
 export { CreateSandwichForm } from './components/create-sandwich-form';
 export { EditSandwichForm } from './components/edit-sandwich-form';

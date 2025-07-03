@@ -1,6 +1,7 @@
 "use client";
 
-import { MiniPieCard } from "./mini-pie-card";
+import { MiniPieCashierCard } from "./mini-pie-cashier-card";
+import { MiniPieManagementCard } from "./mini-pie-management-card";
 import { MiniPieGridSkeleton } from "@/components/ui/mini-pie-skeleton";
 import type { MiniPie } from "@/lib/db/schema";
 
@@ -39,17 +40,24 @@ export function MiniPieGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {miniPies.map((miniPie) => (
-        <MiniPieCard
-          key={miniPie.id}
-          miniPie={miniPie}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          showActions={showActions}
-          showCartActions={showCartActions}
-        />
-      ))}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {miniPies.map((miniPie) => {
+        // Use dedicated card components based on view type
+        if (!showActions && showCartActions) {
+          // Cashier view - only cart actions, no management actions
+          return <MiniPieCashierCard key={miniPie.id} miniPie={miniPie} />;
+        } else {
+          // Management view - with edit/delete actions (default)
+          return (
+            <MiniPieManagementCard
+              key={miniPie.id}
+              miniPie={miniPie}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          );
+        }
+      })}
     </div>
   );
 }

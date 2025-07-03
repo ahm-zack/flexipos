@@ -26,14 +26,16 @@ export function SandwichCashierView() {
 
   if (error) {
     return (
-      <div className="p-8">
-        <div className="max-w-6xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="max-w-full mx-auto">
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">❌</div>
+            <div className="text-4xl sm:text-6xl mb-4">❌</div>
             <h3 className="text-lg font-semibold text-red-600 mb-2">
               Error loading sandwiches
             </h3>
-            <p className="text-muted-foreground mb-4">{error.message}</p>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4">
+              {error.message}
+            </p>
             <Button onClick={() => window.location.reload()}>Try Again</Button>
           </div>
         </div>
@@ -42,14 +44,14 @@ export function SandwichCashierView() {
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="max-w-full mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-center">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 text-center">
             🥪 Sandwich Menu
           </h1>
-          <p className="text-muted-foreground text-center mb-6">
+          <p className="text-sm sm:text-base text-muted-foreground text-center mb-4 sm:mb-6">
             Discover our delicious sandwich selection
           </p>
 

@@ -1,5 +1,4 @@
 // Components
-export { PizzaCard } from './components/pizza-card';
 export { PizzaGrid } from './components/pizza-grid';
 export { PizzaCashierView } from './components/pizza-cashier-view';
 export { PizzaManagementView } from './components/pizza-management-view';

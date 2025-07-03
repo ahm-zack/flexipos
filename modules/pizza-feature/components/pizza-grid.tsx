@@ -1,6 +1,7 @@
 "use client";
 
-import { PizzaCard } from "./pizza-card";
+import { PizzaCashierCard } from "./pizza-cashier-card";
+import { PizzaManagementCard } from "./pizza-management-card";
 import type { Pizza } from "@/lib/db/schema";
 
 interface PizzaGridProps {
@@ -22,14 +23,14 @@ export function PizzaGrid({
 }: PizzaGridProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
             className="bg-card rounded-lg shadow-lg overflow-hidden animate-pulse"
           >
             <div className="aspect-video bg-gray-200" />
-            <div className="p-4 sm:p-6 space-y-3">
+            <div className="p-6 space-y-4">
               <div className="space-y-2">
                 <div className="h-6 bg-gray-200 rounded w-3/4" />
                 <div className="h-4 bg-gray-100 rounded w-1/2" />
@@ -64,17 +65,24 @@ export function PizzaGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
-      {pizzas.map((pizza) => (
-        <PizzaCard
-          key={pizza.id}
-          pizza={pizza}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          showActions={showActions}
-          showCartActions={showCartActions}
-        />
-      ))}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {pizzas.map((pizza) => {
+        // Use dedicated card components based on view type
+        if (!showActions && showCartActions) {
+          // Cashier view - only cart actions, no management actions
+          return <PizzaCashierCard key={pizza.id} pizza={pizza} />;
+        } else {
+          // Management view - with edit/delete actions (default)
+          return (
+            <PizzaManagementCard
+              key={pizza.id}
+              pizza={pizza}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          );
+        }
+      })}
     </div>
   );
 }
