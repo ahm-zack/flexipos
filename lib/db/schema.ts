@@ -145,3 +145,28 @@ export type MiniPie = typeof miniPies.$inferSelect;
 export type NewMiniPie = typeof miniPies.$inferInsert;
 export type MiniPieType = typeof miniPieTypeEnum.enumValues[number];
 export type MiniPieSize = typeof miniPieSizeEnum.enumValues[number];
+
+// Import and re-export orders tables
+export { 
+  orders, 
+  canceledOrders, 
+  modifiedOrders,
+  ordersStatusEnum,
+  itemTypeEnum,
+  modificationTypeEnum
+} from '../orders/db-schema';
+
+export type {
+  Order,
+  NewOrder,
+  OrderStatus,
+  ItemType,
+  CanceledOrder,
+  NewCanceledOrder,
+  ModifiedOrder,
+  NewModifiedOrder,
+  ModificationType,
+  OrderItem,
+  OrderWithItems,
+  OrderResponse
+} from '../orders/db-schema';
