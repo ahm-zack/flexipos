@@ -3,11 +3,20 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Use service role key for uploads to bypass RLS in development
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU';
+// Use service role key for uploads to bypass RLS
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Use service role for uploads (development only)
+// Validate required environment variables
+if (!supabaseUrl) {
+  throw new Error('NEXT_PUBLIC_SUPABASE_URL is required');
+}
+
+if (!supabaseServiceKey) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
+}
+
+// Use service role for uploads
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function uploadMenuImage(file: File, category: string): Promise<string | null> {
@@ -64,6 +73,12 @@ export async function uploadMenuImage(file: File, category: string): Promise<str
 
     if (error) {
       console.error('Upload error details:', JSON.stringify(error, null, 2));
+      console.error('Bucket name:', bucketName);
+      console.error('File name:', fileName);
+      console.error('File type:', file.type);
+      console.error('File size:', file.size);
+      console.error('Supabase URL:', supabaseUrl);
+      console.error('Service key present:', !!supabaseServiceKey);
       return null;
     }
 
