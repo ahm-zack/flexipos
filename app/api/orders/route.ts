@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       customerName: validatedData.customerName,
       items: validatedData.items,
       totalAmount: validatedData.totalAmount,
+      paymentMethod: validatedData.paymentMethod,
       createdBy: validatedData.createdBy,
     });
 

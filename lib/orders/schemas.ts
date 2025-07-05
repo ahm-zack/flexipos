@@ -4,6 +4,10 @@ import { z } from 'zod';
 export const OrderStatusEnum = z.enum(['completed', 'canceled', 'modified']);
 export type OrderStatus = z.infer<typeof OrderStatusEnum>;
 
+// Payment method enum
+export const PaymentMethodEnum = z.enum(['cash', 'card', 'mixed']);
+export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
+
 // Order item schema - represents a single item in an order
 export const OrderItemSchema = z.object({
   id: z.string().uuid(), // Item ID (pizza, pie, sandwich, etc.)
@@ -25,6 +29,7 @@ export const OrderSchema = z.object({
   customerName: z.string().optional(), // Optional customer name
   items: z.array(OrderItemSchema).min(1), // Array of order items
   totalAmount: z.number().min(0), // Total order amount
+  paymentMethod: PaymentMethodEnum, // Payment method
   status: OrderStatusEnum,
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -38,6 +43,7 @@ export const CreateOrderSchema = z.object({
   customerName: z.string().optional(),
   items: z.array(OrderItemSchema).min(1, 'At least one item is required'),
   totalAmount: z.number().min(0, 'Total amount must be positive'),
+  paymentMethod: PaymentMethodEnum, // No default here, let it come from the client
   createdBy: z.string().uuid(),
 });
 
@@ -48,6 +54,7 @@ export const UpdateOrderSchema = z.object({
   customerName: z.string().optional(),
   items: z.array(OrderItemSchema).min(1).optional(),
   totalAmount: z.number().min(0).optional(),
+  paymentMethod: PaymentMethodEnum.optional(),
   status: OrderStatusEnum.optional(),
 });
 

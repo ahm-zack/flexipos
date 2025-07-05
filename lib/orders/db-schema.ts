@@ -4,6 +4,9 @@ import { users } from '../db/schema';
 // Order status enum (using different name to avoid conflicts)
 export const ordersStatusEnum = pgEnum('orders_status', ['completed', 'canceled', 'modified']);
 
+// Payment method enum
+export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'mixed']);
+
 // Item type enum
 export const itemTypeEnum = pgEnum('item_type', ['pizza', 'pie', 'sandwich', 'mini_pie']);
 
@@ -23,6 +26,7 @@ export const orders = pgTable('orders', {
   customerName: text('customer_name'), // Optional customer name
   items: jsonb('items').notNull(), // Array of order items in JSON format
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
+  paymentMethod: paymentMethodEnum('payment_method').notNull().default('cash'), // Payment method
   status: ordersStatusEnum('status').notNull().default('completed'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -54,6 +58,7 @@ export const modifiedOrders = pgTable('modified_orders', {
 export type Order = typeof orders.$inferSelect;
 export type NewOrder = typeof orders.$inferInsert;
 export type OrderStatus = typeof ordersStatusEnum.enumValues[number];
+export type PaymentMethod = typeof paymentMethodEnum.enumValues[number];
 export type ItemType = typeof itemTypeEnum.enumValues[number];
 
 export type CanceledOrder = typeof canceledOrders.$inferSelect;

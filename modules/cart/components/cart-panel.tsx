@@ -1,9 +1,20 @@
 "use client";
 
-import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
+import {
+  X,
+  Plus,
+  Minus,
+  Trash2,
+  ShoppingBag,
+  CreditCard,
+  Banknote,
+  Split,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart } from "../hooks/use-cart";
 import { PriceDisplay } from "@/components/currency";
 import { cn } from "@/lib/utils";
@@ -12,6 +23,7 @@ import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useQueryClient } from "@tanstack/react-query";
 import { orderKeys } from "@/modules/orders-feature/hooks/use-orders";
+import { useState } from "react";
 
 interface CartPanelProps {
   className?: string;
@@ -20,6 +32,10 @@ interface CartPanelProps {
 export function CartPanel({ className }: CartPanelProps) {
   const { cart, isOpen, closeCart, updateQuantity, removeItem, clearCart } =
     useCart();
+
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "mixed">(
+    "cash"
+  );
 
   const createOrder = useCreateOrder();
   const { user: currentUser, loading: userLoading } = useCurrentUser();
@@ -50,9 +66,13 @@ export function CartPanel({ className }: CartPanelProps) {
     const orderData = {
       items: orderItems,
       totalAmount: cart.total,
+      paymentMethod,
       createdBy: currentUser.id, // Use the actual authenticated user's ID
       customerName: undefined, // Optional: add customer name input if needed
     };
+
+    console.log("Creating order with payment method:", paymentMethod);
+    console.log("Order data:", orderData);
 
     createOrder.mutate(orderData, {
       onSuccess: (data) => {
@@ -222,6 +242,76 @@ export function CartPanel({ className }: CartPanelProps) {
                   className="font-semibold text-lg"
                 />
               </div>
+            </div>
+
+            {/* Payment Method Selection */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Payment Method</Label>
+              <RadioGroup
+                value={paymentMethod}
+                onValueChange={(value) =>
+                  setPaymentMethod(value as "cash" | "card" | "mixed")
+                }
+                className="grid grid-cols-3 gap-2"
+              >
+                <div className="flex flex-col">
+                  <Label
+                    htmlFor="cash"
+                    className={cn(
+                      "flex items-center space-x-2 p-3 border rounded-lg",
+                      "hover:bg-muted/50 transition-colors cursor-pointer",
+                      "touch-manipulation select-none active:scale-95",
+                      "min-h-[56px] w-full",
+                      paymentMethod === "cash" &&
+                        "border-primary bg-primary/5 ring-1 ring-primary/20"
+                    )}
+                  >
+                    <RadioGroupItem value="cash" id="cash" />
+                    <div className="flex items-center gap-2 flex-1">
+                      <Banknote className="h-4 w-4" />
+                      <span className="text-xs font-medium">Cash</span>
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex flex-col">
+                  <Label
+                    htmlFor="card"
+                    className={cn(
+                      "flex items-center space-x-2 p-3 border rounded-lg",
+                      "hover:bg-muted/50 transition-colors cursor-pointer",
+                      "touch-manipulation select-none active:scale-95",
+                      "min-h-[56px] w-full",
+                      paymentMethod === "card" &&
+                        "border-primary bg-primary/5 ring-1 ring-primary/20"
+                    )}
+                  >
+                    <RadioGroupItem value="card" id="card" />
+                    <div className="flex items-center gap-2 flex-1">
+                      <CreditCard className="h-4 w-4" />
+                      <span className="text-xs font-medium">Card</span>
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex flex-col">
+                  <Label
+                    htmlFor="mixed"
+                    className={cn(
+                      "flex items-center space-x-2 p-3 border rounded-lg",
+                      "hover:bg-muted/50 transition-colors cursor-pointer",
+                      "touch-manipulation select-none active:scale-95",
+                      "min-h-[56px] w-full",
+                      paymentMethod === "mixed" &&
+                        "border-primary bg-primary/5 ring-1 ring-primary/20"
+                    )}
+                  >
+                    <RadioGroupItem value="mixed" id="mixed" />
+                    <div className="flex items-center gap-2 flex-1">
+                      <Split className="h-4 w-4" />
+                      <span className="text-xs font-medium">Mixed</span>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
             </div>
 
             <Button

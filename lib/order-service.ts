@@ -25,6 +25,7 @@ export interface ApiOrder {
   customerName: string | null;
   items: OrderItem[];
   totalAmount: number;
+  paymentMethod: 'cash' | 'card' | 'mixed';
   status: 'completed' | 'canceled' | 'modified';
   createdAt: string;
   updatedAt: string;
@@ -69,6 +70,7 @@ function transformDatabaseOrderToApi(dbOrder: DatabaseOrder): ApiOrder {
     customerName: dbOrder.customerName,
     items: (dbOrder.items as OrderItem[]) || [],
     totalAmount: parseFloat(dbOrder.totalAmount),
+    paymentMethod: dbOrder.paymentMethod,
     status: dbOrder.status,
     createdAt: dbOrder.createdAt.toISOString(),
     updatedAt: dbOrder.updatedAt.toISOString(),
@@ -216,6 +218,7 @@ export const orderService = {
     customerName?: string;
     items: OrderItem[];
     totalAmount: number;
+    paymentMethod: 'cash' | 'card' | 'mixed';
     createdBy: string;
   }): Promise<OrderServiceResult<ApiOrder>> {
     try {
@@ -227,6 +230,7 @@ export const orderService = {
         customerName: orderData.customerName || null,
         items: orderData.items,
         totalAmount: orderData.totalAmount.toString(),
+        paymentMethod: orderData.paymentMethod,
         status: 'completed',
         createdBy: orderData.createdBy,
         createdAt: now,
