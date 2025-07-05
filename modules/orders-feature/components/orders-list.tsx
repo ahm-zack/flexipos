@@ -2,6 +2,7 @@
 import { useOrders } from "../hooks/use-orders";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SaudiRiyalSymbol } from "@/components/currency/saudi-riyal-symbol";
 import { getOrderStatusText } from "@/lib/orders/utils";
 import { useState } from "react";
 
@@ -130,8 +131,11 @@ export function OrdersList() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Total</span>
-                  <span className="text-lg font-bold text-green-600">
-                    ${order.totalAmount.toFixed(2)}
+                  <span className="text-lg font-bold flex items-center gap-1">
+                    <SaudiRiyalSymbol size={16} />
+                    <span className="text-green-600">
+                      {order.totalAmount.toFixed(2)}
+                    </span>
                   </span>
                 </div>
 

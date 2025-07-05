@@ -1,22 +1,7 @@
 /**
- * Utility functions for orders management
+ * Utility functions for orders management (CLIENT-SAFE)
+ * This file contains functions that can be safely used in both client and server environments
  */
-
-/**
- * Generate a unique order number
- * Format: ORD-YYYYMMDD-XXXXXX (where X is random)
- */
-export function generateOrderNumber(): string {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  
-  // Generate 6 random digits
-  const randomSuffix = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-  
-  return `ORD-${year}${month}${day}-${randomSuffix}`;
-}
 
 /**
  * Calculate total amount from order items
@@ -27,20 +12,29 @@ export function calculateOrderTotal(items: Array<{ quantity: number; unitPrice: 
 
 /**
  * Format order number for display
+ * Removes the ORD- prefix for display purposes
  */
 export function formatOrderNumber(orderNumber: string): string {
-  return orderNumber.replace(/^ORD-/, '#');
+  // For new format ORD-0001, return just the number part
+  if (orderNumber.startsWith('ORD-')) {
+    return orderNumber.replace('ORD-', '#');
+  }
+  
+  // For legacy formats, return as is with # prefix
+  return orderNumber.startsWith('#') ? orderNumber : `#${orderNumber}`;
 }
 
 /**
- * Parse order number to extract date
+ * Parse order number to extract sequence number
  */
-export function parseOrderDate(orderNumber: string): Date | null {
-  const match = orderNumber.match(/^ORD-(\d{4})(\d{2})(\d{2})-/);
-  if (!match) return null;
+export function parseOrderNumber(orderNumber: string): number | null {
+  // For new format ORD-0001
+  const newFormatMatch = orderNumber.match(/^ORD-(\d+)$/);
+  if (newFormatMatch) {
+    return parseInt(newFormatMatch[1], 10);
+  }
   
-  const [, year, month, day] = match;
-  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  return null;
 }
 
 /**

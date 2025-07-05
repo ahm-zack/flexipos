@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { orders, canceledOrders, modifiedOrders, users } from '@/lib/db/schema';
 import { eq, desc, and, like, sql } from 'drizzle-orm';
-import { generateOrderNumber } from '@/lib/orders/utils';
+import { generateOrderNumber } from '@/lib/orders/server-utils';
 import type { OrderItem, OrderFilters } from '@/lib/orders';
 
 // Re-export for external use
@@ -219,7 +219,7 @@ export const orderService = {
     createdBy: string;
   }): Promise<OrderServiceResult<ApiOrder>> {
     try {
-      const orderNumber = generateOrderNumber();
+      const orderNumber = await generateOrderNumber();
       const now = new Date();
 
       const newOrder = await db.insert(orders).values({

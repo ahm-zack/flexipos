@@ -4,7 +4,8 @@
 
 import { db } from '../db';
 import { orders } from '../orders/db-schema';
-import { generateOrderNumber, calculateOrderTotal } from '../orders/utils';
+import { generateOrderNumber } from '../orders/server-utils';
+import { calculateOrderTotal } from '../orders/utils';
 import { CreateOrderSchema } from '../orders/schemas';
 
 async function testOrdersSystem() {
@@ -13,7 +14,7 @@ async function testOrdersSystem() {
   try {
     // Test 1: Order number generation
     console.log('1. Testing order number generation...');
-    const orderNumber = generateOrderNumber();
+    const orderNumber = await generateOrderNumber();
     console.log(`   Generated order number: ${orderNumber}`);
     
     // Test 2: Order total calculation
