@@ -252,6 +252,7 @@ export const orderService = {
       items?: OrderItem[];
       totalAmount?: number;
       status?: 'completed' | 'canceled' | 'modified';
+      paymentMethod?: 'cash' | 'card' | 'mixed';
     }
   ): Promise<OrderServiceResult<ApiOrder>> {
     try {
@@ -270,6 +271,9 @@ export const orderService = {
       }
       if (updateData.status !== undefined) {
         updateFields.status = updateData.status;
+      }
+      if (updateData.paymentMethod !== undefined) {
+        updateFields.paymentMethod = updateData.paymentMethod;
       }
 
       const updatedOrder = await db.update(orders)
@@ -352,6 +356,7 @@ export const orderService = {
       customerName?: string;
       items?: OrderItem[];
       totalAmount?: number;
+      paymentMethod?: 'cash' | 'card' | 'mixed';
     },
     modificationType: 'item_added' | 'item_removed' | 'quantity_changed' | 'item_replaced' | 'multiple_changes'
   ): Promise<OrderServiceResult<ApiModifiedOrder>> {

@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   MoreHorizontal,
   Edit,
@@ -18,16 +19,100 @@ import {
   CreditCard,
   Banknote,
   Split,
+  Search,
+  X,
 } from "lucide-react";
 import { getOrderStatusText } from "@/lib/orders/utils";
+import { EditOrderDialog } from "@/components/edit-order-dialog";
+import { Order } from "@/lib/orders";
+import { ApiOrderResponse } from "@/lib/order-service";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 export function OrdersList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
   const limit = 10;
 
-  const { data, isLoading, error } = useOrders({}, currentPage, limit);
+  // Build filters object for API with proper typing
+  const filters = {
+    ...(activeFilters.has("modified") && { status: "modified" as const }),
+    ...(activeFilters.has("canceled") && { status: "canceled" as const }),
+    // Note: For now, we'll filter payment methods client-side since the API doesn't support it yet
+  };
+
+  const { data, isLoading, error } = useOrders(filters, currentPage, limit);
+
+  // Filter data client-side for search and payment methods
+  const filteredOrders =
+    data?.orders?.filter((order) => {
+      // Search filter
+      if (
+        searchTerm &&
+        !order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase())
+      ) {
+        return false;
+      }
+
+      // Payment method filters
+      if (activeFilters.has("cash") && order.paymentMethod !== "cash")
+        return false;
+      if (activeFilters.has("card") && order.paymentMethod !== "card")
+        return false;
+      if (activeFilters.has("mixed") && order.paymentMethod !== "mixed")
+        return false;
+
+      return true;
+    }) || [];
+
+  const toggleFilter = (filterKey: string) => {
+    const newFilters = new Set(activeFilters);
+
+    // If it's a payment method filter, clear other payment method filters
+    if (["cash", "card", "mixed"].includes(filterKey)) {
+      ["cash", "card", "mixed"].forEach((key) => newFilters.delete(key));
+      if (!activeFilters.has(filterKey)) {
+        newFilters.add(filterKey);
+      }
+    }
+    // If it's a status filter, clear other status filters
+    else if (["modified", "canceled"].includes(filterKey)) {
+      ["modified", "canceled"].forEach((key) => newFilters.delete(key));
+      if (!activeFilters.has(filterKey)) {
+        newFilters.add(filterKey);
+      }
+    }
+
+    setActiveFilters(newFilters);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
+
+  const getFilterButtonVariant = (filterKey: string) => {
+    return activeFilters.has(filterKey) ? "default" : "outline";
+  };
+
+  // Convert ApiOrderResponse to Order type for the dialog
+  const convertToOrder = (apiOrder: ApiOrderResponse): Order => ({
+    id: apiOrder.id,
+    orderNumber: apiOrder.orderNumber,
+    customerName: apiOrder.customerName || undefined,
+    items: apiOrder.items,
+    totalAmount: apiOrder.totalAmount,
+    paymentMethod: apiOrder.paymentMethod,
+    status: apiOrder.status,
+    createdAt: apiOrder.createdAt,
+    updatedAt: apiOrder.updatedAt,
+    createdBy: apiOrder.createdBy,
+  });
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -37,9 +122,10 @@ export function OrdersList() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleEditOrder = (orderId: string) => {
-    // TODO: Implement edit functionality
-    console.log("Edit order:", orderId);
+  const handleEditOrder = (apiOrder: ApiOrderResponse) => {
+    const order = convertToOrder(apiOrder);
+    setEditingOrder(order);
+    setIsEditDialogOpen(true);
   };
 
   const handlePrintOrder = (orderId: string) => {
@@ -67,6 +153,15 @@ export function OrdersList() {
         return "secondary" as const;
       default:
         return "outline" as const;
+    }
+  };
+
+  const getStatusBadgeClassName = (status: string) => {
+    switch (status) {
+      case "modified":
+        return "bg-yellow-500 text-white hover:bg-yellow-600 border-yellow-500";
+      default:
+        return "";
     }
   };
 
@@ -156,28 +251,109 @@ export function OrdersList() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Orders</h1>
-        {data?.total && (
-          <div className="flex items-center gap-4">
-            <div className="px-3 py-1 bg-muted rounded-full">
-              <span className="text-sm font-medium text-muted-foreground">
-                {data.total} total orders
-              </span>
+      {/* Header with Title, Search, and Filters */}
+      <div className="space-y-4 mb-6">
+        {/* Title and Stats Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-3xl font-bold">Orders</h1>
+          {data?.total && (
+            <div className="flex items-center gap-4">
+              <div className="px-3 py-1 bg-muted rounded-full">
+                <span className="text-sm font-medium text-muted-foreground">
+                  {filteredOrders.length} of {data.total} orders
+                </span>
+              </div>
+              <div className="px-3 py-1 bg-muted rounded-full">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Page {data.page} of {Math.ceil(data.total / data.limit)}
+                </span>
+              </div>
             </div>
-            <div className="px-3 py-1 bg-muted rounded-full">
-              <span className="text-sm font-medium text-muted-foreground">
-                Page {data.page} of {Math.ceil(data.total / data.limit)}
-              </span>
-            </div>
+          )}
+        </div>
+
+        {/* Search and Filters Row */}
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search Bar */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Search by order number..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-10"
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSearch}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-        )}
+
+          {/* Filter Buttons */}
+          <div className="flex flex-wrap gap-2">
+            {/* Payment Method Filters */}
+            <Button
+              variant={getFilterButtonVariant("cash")}
+              size="sm"
+              onClick={() => toggleFilter("cash")}
+              className="flex items-center gap-2"
+            >
+              <Banknote className="h-4 w-4" />
+              <span className="hidden sm:inline">Cash</span>
+            </Button>
+            <Button
+              variant={getFilterButtonVariant("card")}
+              size="sm"
+              onClick={() => toggleFilter("card")}
+              className="flex items-center gap-2"
+            >
+              <CreditCard className="h-4 w-4" />
+              <span className="hidden sm:inline">Card</span>
+            </Button>
+            <Button
+              variant={getFilterButtonVariant("mixed")}
+              size="sm"
+              onClick={() => toggleFilter("mixed")}
+              className="flex items-center gap-2"
+            >
+              <Split className="h-4 w-4" />
+              <span className="hidden sm:inline">Mixed</span>
+            </Button>
+
+            {/* Status Filters */}
+            <Button
+              variant={getFilterButtonVariant("modified")}
+              size="sm"
+              onClick={() => toggleFilter("modified")}
+              className="flex items-center gap-2"
+            >
+              <Edit className="h-4 w-4" />
+              <span className="hidden sm:inline">Modified</span>
+            </Button>
+            <Button
+              variant={getFilterButtonVariant("canceled")}
+              size="sm"
+              onClick={() => toggleFilter("canceled")}
+              className="flex items-center gap-2 text-red-600 hover:text-red-700"
+            >
+              <X className="h-4 w-4" />
+              <span className="hidden sm:inline">Canceled</span>
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {data && data.orders && data.orders.length > 0 ? (
+      {data && filteredOrders.length > 0 ? (
         <>
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {data.orders.map((order) => (
+            {filteredOrders.map((order) => (
               <Card
                 key={order.id}
                 className="group hover:shadow-lg hover:shadow-black/5 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out bg-card border border-border cursor-pointer relative"
@@ -190,7 +366,10 @@ export function OrdersList() {
                       </CardTitle>
                       <Badge
                         variant={getStatusBadgeVariant(order.status)}
-                        className="transition-colors duration-200 group-hover:scale-105"
+                        className={cn(
+                          "transition-colors duration-200 group-hover:scale-105",
+                          getStatusBadgeClassName(order.status)
+                        )}
                       >
                         {getOrderStatusText(order.status)}
                       </Badge>
@@ -211,7 +390,7 @@ export function OrdersList() {
                         <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleEditOrder(order.id);
+                            handleEditOrder(order);
                           }}
                           className="cursor-pointer"
                         >
@@ -364,15 +543,50 @@ export function OrdersList() {
         <div className="flex items-center justify-center min-h-[400px]">
           <Card className="w-full max-w-sm">
             <CardContent className="p-8 text-center">
-              <div className="text-4xl mb-4">📦</div>
-              <h3 className="text-lg font-semibold mb-2">No orders found</h3>
-              <p className="text-sm text-muted-foreground">
-                Orders will appear here once customers make purchases.
-              </p>
+              {data?.orders && data.orders.length > 0 ? (
+                // Has data but filtered out
+                <>
+                  <div className="text-4xl mb-4">�</div>
+                  <h3 className="text-lg font-semibold mb-2">
+                    No matching orders
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    No orders match your current search and filter criteria.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setActiveFilters(new Set());
+                      setCurrentPage(1);
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                </>
+              ) : (
+                // No data at all
+                <>
+                  <div className="text-4xl mb-4">�📦</div>
+                  <h3 className="text-lg font-semibold mb-2">
+                    No orders found
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Orders will appear here once customers make purchases.
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
       )}
+
+      {/* Edit Order Dialog */}
+      <EditOrderDialog
+        order={editingOrder}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      />
     </div>
   );
 }
