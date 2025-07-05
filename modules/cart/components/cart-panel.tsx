@@ -7,6 +7,11 @@ import { Separator } from "@/components/ui/separator";
 import { useCart } from "../hooks/use-cart";
 import { PriceDisplay } from "@/components/currency";
 import { cn } from "@/lib/utils";
+import { useCreateOrder } from "@/modules/orders-feature";
+import { toast } from "sonner";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { useQueryClient } from "@tanstack/react-query";
+import { orderKeys } from "@/modules/orders-feature/hooks/use-orders";
 
 interface CartPanelProps {
   className?: string;
@@ -15,6 +20,53 @@ interface CartPanelProps {
 export function CartPanel({ className }: CartPanelProps) {
   const { cart, isOpen, closeCart, updateQuantity, removeItem, clearCart } =
     useCart();
+
+  const createOrder = useCreateOrder();
+  const { user: currentUser, loading: userLoading } = useCurrentUser();
+  const queryClient = useQueryClient();
+
+  // Handle order creation
+  const handleProceedToCheckout = () => {
+    if (!currentUser) {
+      toast.error("Please log in to create an order");
+      return;
+    }
+
+    // Transform cart items to order items format
+    const orderItems = cart.items.map((item) => ({
+      id: item.id,
+      type: "pizza" as const, // You might want to add type to your cart items
+      name: item.name,
+      nameAr: item.name, // You might want to add Arabic name to cart items
+      quantity: item.quantity,
+      unitPrice: item.price,
+      totalPrice: item.price * item.quantity,
+      details: {
+        category: item.category,
+        description: item.description,
+      },
+    }));
+
+    const orderData = {
+      items: orderItems,
+      totalAmount: cart.total,
+      createdBy: currentUser.id, // Use the actual authenticated user's ID
+      customerName: undefined, // Optional: add customer name input if needed
+    };
+
+    createOrder.mutate(orderData, {
+      onSuccess: (data) => {
+        toast.success(`Order #${data.orderNumber} created successfully!`);
+        clearCart();
+        closeCart();
+        // Invalidate orders cache to refresh the orders list
+        queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      },
+      onError: (error) => {
+        toast.error(`Failed to create order: ${error.message}`);
+      },
+    });
+  };
 
   if (!isOpen) return null;
 
@@ -172,8 +224,19 @@ export function CartPanel({ className }: CartPanelProps) {
               </div>
             </div>
 
-            <Button className="w-full h-12 text-lg font-semibold" size="lg">
-              Proceed to Checkout
+            <Button
+              className="w-full h-12 text-lg font-semibold"
+              size="lg"
+              onClick={handleProceedToCheckout}
+              disabled={createOrder.isPending || userLoading || !currentUser}
+            >
+              {createOrder.isPending
+                ? "Creating Order..."
+                : userLoading
+                ? "Loading..."
+                : !currentUser
+                ? "Please Login to Checkout"
+                : "Proceed to Checkout"}
             </Button>
           </div>
         )}

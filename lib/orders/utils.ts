@@ -91,8 +91,6 @@ export function formatOrderItems(items: Array<{
  */
 export function getOrderStatusColor(status: string): string {
   switch (status) {
-    case 'pending':
-      return 'blue';
     case 'completed':
       return 'green';
     case 'canceled':
@@ -109,8 +107,6 @@ export function getOrderStatusColor(status: string): string {
  */
 export function getOrderStatusText(status: string): string {
   switch (status) {
-    case 'pending':
-      return 'Pending';
     case 'completed':
       return 'Completed';
     case 'canceled':

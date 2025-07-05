@@ -91,7 +91,7 @@ const updateOrder = async ({
     customerName?: string;
     items?: OrderItem[];
     totalAmount?: number;
-    status?: 'pending' | 'completed' | 'canceled' | 'modified';
+    status?: 'completed' | 'canceled' | 'modified';
   }
 }): Promise<ApiOrder> => {
   const response = await fetch(`/api/orders/${id}`, {

@@ -25,7 +25,7 @@ export interface ApiOrder {
   customerName: string | null;
   items: OrderItem[];
   totalAmount: number;
-  status: 'pending' | 'completed' | 'canceled' | 'modified';
+  status: 'completed' | 'canceled' | 'modified';
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -227,7 +227,7 @@ export const orderService = {
         customerName: orderData.customerName || null,
         items: orderData.items,
         totalAmount: orderData.totalAmount.toString(),
-        status: 'pending',
+        status: 'completed',
         createdBy: orderData.createdBy,
         createdAt: now,
         updatedAt: now,
@@ -247,7 +247,7 @@ export const orderService = {
       customerName?: string;
       items?: OrderItem[];
       totalAmount?: number;
-      status?: 'pending' | 'completed' | 'canceled' | 'modified';
+      status?: 'completed' | 'canceled' | 'modified';
     }
   ): Promise<OrderServiceResult<ApiOrder>> {
     try {

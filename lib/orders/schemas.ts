@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Order status enum
-export const OrderStatusEnum = z.enum(['pending', 'completed', 'canceled', 'modified']);
+export const OrderStatusEnum = z.enum(['completed', 'canceled', 'modified']);
 export type OrderStatus = z.infer<typeof OrderStatusEnum>;
 
 // Order item schema - represents a single item in an order

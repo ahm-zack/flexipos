@@ -15,6 +15,7 @@ import {
   ChefHat,
   Package,
   Zap,
+  ShoppingBag,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -86,6 +87,11 @@ const data = {
     },
   ],
   navSecondary: [
+    {
+      title: "Orders",
+      url: "/admin/orders",
+      icon: ShoppingBag,
+    },
     {
       title: "Items Management",
       url: "/admin/items",

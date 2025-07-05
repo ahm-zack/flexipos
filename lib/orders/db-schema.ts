@@ -2,7 +2,7 @@ import { pgTable, text, timestamp, uuid, pgEnum, decimal, jsonb } from 'drizzle-
 import { users } from '../db/schema';
 
 // Order status enum (using different name to avoid conflicts)
-export const ordersStatusEnum = pgEnum('orders_status', ['pending', 'completed', 'canceled', 'modified']);
+export const ordersStatusEnum = pgEnum('orders_status', ['completed', 'canceled', 'modified']);
 
 // Item type enum
 export const itemTypeEnum = pgEnum('item_type', ['pizza', 'pie', 'sandwich', 'mini_pie']);
@@ -23,7 +23,7 @@ export const orders = pgTable('orders', {
   customerName: text('customer_name'), // Optional customer name
   items: jsonb('items').notNull(), // Array of order items in JSON format
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
-  status: ordersStatusEnum('status').notNull().default('pending'),
+  status: ordersStatusEnum('status').notNull().default('completed'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   createdBy: uuid('created_by').notNull().references(() => users.id), // Foreign key to users table

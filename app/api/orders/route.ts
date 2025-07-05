@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     // Parse query parameters
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
-    const status = searchParams.get('status') as 'pending' | 'completed' | 'canceled' | 'modified' | null;
+    const status = searchParams.get('status') as 'completed' | 'canceled' | 'modified' | null;
     const createdBy = searchParams.get('createdBy');
     const customerName = searchParams.get('customerName');
     const dateFrom = searchParams.get('dateFrom');

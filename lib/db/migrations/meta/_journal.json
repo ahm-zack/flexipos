@@ -15,6 +15,13 @@
       "when": 1751593694435,
       "tag": "0001_perpetual_luckman",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1751656874645,
+      "tag": "0002_freezing_retro_girl",
+      "breakpoints": true
     }
   ]
 }

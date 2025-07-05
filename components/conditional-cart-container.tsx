@@ -10,7 +10,8 @@ export function ConditionalCartContainer() {
   const isManagementPage =
     pathname.includes("/admin/items") ||
     pathname.includes("/admin/users") ||
-    pathname.includes("/admin/reports");
+    pathname.includes("/admin/reports") ||
+    pathname.includes("/admin/orders");
 
   if (isManagementPage) {
     return null;
