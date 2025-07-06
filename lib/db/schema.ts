@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, pgEnum, decimal } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, pgEnum, decimal, integer, jsonb, date } from 'drizzle-orm/pg-core';
 
 // Define role enum
 export const roleEnum = pgEnum('role', ['superadmin', 'admin', 'manager', 'cashier', 'kitchen']);
@@ -145,6 +145,68 @@ export type MiniPie = typeof miniPies.$inferSelect;
 export type NewMiniPie = typeof miniPies.$inferInsert;
 export type MiniPieType = typeof miniPieTypeEnum.enumValues[number];
 export type MiniPieSize = typeof miniPieSizeEnum.enumValues[number];
+
+// Define payment method enum for EOD reports
+export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'digital_wallet', 'bank_transfer']);
+
+// Define order status enum for EOD reports
+export const eodOrderStatusEnum = pgEnum('eod_order_status', ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']);
+
+// Define report type enum
+export const reportTypeEnum = pgEnum('report_type', ['daily', 'custom', 'weekly', 'monthly']);
+
+// EOD Reports table schema
+export const eodReports = pgTable('eod_reports', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  reportDate: date('report_date').notNull(),
+  startDateTime: timestamp('start_date_time', { withTimezone: true }).notNull(),
+  endDateTime: timestamp('end_date_time', { withTimezone: true }).notNull(),
+  
+  // Core metrics
+  totalOrders: integer('total_orders').notNull().default(0),
+  completedOrders: integer('completed_orders').notNull().default(0),
+  cancelledOrders: integer('cancelled_orders').notNull().default(0),
+  pendingOrders: integer('pending_orders').notNull().default(0),
+  
+  // Financial metrics
+  totalRevenue: decimal('total_revenue', { precision: 12, scale: 2 }).notNull().default('0.00'),
+  totalWithVat: decimal('total_with_vat', { precision: 12, scale: 2 }).notNull().default('0.00'),
+  totalWithoutVat: decimal('total_without_vat', { precision: 12, scale: 2 }).notNull().default('0.00'),
+  vatAmount: decimal('vat_amount', { precision: 12, scale: 2 }).notNull().default('0.00'),
+  
+  // Payment method breakdown
+  totalCashOrders: decimal('total_cash_orders', { precision: 12, scale: 2 }).notNull().default('0.00'),
+  totalCardOrders: decimal('total_card_orders', { precision: 12, scale: 2 }).notNull().default('0.00'),
+  cashOrdersCount: integer('cash_orders_count').notNull().default(0),
+  cardOrdersCount: integer('card_orders_count').notNull().default(0),
+  
+  // Performance metrics
+  averageOrderValue: decimal('average_order_value', { precision: 10, scale: 2 }).notNull().default('0.00'),
+  peakHour: text('peak_hour'),
+  orderCompletionRate: decimal('order_completion_rate', { precision: 5, scale: 2 }).notNull().default('0.00'),
+  orderCancellationRate: decimal('order_cancellation_rate', { precision: 5, scale: 2 }).notNull().default('0.00'),
+  
+  // Complex data stored as JSON
+  paymentBreakdown: jsonb('payment_breakdown'), // PaymentBreakdown[]
+  bestSellingItems: jsonb('best_selling_items'), // BestSellingItem[]
+  hourlySales: jsonb('hourly_sales'), // HourlySales[]
+  
+  // Metadata
+  generatedBy: uuid('generated_by').references(() => users.id).notNull(),
+  generatedAt: timestamp('generated_at', { withTimezone: true }).defaultNow().notNull(),
+  reportType: reportTypeEnum('report_type').notNull().default('daily'),
+  
+  // Timestamps
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Export EOD report types
+export type EODReport = typeof eodReports.$inferSelect;
+export type NewEODReport = typeof eodReports.$inferInsert;
+export type PaymentMethod = typeof paymentMethodEnum.enumValues[number];
+export type EODOrderStatus = typeof eodOrderStatusEnum.enumValues[number];
+export type ReportType = typeof reportTypeEnum.enumValues[number];
 
 // Import and re-export orders tables
 export { 

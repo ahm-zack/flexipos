@@ -430,3 +430,162 @@ export const editMiniPieFormSchema = createMiniPieFormSchema.extend({
 
 export type CreateMiniPieFormData = z.infer<typeof createMiniPieFormSchema>;
 export type EditMiniPieFormData = z.infer<typeof editMiniPieFormSchema>;
+
+// EOD Report Schemas
+
+// Payment method enum
+export const PaymentMethodEnum = z.enum(['cash', 'card', 'digital_wallet', 'bank_transfer']);
+export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
+
+// Order status enum for reporting
+export const OrderStatusEnum = z.enum(['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']);
+export type OrderStatus = z.infer<typeof OrderStatusEnum>;
+
+// Best selling item schema
+export const BestSellingItemSchema = z.object({
+  itemName: z.string(),
+  itemType: z.enum(['pizza', 'pie', 'sandwich', 'mini-pie', 'beverage', 'appetizer', 'burger', 'shawerma', 'side-order']),
+  quantity: z.number().int().min(0),
+  totalRevenue: z.number().min(0),
+  averagePrice: z.number().min(0),
+});
+
+export type BestSellingItem = z.infer<typeof BestSellingItemSchema>;
+
+// Payment method breakdown schema
+export const PaymentBreakdownSchema = z.object({
+  method: PaymentMethodEnum,
+  orderCount: z.number().int().min(0),
+  totalAmount: z.number().min(0),
+  percentage: z.number().min(0).max(100),
+});
+
+export type PaymentBreakdown = z.infer<typeof PaymentBreakdownSchema>;
+
+// Hourly sales data schema
+export const HourlySalesSchema = z.object({
+  hour: z.number().int().min(0).max(23),
+  orderCount: z.number().int().min(0),
+  revenue: z.number().min(0),
+});
+
+export type HourlySales = z.infer<typeof HourlySalesSchema>;
+
+// Main EOD Report Data schema
+export const EODReportDataSchema = z.object({
+  // Time period
+  startDateTime: z.date(),
+  endDateTime: z.date(),
+  reportGeneratedAt: z.date(),
+  
+  // Core metrics (your requirements)
+  totalCashOrders: z.number().min(0),
+  totalCardOrders: z.number().min(0),
+  totalWithVat: z.number().min(0),
+  totalWithoutVat: z.number().min(0),
+  totalCancelledOrders: z.number().int().min(0),
+  totalOrders: z.number().int().min(0),
+  
+  // Additional order statistics
+  completedOrders: z.number().int().min(0),
+  pendingOrders: z.number().int().min(0),
+  
+  // Financial breakdown
+  vatAmount: z.number().min(0),
+  averageOrderValue: z.number().min(0),
+  
+  // Payment method breakdown
+  paymentBreakdown: z.array(PaymentBreakdownSchema),
+  
+  // Performance metrics
+  bestSellingItems: z.array(BestSellingItemSchema),
+  peakHour: z.string().optional(),
+  hourlySales: z.array(HourlySalesSchema),
+  
+  // Operational metrics
+  orderCompletionRate: z.number().min(0).max(100),
+  orderCancellationRate: z.number().min(0).max(100),
+  
+  // Comparison with previous period (optional)
+  previousPeriodComparison: z.object({
+    revenueChange: z.number().optional(),
+    orderCountChange: z.number().optional(),
+    averageOrderValueChange: z.number().optional(),
+  }).optional(),
+});
+
+export type EODReportData = z.infer<typeof EODReportDataSchema>;
+
+// EOD Report Request schema (for API)
+export const EODReportRequestSchema = z.object({
+  startDateTime: z.string().datetime(),
+  endDateTime: z.string().datetime(),
+  saveToDatabase: z.boolean().default(false),
+  includePreviousPeriodComparison: z.boolean().default(false),
+});
+
+export type EODReportRequest = z.infer<typeof EODReportRequestSchema>;
+
+// Saved EOD Report schema (for database storage)
+export const SavedEODReportSchema = z.object({
+  id: z.string().uuid(),
+  reportDate: z.date(),
+  startDateTime: z.date(),
+  endDateTime: z.date(),
+  
+  // All the metrics
+  totalOrders: z.number().int().min(0),
+  completedOrders: z.number().int().min(0),
+  cancelledOrders: z.number().int().min(0),
+  pendingOrders: z.number().int().min(0),
+  
+  totalRevenue: z.number().min(0),
+  totalWithVat: z.number().min(0),
+  totalWithoutVat: z.number().min(0),
+  vatAmount: z.number().min(0),
+  
+  totalCashOrders: z.number().min(0),
+  totalCardOrders: z.number().min(0),
+  
+  averageOrderValue: z.number().min(0),
+  peakHour: z.string().optional(),
+  orderCompletionRate: z.number().min(0).max(100),
+  orderCancellationRate: z.number().min(0).max(100),
+  
+  // JSON fields for complex data
+  paymentBreakdown: z.string(), // JSON string
+  bestSellingItems: z.string(), // JSON string
+  hourlySales: z.string(), // JSON string
+  
+  // Metadata
+  generatedBy: z.string().uuid(),
+  generatedAt: z.date(),
+  reportType: z.enum(['daily', 'custom', 'weekly', 'monthly']).default('daily'),
+  
+  // Timestamps
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export type SavedEODReport = z.infer<typeof SavedEODReportSchema>;
+
+// EOD Report History Request schema
+export const EODReportHistoryRequestSchema = z.object({
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(10),
+  startDate: z.string().date().optional(),
+  endDate: z.string().date().optional(),
+  reportType: z.enum(['daily', 'custom', 'weekly', 'monthly']).optional(),
+});
+
+export type EODReportHistoryRequest = z.infer<typeof EODReportHistoryRequestSchema>;
+
+// Quick preset periods schema
+export const ReportPresetSchema = z.object({
+  label: z.string(),
+  value: z.enum(['today', 'yesterday', 'last-7-days', 'last-30-days', 'this-week', 'this-month', 'custom']),
+  startDateTime: z.date(),
+  endDateTime: z.date(),
+});
+
+export type ReportPreset = z.infer<typeof ReportPresetSchema>;
