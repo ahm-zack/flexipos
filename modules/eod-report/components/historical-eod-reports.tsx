@@ -1,32 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  CalendarDays,
-  TrendingUp,
-  DollarSign,
-  ShoppingCart,
-  Clock,
-} from "lucide-react";
+import { CalendarDays, CreditCard, Banknote, Download } from "lucide-react";
 import { useEODReportHistory, useEODReportFormatters } from "../hooks";
 import { format } from "date-fns";
-import type { SavedEODReport, PaymentBreakdown } from "@/lib/schemas";
 
 export function HistoricalEODReports() {
-  const [selectedPeriod, setSelectedPeriod] = useState<
-    "week" | "month" | "all"
-  >("week");
-
-  // Default history request
+  // Simple history request - get all reports
   const historyRequest = {
     page: 1,
     limit: 50,
-    reportType: undefined,
-    startDate: undefined,
-    endDate: undefined,
   };
 
   const {
@@ -37,58 +22,11 @@ export function HistoricalEODReports() {
   } = useEODReportHistory(historyRequest);
   const formatters = useEODReportFormatters();
 
-  const filteredReports = React.useMemo(() => {
-    if (!reportData?.reports) return [];
-
-    const reports = reportData.reports;
-    const now = new Date();
-    const filterDate = new Date();
-
-    switch (selectedPeriod) {
-      case "week":
-        filterDate.setDate(now.getDate() - 7);
-        break;
-      case "month":
-        filterDate.setMonth(now.getMonth() - 1);
-        break;
-      case "all":
-        return reports;
-      default:
-        return reports;
-    }
-
-    return reports.filter(
-      (report: SavedEODReport) => new Date(report.createdAt) >= filterDate
-    );
-  }, [reportData, selectedPeriod]);
-
-  const formatDateRange = (startDate: Date, endDate: Date) => {
-    return `${format(startDate, "dd/MM/yyyy HH:mm")} - ${format(
-      endDate,
-      "dd/MM/yyyy HH:mm"
-    )}`;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "failed":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-2 sm:px-4 lg:px-6">
+      <div className="max-w-7xl mx-auto space-y-4 px-4">
         <div className="flex justify-center items-center h-32">
-          <div className="text-muted-foreground">
-            Loading historical reports...
-          </div>
+          <div className="text-muted-foreground">Loading reports...</div>
         </div>
       </div>
     );
@@ -96,15 +34,13 @@ export function HistoricalEODReports() {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-2 sm:px-4 lg:px-6">
-        <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
+      <div className="max-w-7xl mx-auto space-y-4 px-4">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-lg text-red-600">Error</CardTitle>
+            <CardTitle className="text-red-600">Error</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-red-500 mb-4">
-              Failed to load historical reports
-            </p>
+            <p className="text-red-500 mb-4">Failed to load reports</p>
             <Button onClick={() => refetch()} variant="outline">
               Try Again
             </Button>
@@ -114,180 +50,318 @@ export function HistoricalEODReports() {
     );
   }
 
+  const reports = reportData?.reports || [];
+
+  const safeParseNumber = (
+    value: string | number | null | undefined
+  ): number => {
+    if (typeof value === "number") return value;
+    if (typeof value === "string") return parseFloat(value) || 0;
+    return 0;
+  };
+
+  const safeGetString = (value: unknown): string => {
+    if (typeof value === "string") return value;
+    return String(value || "");
+  };
+
+  const safeParseJSON = (value: unknown): unknown[] => {
+    try {
+      if (typeof value === "string") {
+        return JSON.parse(value) || [];
+      }
+      if (Array.isArray(value)) return value;
+      return [];
+    } catch {
+      return [];
+    }
+  };
+
+  const safeGetDate = (value: unknown): Date => {
+    if (value instanceof Date) return value;
+    if (typeof value === "string") return new Date(value);
+    return new Date();
+  };
+
+  // Export functionality for individual reports
+  const exportReportToCSV = (report: unknown) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const reportData = report as any; // Type assertion for flexibility with dynamic data
+    const bestSellingItems = safeParseJSON(reportData.bestSellingItems);
+
+    const csvData = [
+      ["EOD Report Data"],
+      ["Report ID", safeGetString(reportData.id)],
+      [
+        "Generated At",
+        format(
+          safeGetDate(reportData.generatedAt || reportData.createdAt),
+          "dd/MM/yyyy HH:mm"
+        ),
+      ],
+      [
+        "Report Date",
+        format(
+          safeGetDate(reportData.reportDate || reportData.createdAt),
+          "dd/MM/yyyy"
+        ),
+      ],
+      ["Report Type", reportData.reportType || "daily"],
+      [""],
+      ["Financial Summary"],
+      ["Total Revenue (with VAT)", safeParseNumber(reportData.totalWithVat)],
+      [
+        "Total Revenue (without VAT)",
+        safeParseNumber(reportData.totalWithoutVat),
+      ],
+      ["VAT Amount", safeParseNumber(reportData.vatAmount)],
+      ["Average Order Value", safeParseNumber(reportData.averageOrderValue)],
+      [""],
+      ["Order Statistics"],
+      ["Total Orders", safeParseNumber(reportData.totalOrders)],
+      ["Completed Orders", safeParseNumber(reportData.completedOrders)],
+      ["Cancelled Orders", safeParseNumber(reportData.cancelledOrders)],
+      [
+        "Completion Rate",
+        `${safeParseNumber(reportData.orderCompletionRate)}%`,
+      ],
+      ["Peak Hour", safeGetString(reportData.peakHour) || "N/A"],
+      [""],
+      ["Payment Breakdown"],
+      ["Cash Orders", safeParseNumber(reportData.totalCashOrders)],
+      ["Card Orders", safeParseNumber(reportData.totalCardOrders)],
+      [""],
+      ["Best Selling Items"],
+      ...bestSellingItems.map((item: unknown) => {
+        const itemData = item as {
+          itemName?: string;
+          itemType?: string;
+          quantity?: number;
+          totalRevenue?: number;
+        };
+        return [
+          itemData.itemName || "Unknown",
+          `${itemData.quantity || 0} sold - ${formatters.formatCurrency(
+            itemData.totalRevenue || 0
+          )}`,
+        ];
+      }),
+    ];
+
+    const csvContent = csvData.map((row) => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `EOD_Report_${safeGetString(reportData.id).slice(-8)}_${format(
+      safeGetDate(reportData.reportDate || reportData.createdAt),
+      "yyyy-MM-dd"
+    )}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-2 sm:px-4 lg:px-6">
-      <div className="px-2 sm:px-0">
-        <h1 className="text-2xl sm:text-3xl font-bold">
-          Historical EOD Reports
-        </h1>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          View and analyze previous End of Day reports
+    <div className="max-w-7xl mx-auto space-y-6 px-4">
+      <div>
+        <h1 className="text-3xl font-bold">📊 Historical EOD Reports</h1>
+        <p className="text-muted-foreground">
+          View previous End of Day reports ({reports.length} total reports
+          available)
         </p>
       </div>
 
-      {/* Filter Controls */}
-      <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
-        <CardHeader>
-          <CardTitle className="text-lg">Filter Reports</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={selectedPeriod === "week" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedPeriod("week")}
-            >
-              Last 7 Days
-            </Button>
-            <Button
-              variant={selectedPeriod === "month" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedPeriod("month")}
-            >
-              Last 30 Days
-            </Button>
-            <Button
-              variant={selectedPeriod === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedPeriod("all")}
-            >
-              All Reports
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Reports List */}
-      {filteredReports.length === 0 ? (
-        <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
+      {reports.length === 0 ? (
+        <Card>
           <CardContent className="text-center py-8">
             <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">
-              No reports found for the selected period
-            </p>
+            <p className="text-muted-foreground">No reports found</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredReports.map((report: SavedEODReport) => {
-            // Safely parse JSON fields with error handling
-            let paymentBreakdown = [];
-
-            try {
-              paymentBreakdown =
-                typeof report.paymentBreakdown === "string"
-                  ? JSON.parse(report.paymentBreakdown)
-                  : report.paymentBreakdown || [];
-            } catch {
-              paymentBreakdown = [];
-            }
+        <div className="space-y-3">
+          {reports.map((report) => {
+            const bestSellingItems = safeParseJSON(report.bestSellingItems);
 
             return (
-              <Card key={report.id} className="w-full mx-1 sm:mx-0">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-base">
-                        {formatDateRange(
-                          report.startDateTime,
-                          report.endDateTime
-                        )}
-                      </CardTitle>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Generated:{" "}
-                        {format(new Date(report.createdAt), "dd/MM/yyyy HH:mm")}
-                      </p>
-                    </div>
-                    <Badge
-                      className={getStatusColor("completed")}
-                      variant="secondary"
-                    >
-                      Completed
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {/* Key Metrics */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-green-600" />
+              <Card
+                key={safeGetString(report.id)}
+                className="w-full hover:shadow-md transition-all duration-200 border-l-4 border-l-primary"
+              >
+                <CardContent className="p-4">
+                  {/* Header Row */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 p-2 rounded-lg">
+                        <CalendarDays className="h-5 w-5 text-primary" />
+                      </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Revenue</p>
-                        <p className="font-semibold text-sm">
-                          {formatters.formatCurrency(report.totalWithVat)}
+                        <h3 className="font-semibold text-lg">
+                          Report #{safeGetString(report.id).slice(-8)}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {format(
+                            safeGetDate(report.reportDate || report.createdAt),
+                            "dd/MM/yyyy"
+                          )}{" "}
+                          • {report.reportType || "daily"}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <ShoppingCart className="h-4 w-4 text-blue-600" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Orders</p>
-                        <p className="font-semibold text-sm">
-                          {report.totalOrders}
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-primary">
+                          {formatters.formatCurrency(
+                            safeParseNumber(report.totalWithVat)
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {safeParseNumber(report.totalOrders)} orders
                         </p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-purple-600" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Avg Order
-                        </p>
-                        <p className="font-semibold text-sm">
-                          {formatters.formatCurrency(report.averageOrderValue)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-orange-600" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Peak Hour
-                        </p>
-                        <p className="font-semibold text-sm">
-                          {report.peakHour || "N/A"}
-                        </p>
-                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => exportReportToCSV(report)}
+                        className="text-xs"
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        CSV
+                      </Button>
                     </div>
                   </div>
 
-                  {/* Completion Rate */}
-                  <div className="pt-2 border-t">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-muted-foreground">
-                        Completion Rate
-                      </span>
-                      <span className="text-sm font-semibold text-green-600">
+                  {/* Main Stats Grid - Responsive */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+                    <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                      <div className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">
+                        {safeParseNumber(report.completedOrders)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Completed</p>
+                    </div>
+                    <div className="text-center p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                      <div className="text-base sm:text-lg font-bold text-red-600 dark:text-red-400">
+                        {safeParseNumber(report.cancelledOrders)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Cancelled</p>
+                    </div>
+                    <div className="text-center p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                      <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
                         {formatters.formatPercentage(
-                          report.orderCompletionRate
+                          safeParseNumber(report.orderCompletionRate)
                         )}
-                      </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Success</p>
+                    </div>
+                    <div className="text-center p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                      <div className="text-base sm:text-lg font-bold text-purple-600 dark:text-purple-400">
+                        {formatters.formatCurrency(
+                          safeParseNumber(report.averageOrderValue)
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Avg Order</p>
+                    </div>
+                    <div className="text-center p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                      <div className="text-base sm:text-lg font-bold text-orange-600 dark:text-orange-400">
+                        {formatters.formatPeakHour(
+                          safeGetString(report.peakHour)
+                        ) || "N/A"}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Peak</p>
+                    </div>
+                    <div className="text-center p-3 bg-teal-500/10 rounded-lg border border-teal-500/20">
+                      <div className="text-base sm:text-lg font-bold text-teal-600 dark:text-teal-400">
+                        {formatters.formatCurrency(
+                          safeParseNumber(report.vatAmount)
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">VAT</p>
                     </div>
                   </div>
 
-                  {/* Payment Methods */}
-                  <div className="pt-2 border-t">
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Payment Methods
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {paymentBreakdown.length > 0 ? (
-                        paymentBreakdown.map(
-                          (payment: PaymentBreakdown, index: number) => (
-                            <Badge
-                              key={index}
-                              variant="outline"
-                              className="text-xs"
-                            >
-                              {payment.method}:{" "}
-                              {formatters.formatPercentage(payment.percentage)}
-                            </Badge>
-                          )
-                        )
-                      ) : (
-                        <Badge variant="outline" className="text-xs">
-                          No payment data
-                        </Badge>
+                  {/* Payment & Sales Row - Responsive */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Payment Breakdown */}
+                    <div className="bg-muted/50 p-3 rounded-lg border">
+                      <h4 className="font-medium text-sm mb-2">
+                        Payment Split
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-1">
+                            <Banknote className="h-3 w-3 text-green-600 dark:text-green-400" />
+                            Cash
+                          </span>
+                          <span className="font-medium">
+                            {formatters.formatCurrency(
+                              safeParseNumber(report.totalCashOrders)
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-1">
+                            <CreditCard className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                            Card
+                          </span>
+                          <span className="font-medium">
+                            {formatters.formatCurrency(
+                              safeParseNumber(report.totalCardOrders)
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Top Items */}
+                    <div className="bg-muted/50 p-3 rounded-lg border">
+                      <h4 className="font-medium text-sm mb-2">Top Items</h4>
+                      <div className="space-y-1">
+                        {bestSellingItems.length > 0 ? (
+                          bestSellingItems
+                            .slice(0, 2)
+                            .map((item: unknown, index: number) => {
+                              const itemData = item as {
+                                itemName?: string;
+                                itemType?: string;
+                                quantity?: number;
+                                totalRevenue?: number;
+                              };
+                              return (
+                                <div
+                                  key={index}
+                                  className="flex justify-between text-xs"
+                                >
+                                  <span className="truncate">
+                                    {itemData.itemName || "Unknown"}
+                                  </span>
+                                  <span className="font-medium ml-2">
+                                    {itemData.quantity || 0}x
+                                  </span>
+                                </div>
+                              );
+                            })
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            No item data
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="mt-4 pt-3 border-t flex flex-col sm:flex-row sm:justify-between gap-2">
+                    <div className="text-xs text-muted-foreground">
+                      Generated:{" "}
+                      {format(
+                        safeGetDate(report.generatedAt || report.createdAt),
+                        "dd/MM/yyyy HH:mm"
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Net:{" "}
+                      {formatters.formatCurrency(
+                        safeParseNumber(report.totalWithoutVat)
                       )}
                     </div>
                   </div>
@@ -295,6 +369,62 @@ export function HistoricalEODReports() {
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {/* Summary Statistics */}
+      {reports.length > 0 && (
+        <div className="mt-6 pt-4 border-t">
+          <h2 className="text-lg font-semibold mb-3">📈 Summary Statistics</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-green-500/10 p-4 rounded-lg border border-green-500/20">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {formatters.formatCurrency(
+                  reports.reduce(
+                    (sum, report) => sum + safeParseNumber(report.totalWithVat),
+                    0
+                  )
+                )}
+              </div>
+              <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                Total Revenue ({reports.length} reports)
+              </p>
+            </div>
+
+            <div className="bg-blue-500/10 p-4 rounded-lg border border-blue-500/20">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {reports.reduce(
+                  (sum, report) => sum + safeParseNumber(report.totalOrders),
+                  0
+                )}
+              </div>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                Total Orders (Avg:{" "}
+                {Math.round(
+                  reports.reduce(
+                    (sum, report) => sum + safeParseNumber(report.totalOrders),
+                    0
+                  ) / reports.length
+                )}
+                )
+              </p>
+            </div>
+
+            <div className="bg-purple-500/10 p-4 rounded-lg border border-purple-500/20">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {formatters.formatPercentage(
+                  reports.reduce(
+                    (sum, report) =>
+                      sum + safeParseNumber(report.orderCompletionRate),
+                    0
+                  ) / reports.length
+                )}
+              </div>
+              <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+                Avg Completion Rate
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>

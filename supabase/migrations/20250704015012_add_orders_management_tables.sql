@@ -13,6 +13,7 @@ CREATE TABLE "public"."orders" (
     "customer_name" text,
     "items" jsonb NOT NULL,
     "total_amount" numeric(10, 2) NOT NULL,
+    "payment_method" "payment_method" NOT NULL DEFAULT 'cash',
     "status" "orders_status" DEFAULT 'pending' NOT NULL,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -45,6 +46,7 @@ CREATE INDEX "idx_orders_status" ON "public"."orders" ("status");
 CREATE INDEX "idx_orders_created_by" ON "public"."orders" ("created_by");
 CREATE INDEX "idx_orders_created_at" ON "public"."orders" ("created_at");
 CREATE INDEX "idx_orders_order_number" ON "public"."orders" ("order_number");
+CREATE INDEX "idx_orders_payment_method" ON "public"."orders" ("payment_method");
 CREATE INDEX "idx_canceled_orders_original_order_id" ON "public"."canceled_orders" ("original_order_id");
 CREATE INDEX "idx_modified_orders_original_order_id" ON "public"."modified_orders" ("original_order_id");
 

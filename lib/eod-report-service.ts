@@ -79,7 +79,11 @@ const fetchOrdersInRange = async (startDate: Date, endDate: Date): Promise<Order
     )
     .orderBy(asc(orders.createdAt));
   
-  return result as OrderWithDetails[];
+  // Parse the items JSON field
+  return result.map(order => ({
+    ...order,
+    items: Array.isArray(order.items) ? order.items : JSON.parse(order.items as string)
+  })) as OrderWithDetails[];
 };
 
 /**
@@ -94,7 +98,11 @@ const fetchCanceledOrdersInRange = async (startDate: Date, endDate: Date): Promi
     )
     .orderBy(asc(canceledOrders.canceledAt));
   
-  return result as CanceledOrderWithDetails[];
+  // Parse the orderData JSON field
+  return result.map(order => ({
+    ...order,
+    orderData: typeof order.orderData === 'string' ? JSON.parse(order.orderData) : order.orderData
+  })) as CanceledOrderWithDetails[];
 };
 
 /**
@@ -323,6 +331,10 @@ export const saveEODReportToDatabase = async (
   reportData: EODReportData, 
   generatedBy: string
 ): Promise<string> => {
+  // Calculate cash and card order counts from payment breakdown
+  const cashOrdersCount = reportData.paymentBreakdown.find(p => p.method === 'cash')?.orderCount || 0;
+  const cardOrdersCount = reportData.paymentBreakdown.find(p => p.method === 'card')?.orderCount || 0;
+  
   const reportToSave: NewEODReport = {
     reportDate: reportData.startDateTime.toISOString().split('T')[0],
     startDateTime: reportData.startDateTime,
@@ -337,6 +349,8 @@ export const saveEODReportToDatabase = async (
     vatAmount: reportData.vatAmount.toString(),
     totalCashOrders: reportData.totalCashOrders.toString(),
     totalCardOrders: reportData.totalCardOrders.toString(),
+    cashOrdersCount,
+    cardOrdersCount,
     averageOrderValue: reportData.averageOrderValue.toString(),
     peakHour: reportData.peakHour,
     orderCompletionRate: reportData.orderCompletionRate.toString(),

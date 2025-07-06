@@ -14,8 +14,11 @@ export const useEODReportFormatters = () => {
     }).format(amount);
   };
 
-  const formatPercentage = (value: number): string => {
-    return `${value.toFixed(2)}%`;
+  const formatPercentage = (value: number | string | null | undefined): string => {
+    if (value === null || value === undefined) return '0.00%';
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(numValue)) return '0.00%';
+    return `${numValue.toFixed(2)}%`;
   };
 
   const formatDate = (date: Date): string => {

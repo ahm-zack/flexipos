@@ -145,49 +145,60 @@ export function EODReportDashboard() {
       {/* Enhanced Results - Show all EOD Report Details */}
       {generateReport.isSuccess && reportData && (
         <div className="space-y-4 sm:space-y-6">
-          <Card className="w-full mx-1 sm:mx-0">
+          <Card className="w-full mx-1 sm:mx-0 border-l-4 border-l-green-500">
             <CardHeader>
               <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <span className="text-lg">Report Generated Successfully</span>
-                <Badge variant="default" className="text-xs">
+                <span className="text-lg text-green-600 dark:text-green-400">
+                  ✅ Report Generated Successfully
+                </span>
+                <Badge variant="default" className="text-xs bg-green-600">
                   Saved to Database
                 </Badge>
               </CardTitle>
+              <div className="text-sm text-muted-foreground">
+                📅 Period:{" "}
+                {formatters.formatDateRange(
+                  new Date(reportData.startDateTime),
+                  new Date(reportData.endDateTime)
+                )}{" "}
+                • 🕒 Generated:{" "}
+                {formatters.formatDate(new Date(reportData.reportGeneratedAt))}
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-xl sm:text-2xl font-bold text-green-600">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                  <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
                     {formatters.formatCurrency(reportData.totalWithVat)}
                   </div>
                   <div className="text-xs sm:text-sm text-muted-foreground">
-                    Total Revenue
+                    💰 Total Revenue
                   </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xl sm:text-2xl font-bold">
+                <div className="text-center p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                  <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {reportData.totalOrders}
                   </div>
                   <div className="text-xs sm:text-sm text-muted-foreground">
-                    Total Orders
+                    📋 Total Orders
                   </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xl sm:text-2xl font-bold text-blue-600">
+                <div className="text-center p-4 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                  <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {formatters.formatPercentage(
                       reportData.orderCompletionRate
                     )}
                   </div>
                   <div className="text-xs sm:text-sm text-muted-foreground">
-                    Completion Rate
+                    ✅ Completion Rate
                   </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xl sm:text-2xl font-bold">
+                <div className="text-center p-4 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                  <div className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400">
                     {formatters.formatCurrency(reportData.averageOrderValue)}
                   </div>
                   <div className="text-xs sm:text-sm text-muted-foreground">
-                    Average Order
+                    📊 Average Order
                   </div>
                 </div>
               </div>
@@ -226,12 +237,14 @@ export function EODReportDashboard() {
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 max-w-6xl mx-auto">
                 <Card className="w-full mx-1 sm:mx-0">
                   <CardHeader>
-                    <CardTitle className="text-lg">Financial Summary</CardTitle>
+                    <CardTitle className="text-lg">
+                      💰 Financial Summary
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Total Revenue (with VAT):</span>
-                      <span className="font-bold text-sm">
+                      <span className="font-bold text-sm text-green-600">
                         {formatters.formatCurrency(reportData.totalWithVat)}
                       </span>
                     </div>
@@ -245,13 +258,13 @@ export function EODReportDashboard() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">VAT Amount:</span>
-                      <span className="text-sm">
+                      <span className="text-sm text-blue-600">
                         {formatters.formatCurrency(reportData.vatAmount)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Average Order Value:</span>
-                      <span className="text-sm">
+                      <span className="text-sm font-medium">
                         {formatters.formatCurrency(
                           reportData.averageOrderValue
                         )}
@@ -262,7 +275,9 @@ export function EODReportDashboard() {
 
                 <Card className="w-full mx-1 sm:mx-0">
                   <CardHeader>
-                    <CardTitle className="text-lg">Order Statistics</CardTitle>
+                    <CardTitle className="text-lg">
+                      📊 Order Statistics
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between items-center">
@@ -273,20 +288,21 @@ export function EODReportDashboard() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Completed Orders:</span>
-                      <span className="text-green-600 text-sm">
+                      <span className="text-green-600 text-sm font-medium">
                         {reportData.completedOrders}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Cancelled Orders:</span>
-                      <span className="text-red-600 text-sm">
+                      <span className="text-red-600 text-sm font-medium">
                         {reportData.totalCancelledOrders}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Peak Hour:</span>
-                      <span className="font-bold text-sm">
-                        {reportData.peakHour || "N/A"}
+                      <span className="font-bold text-sm text-purple-600">
+                        {formatters.formatPeakHour(reportData.peakHour) ||
+                          "N/A"}
                       </span>
                     </div>
                   </CardContent>
