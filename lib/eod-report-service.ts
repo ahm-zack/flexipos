@@ -142,25 +142,17 @@ const calculatePaymentBreakdown = (orders: OrderWithDetails[]): PaymentBreakdown
   const breakdown: Record<PaymentMethod, { amount: number; count: number }> = {
     cash: { amount: 0, count: 0 },
     card: { amount: 0, count: 0 },
-    digital_wallet: { amount: 0, count: 0 },
-    bank_transfer: { amount: 0, count: 0 }
+    mixed: { amount: 0, count: 0 }
   };
 
   orders.forEach(order => {
     const amount = parseFloat(order.totalAmount || '0');
-    let paymentMethod: PaymentMethod;
+    const paymentMethod = order.paymentMethod as PaymentMethod;
     
-    // Map payment methods
-    if (order.paymentMethod === 'cash') {
-      paymentMethod = 'cash';
-    } else if (order.paymentMethod === 'card') {
-      paymentMethod = 'card';
-    } else {
-      paymentMethod = 'digital_wallet'; // Default for mixed/other
+    if (breakdown[paymentMethod]) {
+      breakdown[paymentMethod].amount += amount;
+      breakdown[paymentMethod].count += 1;
     }
-    
-    breakdown[paymentMethod].amount += amount;
-    breakdown[paymentMethod].count += 1;
   });
 
   const totalRevenue = calculateTotalRevenue(orders);

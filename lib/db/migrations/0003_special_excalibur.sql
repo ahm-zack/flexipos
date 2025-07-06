@@ -1,5 +1,9 @@
 CREATE TYPE "public"."eod_order_status" AS ENUM('pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled');--> statement-breakpoint
-CREATE TYPE "public"."payment_method" AS ENUM('cash', 'card', 'digital_wallet', 'bank_transfer');--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."payment_method" AS ENUM('cash', 'card', 'mixed');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;--> statement-breakpoint
 CREATE TYPE "public"."report_type" AS ENUM('daily', 'custom', 'weekly', 'monthly');--> statement-breakpoint
 CREATE TABLE "eod_reports" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

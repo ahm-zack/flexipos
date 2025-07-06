@@ -6,6 +6,7 @@ export * from './hooks';
 
 // Export all components
 export * from './components';
+export { EODReportManager } from './components/eod-report-manager';
 
 // Export service functions for direct use
 export {

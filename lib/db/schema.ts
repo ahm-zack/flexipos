@@ -147,7 +147,7 @@ export type MiniPieType = typeof miniPieTypeEnum.enumValues[number];
 export type MiniPieSize = typeof miniPieSizeEnum.enumValues[number];
 
 // Define payment method enum for EOD reports
-export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'digital_wallet', 'bank_transfer']);
+export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'mixed']);
 
 // Define order status enum for EOD reports
 export const eodOrderStatusEnum = pgEnum('eod_order_status', ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']);

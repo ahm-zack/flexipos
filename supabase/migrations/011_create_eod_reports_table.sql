@@ -3,7 +3,7 @@
 -- Date: 2025-07-06
 
 -- Create payment method enum
-CREATE TYPE payment_method AS ENUM ('cash', 'card', 'digital_wallet', 'bank_transfer');
+CREATE TYPE payment_method AS ENUM ('cash', 'card', 'mixed');
 
 -- Create EOD order status enum
 CREATE TYPE eod_order_status AS ENUM ('pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled');

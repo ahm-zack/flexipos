@@ -434,7 +434,7 @@ export type EditMiniPieFormData = z.infer<typeof editMiniPieFormSchema>;
 // EOD Report Schemas
 
 // Payment method enum
-export const PaymentMethodEnum = z.enum(['cash', 'card', 'digital_wallet', 'bank_transfer']);
+export const PaymentMethodEnum = z.enum(['cash', 'card', 'mixed']);
 export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
 
 // Order status enum for reporting
