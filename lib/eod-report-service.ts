@@ -539,3 +539,24 @@ export const formatCurrency = (amount: number): string => {
 export const formatPercentage = (percentage: number): string => {
   return `${percentage.toFixed(2)}%`;
 };
+
+/**
+ * Deletes an EOD report by ID
+ */
+export const deleteEODReport = async (reportId: string): Promise<void> => {
+  try {
+    const result = await db
+      .delete(eodReports)
+      .where(eq(eodReports.id, reportId))
+      .returning();
+    
+    if (result.length === 0) {
+      throw new Error(`EOD report with ID ${reportId} not found`);
+    }
+    
+    console.log(`EOD report ${reportId} deleted successfully`);
+  } catch (error) {
+    console.error(`Error deleting EOD report ${reportId}:`, error);
+    throw error;
+  }
+};

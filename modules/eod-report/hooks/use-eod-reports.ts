@@ -138,6 +138,30 @@ const fetchEODReportById = async (id: string): Promise<SavedEODReport> => {
   return data.data;
 };
 
+const deleteEODReport = async (id: string): Promise<void> => {
+  const response = await fetch(`/api/admin/reports/eod/${id}`, {
+    method: 'DELETE',
+  });
+  
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error("EOD report not found");
+    }
+    // Handle specific auth errors
+    if (response.status === 403) {
+      const data = await response.json();
+      throw new Error(data.error || 'Insufficient permissions to delete EOD reports');
+    }
+    throw new Error("Failed to delete EOD report");
+  }
+  
+  const data = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.error || "Failed to delete EOD report");
+  }
+};
+
 // Hooks
 
 /**
@@ -201,6 +225,21 @@ export const useEODReport = (id: string) => {
     queryFn: () => fetchEODReportById(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+/**
+ * Hook to delete an EOD report
+ */
+export const useDeleteEODReport = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: deleteEODReport,
+    onSuccess: () => {
+      // Invalidate history queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: eodReportKeys.history() });
+    },
   });
 };
 

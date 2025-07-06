@@ -1,13 +1,35 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, CreditCard, Banknote, Download } from "lucide-react";
-import { useEODReportHistory, useEODReportFormatters } from "../hooks";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  CalendarDays,
+  CreditCard,
+  Banknote,
+  Download,
+  Trash2,
+} from "lucide-react";
+import { SaudiRiyalSymbol } from "@/components/currency/saudi-riyal-symbol";
+import {
+  useEODReportHistory,
+  useEODReportFormatters,
+  useDeleteEODReport,
+} from "../hooks";
 import { format } from "date-fns";
 
 export function HistoricalEODReports() {
+  const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   // Simple history request - get all reports
   const historyRequest = {
     page: 1,
@@ -21,6 +43,7 @@ export function HistoricalEODReports() {
     refetch,
   } = useEODReportHistory(historyRequest);
   const formatters = useEODReportFormatters();
+  const deleteReport = useDeleteEODReport();
 
   if (isLoading) {
     return (
@@ -141,9 +164,7 @@ export function HistoricalEODReports() {
         };
         return [
           itemData.itemName || "Unknown",
-          `${itemData.quantity || 0} sold - ${formatters.formatCurrency(
-            itemData.totalRevenue || 0
-          )}`,
+          `${itemData.quantity || 0} sold - ${itemData.totalRevenue || 0}`,
         ];
       }),
     ];
@@ -159,6 +180,36 @@ export function HistoricalEODReports() {
     )}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  // Delete functionality for individual reports
+  const handleDeleteReport = (reportId: string) => {
+    setDeletingReportId(reportId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteReport = async () => {
+    if (!deletingReportId) return;
+
+    try {
+      await deleteReport.mutateAsync(deletingReportId);
+
+      // Close dialog and reset state
+      setDeleteDialogOpen(false);
+      setDeletingReportId(null);
+
+      // The hook automatically invalidates the cache and refetches
+      console.log("Report deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete report:", error);
+      // You might want to show an error toast here
+      // For now, keep the dialog open so user can try again
+    }
+  };
+
+  const cancelDeleteReport = () => {
+    setDeleteDialogOpen(false);
+    setDeletingReportId(null);
   };
 
   return (
@@ -208,26 +259,16 @@ export function HistoricalEODReports() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-primary">
-                          {formatters.formatCurrency(
-                            safeParseNumber(report.totalWithVat)
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {safeParseNumber(report.totalOrders)} orders
-                        </p>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-primary flex items-center gap-1">
+                        <SaudiRiyalSymbol size={20} className="text-primary" />
+                        {formatters.formatCurrency(
+                          safeParseNumber(report.totalWithVat)
+                        )}
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => exportReportToCSV(report)}
-                        className="text-xs"
-                      >
-                        <Download className="h-3 w-3 mr-1" />
-                        CSV
-                      </Button>
+                      <p className="text-sm text-muted-foreground">
+                        {safeParseNumber(report.totalOrders)} orders
+                      </p>
                     </div>
                   </div>
 
@@ -254,7 +295,11 @@ export function HistoricalEODReports() {
                       <p className="text-xs text-muted-foreground">Success</p>
                     </div>
                     <div className="text-center p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                      <div className="text-base sm:text-lg font-bold text-purple-600 dark:text-purple-400">
+                      <div className="text-base sm:text-lg font-bold text-purple-600 dark:text-purple-400 flex items-center justify-center gap-1">
+                        <SaudiRiyalSymbol
+                          size={14}
+                          className="text-purple-600 dark:text-purple-400"
+                        />
                         {formatters.formatCurrency(
                           safeParseNumber(report.averageOrderValue)
                         )}
@@ -270,7 +315,11 @@ export function HistoricalEODReports() {
                       <p className="text-xs text-muted-foreground">Peak</p>
                     </div>
                     <div className="text-center p-3 bg-teal-500/10 rounded-lg border border-teal-500/20">
-                      <div className="text-base sm:text-lg font-bold text-teal-600 dark:text-teal-400">
+                      <div className="text-base sm:text-lg font-bold text-teal-600 dark:text-teal-400 flex items-center justify-center gap-1">
+                        <SaudiRiyalSymbol
+                          size={14}
+                          className="text-teal-600 dark:text-teal-400"
+                        />
                         {formatters.formatCurrency(
                           safeParseNumber(report.vatAmount)
                         )}
@@ -292,7 +341,11 @@ export function HistoricalEODReports() {
                             <Banknote className="h-3 w-3 text-green-600 dark:text-green-400" />
                             Cash
                           </span>
-                          <span className="font-medium">
+                          <span className="font-medium flex items-center gap-1">
+                            <SaudiRiyalSymbol
+                              size={12}
+                              className="text-green-600 dark:text-green-400"
+                            />
                             {formatters.formatCurrency(
                               safeParseNumber(report.totalCashOrders)
                             )}
@@ -303,7 +356,11 @@ export function HistoricalEODReports() {
                             <CreditCard className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                             Card
                           </span>
-                          <span className="font-medium">
+                          <span className="font-medium flex items-center gap-1">
+                            <SaudiRiyalSymbol
+                              size={12}
+                              className="text-blue-600 dark:text-blue-400"
+                            />
                             {formatters.formatCurrency(
                               safeParseNumber(report.totalCardOrders)
                             )}
@@ -350,19 +407,47 @@ export function HistoricalEODReports() {
                   </div>
 
                   {/* Footer */}
-                  <div className="mt-4 pt-3 border-t flex flex-col sm:flex-row sm:justify-between gap-2">
-                    <div className="text-xs text-muted-foreground">
-                      Generated:{" "}
-                      {format(
-                        safeGetDate(report.generatedAt || report.createdAt),
-                        "dd/MM/yyyy HH:mm"
-                      )}
+                  <div className="mt-4 pt-3 border-t flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                      <div className="text-xs text-muted-foreground">
+                        Generated:{" "}
+                        {format(
+                          safeGetDate(report.generatedAt || report.createdAt),
+                          "dd/MM/yyyy HH:mm"
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1">
+                        Net:
+                        <SaudiRiyalSymbol
+                          size={10}
+                          className="text-muted-foreground"
+                        />
+                        {formatters.formatCurrency(
+                          safeParseNumber(report.totalWithoutVat)
+                        )}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      Net:{" "}
-                      {formatters.formatCurrency(
-                        safeParseNumber(report.totalWithoutVat)
-                      )}
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => exportReportToCSV(report)}
+                        className="text-xs"
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        Download CSV
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          handleDeleteReport(safeGetString(report.id))
+                        }
+                        className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -378,7 +463,11 @@ export function HistoricalEODReports() {
           <h2 className="text-lg font-semibold mb-3">📈 Summary Statistics</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-green-500/10 p-4 rounded-lg border border-green-500/20">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
+                <SaudiRiyalSymbol
+                  size={20}
+                  className="text-green-600 dark:text-green-400"
+                />
                 {formatters.formatCurrency(
                   reports.reduce(
                     (sum, report) => sum + safeParseNumber(report.totalWithVat),
@@ -427,6 +516,42 @@ export function HistoricalEODReports() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete EOD Report</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this EOD report? This action
+              cannot be undone.
+              {deletingReportId && (
+                <span className="block mt-2 text-sm font-medium">
+                  Report ID: #{deletingReportId.slice(-8)}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={cancelDeleteReport}
+              className="text-sm"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteReport}
+              disabled={deleteReport.isPending}
+              className="text-sm"
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              {deleteReport.isPending ? "Deleting..." : "Delete Report"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

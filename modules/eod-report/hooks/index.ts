@@ -5,6 +5,7 @@ export {
   useGenerateEODReportWithPreset,
   useEODReportHistory,
   useEODReport,
+  useDeleteEODReport,
   useTodayEODReport,
   useYesterdayEODReport,
   useLast7DaysEODReport,

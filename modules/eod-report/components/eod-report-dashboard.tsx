@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SaudiRiyalSymbol } from "@/components/currency/saudi-riyal-symbol";
 import { useGenerateEODReport, useEODReportFormatters } from "../hooks";
 
 // Export the historical reports component
@@ -168,7 +169,11 @@ export function EODReportDashboard() {
             <CardContent>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-green-500/10 rounded-lg border border-green-500/20">
-                  <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
+                  <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400 flex items-center justify-center gap-1">
+                    <SaudiRiyalSymbol
+                      size={20}
+                      className="text-green-600 dark:text-green-400"
+                    />
                     {formatters.formatCurrency(reportData.totalWithVat)}
                   </div>
                   <div className="text-xs sm:text-sm text-muted-foreground">
@@ -194,7 +199,11 @@ export function EODReportDashboard() {
                   </div>
                 </div>
                 <div className="text-center p-4 bg-orange-500/10 rounded-lg border border-orange-500/20">
-                  <div className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400">
+                  <div className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400 flex items-center justify-center gap-1">
+                    <SaudiRiyalSymbol
+                      size={20}
+                      className="text-orange-600 dark:text-orange-400"
+                    />
                     {formatters.formatCurrency(reportData.averageOrderValue)}
                   </div>
                   <div className="text-xs sm:text-sm text-muted-foreground">
@@ -244,7 +253,11 @@ export function EODReportDashboard() {
                   <CardContent className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Total Revenue (with VAT):</span>
-                      <span className="font-bold text-sm text-green-600">
+                      <span className="font-bold text-sm text-green-600 flex items-center gap-1">
+                        <SaudiRiyalSymbol
+                          size={12}
+                          className="text-green-600"
+                        />
                         {formatters.formatCurrency(reportData.totalWithVat)}
                       </span>
                     </div>
@@ -252,19 +265,22 @@ export function EODReportDashboard() {
                       <span className="text-sm">
                         Total Revenue (without VAT):
                       </span>
-                      <span className="text-sm">
+                      <span className="text-sm flex items-center gap-1">
+                        <SaudiRiyalSymbol size={12} className="text-current" />
                         {formatters.formatCurrency(reportData.totalWithoutVat)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">VAT Amount:</span>
-                      <span className="text-sm text-blue-600">
+                      <span className="text-sm text-blue-600 flex items-center gap-1">
+                        <SaudiRiyalSymbol size={12} className="text-blue-600" />
                         {formatters.formatCurrency(reportData.vatAmount)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Average Order Value:</span>
-                      <span className="text-sm font-medium">
+                      <span className="text-sm font-medium flex items-center gap-1">
+                        <SaudiRiyalSymbol size={12} className="text-current" />
                         {formatters.formatCurrency(
                           reportData.averageOrderValue
                         )}
@@ -300,7 +316,7 @@ export function EODReportDashboard() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Peak Hour:</span>
-                      <span className="font-bold text-sm text-purple-600">
+                      <span className="font-bold text-sm">
                         {formatters.formatPeakHour(reportData.peakHour) ||
                           "N/A"}
                       </span>
@@ -333,7 +349,11 @@ export function EODReportDashboard() {
                           </div>
                         </div>
                         <div className="text-left sm:text-right">
-                          <div className="font-bold text-sm">
+                          <div className="font-bold text-sm flex items-center gap-1">
+                            <SaudiRiyalSymbol
+                              size={12}
+                              className="text-current"
+                            />
                             {formatters.formatCurrency(payment.totalAmount)}
                           </div>
                           <div className="text-xs text-muted-foreground">
@@ -368,11 +388,20 @@ export function EODReportDashboard() {
                           </div>
                         </div>
                         <div className="text-left sm:text-right">
-                          <div className="font-bold text-sm">
+                          <div className="font-bold text-sm flex items-center gap-1">
+                            <SaudiRiyalSymbol
+                              size={12}
+                              className="text-current"
+                            />
                             {formatters.formatCurrency(item.totalRevenue)}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            Avg: {formatters.formatCurrency(item.averagePrice)}
+                          <div className="text-xs text-muted-foreground flex items-center gap-1">
+                            Avg:{" "}
+                            <SaudiRiyalSymbol
+                              size={10}
+                              className="text-muted-foreground"
+                            />
+                            {formatters.formatCurrency(item.averagePrice)}
                           </div>
                         </div>
                       </div>
@@ -401,7 +430,11 @@ export function EODReportDashboard() {
                           <div className="text-xs text-muted-foreground">
                             {hour.orderCount} orders
                           </div>
-                          <div className="font-bold text-green-600 text-sm">
+                          <div className="font-bold text-green-600 text-sm flex items-center gap-1">
+                            <SaudiRiyalSymbol
+                              size={12}
+                              className="text-green-600"
+                            />
                             {formatters.formatCurrency(hour.revenue)}
                           </div>
                         </div>
