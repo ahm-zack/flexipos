@@ -37,17 +37,6 @@ export function HistoricalEODReports() {
   } = useEODReportHistory(historyRequest);
   const formatters = useEODReportFormatters();
 
-  // Debug: Log the data to console
-  React.useEffect(() => {
-    if (reportData) {
-      console.log("EOD Report Data:", reportData);
-      console.log("Reports count:", reportData.reports?.length || 0);
-      if (reportData.reports?.length > 0) {
-        console.log("First report sample:", reportData.reports[0]);
-      }
-    }
-  }, [reportData]);
-
   const filteredReports = React.useMemo(() => {
     if (!reportData?.reports) return [];
 
@@ -136,51 +125,6 @@ export function HistoricalEODReports() {
         </p>
       </div>
 
-      {/* Debug Information */}
-      {process.env.NODE_ENV === "development" && (
-        <Card className="w-full mx-1 sm:mx-auto max-w-4xl bg-gray-50">
-          <CardHeader>
-            <CardTitle className="text-sm text-gray-600">
-              Debug Info (Development Only)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xs space-y-2">
-              <p>
-                <strong>Loading:</strong> {isLoading ? "Yes" : "No"}
-              </p>
-              <p>
-                <strong>Error:</strong> {error ? String(error) : "None"}
-              </p>
-              <p>
-                <strong>Reports Data:</strong>{" "}
-                {reportData ? "Available" : "Not Available"}
-              </p>
-              <p>
-                <strong>Reports Count:</strong>{" "}
-                {reportData?.reports?.length || 0}
-              </p>
-              <p>
-                <strong>Selected Period:</strong> {selectedPeriod}
-              </p>
-              <p>
-                <strong>Filtered Count:</strong> {filteredReports.length}
-              </p>
-              {reportData?.reports && reportData.reports.length > 0 && (
-                <details className="mt-2">
-                  <summary className="cursor-pointer font-medium">
-                    Sample Report Data
-                  </summary>
-                  <pre className="mt-2 text-xs bg-white p-2 rounded border overflow-auto max-h-32">
-                    {JSON.stringify(reportData.reports[0], null, 2)}
-                  </pre>
-                </details>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Filter Controls */}
       <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
         <CardHeader>
@@ -234,8 +178,7 @@ export function HistoricalEODReports() {
                 typeof report.paymentBreakdown === "string"
                   ? JSON.parse(report.paymentBreakdown)
                   : report.paymentBreakdown || [];
-            } catch (e) {
-              console.warn("Failed to parse paymentBreakdown:", e);
+            } catch {
               paymentBreakdown = [];
             }
 

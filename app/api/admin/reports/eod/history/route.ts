@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      data: result.reports,
+      reports: result.reports,
       pagination: result.pagination,
       message: 'EOD reports retrieved successfully',
       requestedBy: user.id

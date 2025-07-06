@@ -109,7 +109,7 @@ const fetchEODReportHistory = async (historyRequest: EODReportHistoryRequest): P
   }
   
   return {
-    reports: data.data,
+    reports: data.reports,
     pagination: data.pagination,
   };
 };
