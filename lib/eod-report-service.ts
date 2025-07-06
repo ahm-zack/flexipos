@@ -1,6 +1,7 @@
 import { db } from './db';
 import { orders, canceledOrders, eodReports, type NewEODReport } from './db/schema';
 import { and, between, eq, sql, desc, asc } from 'drizzle-orm';
+import { generateEODReportNumber } from './eod-report/server-utils';
 import { 
   EODReportDataSchema, 
   EODReportRequestSchema, 
@@ -331,11 +332,15 @@ export const saveEODReportToDatabase = async (
   reportData: EODReportData, 
   generatedBy: string
 ): Promise<string> => {
+  // Generate the report number
+  const reportNumber = await generateEODReportNumber();
+  
   // Calculate cash and card order counts from payment breakdown
   const cashOrdersCount = reportData.paymentBreakdown.find(p => p.method === 'cash')?.orderCount || 0;
   const cardOrdersCount = reportData.paymentBreakdown.find(p => p.method === 'card')?.orderCount || 0;
   
   const reportToSave: NewEODReport = {
+    reportNumber,
     reportDate: reportData.startDateTime.toISOString().split('T')[0],
     startDateTime: reportData.startDateTime,
     endDateTime: reportData.endDateTime,
@@ -386,6 +391,7 @@ export const getEODReportsHistory = async (
     db
       .select({
         id: eodReports.id,
+        reportNumber: eodReports.reportNumber,
         reportDate: eodReports.reportDate,
         startDateTime: eodReports.startDateTime,
         endDateTime: eodReports.endDateTime,

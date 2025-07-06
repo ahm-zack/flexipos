@@ -18,9 +18,27 @@ export function EODReportDashboard() {
   const [startTime, setStartTime] = useState("");
   const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [nextReportNumber, setNextReportNumber] = useState<string | null>(null);
 
   const generateReport = useGenerateEODReport();
   const formatters = useEODReportFormatters();
+
+  // Fetch next report number when component mounts
+  React.useEffect(() => {
+    const fetchNextReportNumber = async () => {
+      try {
+        const response = await fetch("/api/admin/reports/eod/next-number");
+        const result = await response.json();
+        if (result.success && result.data?.nextReportNumber) {
+          setNextReportNumber(result.data.nextReportNumber);
+        }
+      } catch (error) {
+        console.error("Failed to fetch next report number:", error);
+      }
+    };
+
+    fetchNextReportNumber();
+  }, []);
 
   // Helper function to format date for display
   const formatDateForDisplay = (dateString: string) => {
@@ -64,7 +82,14 @@ export function EODReportDashboard() {
 
       <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
         <CardHeader>
-          <CardTitle className="text-lg">Select Date & Time Range</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <CardTitle className="text-lg">Select Date & Time Range</CardTitle>
+            {nextReportNumber && (
+              <Badge variant="secondary" className="text-xs font-mono">
+                Next: {nextReportNumber}
+              </Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

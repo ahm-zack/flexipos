@@ -114,6 +114,11 @@ export function HistoricalEODReports() {
 
     const csvData = [
       ["EOD Report Data"],
+      [
+        "Report Number",
+        safeGetString(reportData.reportNumber) ||
+          `Report #${safeGetString(reportData.id).slice(-8)}`,
+      ],
       ["Report ID", safeGetString(reportData.id)],
       [
         "Generated At",
@@ -174,7 +179,10 @@ export function HistoricalEODReports() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `EOD_Report_${safeGetString(reportData.id).slice(-8)}_${format(
+    const reportNumber =
+      safeGetString(reportData.reportNumber) ||
+      `Report_${safeGetString(reportData.id).slice(-8)}`;
+    a.download = `${reportNumber}_${format(
       safeGetDate(reportData.reportDate || reportData.createdAt),
       "yyyy-MM-dd"
     )}.csv`;
@@ -213,10 +221,12 @@ export function HistoricalEODReports() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 px-4">
-      <div>
-        <h1 className="text-3xl font-bold">📊 Historical EOD Reports</h1>
-        <p className="text-muted-foreground">
+    <div className="max-w-7xl mx-auto space-y-6 px-2 sm:px-4">
+      <div className="px-2 sm:px-0">
+        <h1 className="text-2xl sm:text-3xl font-bold">
+          📊 Historical EOD Reports
+        </h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
           View previous End of Day reports ({reports.length} total reports
           available)
         </p>
@@ -230,27 +240,28 @@ export function HistoricalEODReports() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 px-1 sm:px-0">
           {reports.map((report) => {
             const bestSellingItems = safeParseJSON(report.bestSellingItems);
 
             return (
               <Card
                 key={safeGetString(report.id)}
-                className="w-full hover:shadow-md transition-all duration-200 border-l-4 border-l-primary"
+                className="w-full mx-auto hover:shadow-md transition-all duration-200 border-l-4 border-l-primary"
               >
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   {/* Header Row */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-primary/10 p-2 rounded-lg">
-                        <CalendarDays className="h-5 w-5 text-primary" />
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2 sm:gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
+                        <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-lg">
-                          Report #{safeGetString(report.id).slice(-8)}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-base sm:text-lg truncate">
+                          {safeGetString(report.reportNumber) ||
+                            `Report #${safeGetString(report.id).slice(-8)}`}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {format(
                             safeGetDate(report.reportDate || report.createdAt),
                             "dd/MM/yyyy"
@@ -259,119 +270,154 @@ export function HistoricalEODReports() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-primary flex items-center gap-1">
-                        <SaudiRiyalSymbol size={20} className="text-primary" />
-                        {formatters.formatCurrency(
-                          safeParseNumber(report.totalWithVat)
-                        )}
+                    <div className="text-left sm:text-right flex-shrink-0">
+                      <div className="text-xl sm:text-2xl font-bold text-primary flex items-center gap-1">
+                        <SaudiRiyalSymbol
+                          size={16}
+                          className="text-primary sm:hidden"
+                        />
+                        <SaudiRiyalSymbol
+                          size={20}
+                          className="text-primary hidden sm:block"
+                        />
+                        <span className="truncate">
+                          {formatters.formatCurrency(
+                            safeParseNumber(report.totalWithVat)
+                          )}
+                        </span>
                       </div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {safeParseNumber(report.totalOrders)} orders
                       </p>
                     </div>
                   </div>
 
                   {/* Main Stats Grid - Responsive */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-                    <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                      <div className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <div className="text-center p-2 sm:p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                      <div className="text-sm sm:text-base lg:text-lg font-bold text-green-600 dark:text-green-400">
                         {safeParseNumber(report.completedOrders)}
                       </div>
                       <p className="text-xs text-muted-foreground">Completed</p>
                     </div>
-                    <div className="text-center p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-                      <div className="text-base sm:text-lg font-bold text-red-600 dark:text-red-400">
+                    <div className="text-center p-2 sm:p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                      <div className="text-sm sm:text-base lg:text-lg font-bold text-red-600 dark:text-red-400">
                         {safeParseNumber(report.cancelledOrders)}
                       </div>
                       <p className="text-xs text-muted-foreground">Cancelled</p>
                     </div>
-                    <div className="text-center p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                      <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
+                    <div className="text-center p-2 sm:p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                      <div className="text-sm sm:text-base lg:text-lg font-bold text-blue-600 dark:text-blue-400">
                         {formatters.formatPercentage(
                           safeParseNumber(report.orderCompletionRate)
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">Success</p>
                     </div>
-                    <div className="text-center p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                      <div className="text-base sm:text-lg font-bold text-purple-600 dark:text-purple-400 flex items-center justify-center gap-1">
+                    <div className="text-center p-2 sm:p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                      <div className="text-sm sm:text-base lg:text-lg font-bold text-purple-600 dark:text-purple-400 flex items-center justify-center gap-1">
+                        <SaudiRiyalSymbol
+                          size={12}
+                          className="text-purple-600 dark:text-purple-400 sm:hidden"
+                        />
                         <SaudiRiyalSymbol
                           size={14}
-                          className="text-purple-600 dark:text-purple-400"
+                          className="text-purple-600 dark:text-purple-400 hidden sm:block"
                         />
-                        {formatters.formatCurrency(
-                          safeParseNumber(report.averageOrderValue)
-                        )}
+                        <span className="truncate text-xs sm:text-sm lg:text-base">
+                          {formatters.formatCurrency(
+                            safeParseNumber(report.averageOrderValue)
+                          )}
+                        </span>
                       </div>
                       <p className="text-xs text-muted-foreground">Avg Order</p>
                     </div>
-                    <div className="text-center p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
-                      <div className="text-base sm:text-lg font-bold text-orange-600 dark:text-orange-400">
+                    <div className="text-center p-2 sm:p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                      <div className="text-sm sm:text-base lg:text-lg font-bold text-orange-600 dark:text-orange-400">
                         {formatters.formatPeakHour(
                           safeGetString(report.peakHour)
                         ) || "N/A"}
                       </div>
                       <p className="text-xs text-muted-foreground">Peak</p>
                     </div>
-                    <div className="text-center p-3 bg-teal-500/10 rounded-lg border border-teal-500/20">
-                      <div className="text-base sm:text-lg font-bold text-teal-600 dark:text-teal-400 flex items-center justify-center gap-1">
+                    <div className="text-center p-2 sm:p-3 bg-teal-500/10 rounded-lg border border-teal-500/20">
+                      <div className="text-sm sm:text-base lg:text-lg font-bold text-teal-600 dark:text-teal-400 flex items-center justify-center gap-1">
+                        <SaudiRiyalSymbol
+                          size={12}
+                          className="text-teal-600 dark:text-teal-400 sm:hidden"
+                        />
                         <SaudiRiyalSymbol
                           size={14}
-                          className="text-teal-600 dark:text-teal-400"
+                          className="text-teal-600 dark:text-teal-400 hidden sm:block"
                         />
-                        {formatters.formatCurrency(
-                          safeParseNumber(report.vatAmount)
-                        )}
+                        <span className="truncate text-xs sm:text-sm lg:text-base">
+                          {formatters.formatCurrency(
+                            safeParseNumber(report.vatAmount)
+                          )}
+                        </span>
                       </div>
                       <p className="text-xs text-muted-foreground">VAT</p>
                     </div>
                   </div>
 
                   {/* Payment & Sales Row - Responsive */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     {/* Payment Breakdown */}
-                    <div className="bg-muted/50 p-3 rounded-lg border">
-                      <h4 className="font-medium text-sm mb-2">
+                    <div className="bg-muted/50 p-2 sm:p-3 rounded-lg border">
+                      <h4 className="font-medium text-xs sm:text-sm mb-2">
                         Payment Split
                       </h4>
                       <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-xs sm:text-sm">
                           <span className="flex items-center gap-1">
-                            <Banknote className="h-3 w-3 text-green-600 dark:text-green-400" />
-                            Cash
+                            <Banknote className="h-3 w-3 text-green-600 dark:text-green-400 flex-shrink-0" />
+                            <span className="truncate">Cash</span>
                           </span>
-                          <span className="font-medium flex items-center gap-1">
+                          <span className="font-medium flex items-center gap-1 flex-shrink-0">
+                            <SaudiRiyalSymbol
+                              size={10}
+                              className="text-green-600 dark:text-green-400 sm:hidden"
+                            />
                             <SaudiRiyalSymbol
                               size={12}
-                              className="text-green-600 dark:text-green-400"
+                              className="text-green-600 dark:text-green-400 hidden sm:block"
                             />
-                            {formatters.formatCurrency(
-                              safeParseNumber(report.totalCashOrders)
-                            )}
+                            <span className="truncate">
+                              {formatters.formatCurrency(
+                                safeParseNumber(report.totalCashOrders)
+                              )}
+                            </span>
                           </span>
                         </div>
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-xs sm:text-sm">
                           <span className="flex items-center gap-1">
-                            <CreditCard className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                            Card
+                            <CreditCard className="h-3 w-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                            <span className="truncate">Card</span>
                           </span>
-                          <span className="font-medium flex items-center gap-1">
+                          <span className="font-medium flex items-center gap-1 flex-shrink-0">
+                            <SaudiRiyalSymbol
+                              size={10}
+                              className="text-blue-600 dark:text-blue-400 sm:hidden"
+                            />
                             <SaudiRiyalSymbol
                               size={12}
-                              className="text-blue-600 dark:text-blue-400"
+                              className="text-blue-600 dark:text-blue-400 hidden sm:block"
                             />
-                            {formatters.formatCurrency(
-                              safeParseNumber(report.totalCardOrders)
-                            )}
+                            <span className="truncate">
+                              {formatters.formatCurrency(
+                                safeParseNumber(report.totalCardOrders)
+                              )}
+                            </span>
                           </span>
                         </div>
                       </div>
                     </div>
 
                     {/* Top Items */}
-                    <div className="bg-muted/50 p-3 rounded-lg border">
-                      <h4 className="font-medium text-sm mb-2">Top Items</h4>
+                    <div className="bg-muted/50 p-2 sm:p-3 rounded-lg border">
+                      <h4 className="font-medium text-xs sm:text-sm mb-2">
+                        Top Items
+                      </h4>
                       <div className="space-y-1">
                         {bestSellingItems.length > 0 ? (
                           bestSellingItems
@@ -386,12 +432,12 @@ export function HistoricalEODReports() {
                               return (
                                 <div
                                   key={index}
-                                  className="flex justify-between text-xs"
+                                  className="flex justify-between text-xs items-center gap-2"
                                 >
-                                  <span className="truncate">
+                                  <span className="truncate flex-1 min-w-0">
                                     {itemData.itemName || "Unknown"}
                                   </span>
-                                  <span className="font-medium ml-2">
+                                  <span className="font-medium flex-shrink-0">
                                     {itemData.quantity || 0}x
                                   </span>
                                 </div>
@@ -407,7 +453,7 @@ export function HistoricalEODReports() {
                   </div>
 
                   {/* Footer */}
-                  <div className="mt-4 pt-3 border-t flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                  <div className="mt-3 sm:mt-4 pt-3 border-t flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-2">
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                       <div className="text-xs text-muted-foreground">
                         Generated:{" "}
@@ -422,20 +468,22 @@ export function HistoricalEODReports() {
                           size={10}
                           className="text-muted-foreground"
                         />
-                        {formatters.formatCurrency(
-                          safeParseNumber(report.totalWithoutVat)
-                        )}
+                        <span className="truncate">
+                          {formatters.formatCurrency(
+                            safeParseNumber(report.totalWithoutVat)
+                          )}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => exportReportToCSV(report)}
-                        className="text-xs"
+                        className="text-xs flex-1 sm:flex-initial"
                       >
                         <Download className="h-3 w-3 mr-1" />
-                        Download CSV
+                        <span className="hidden sm:inline">Download </span>CSV
                       </Button>
                       <Button
                         size="sm"
@@ -443,7 +491,7 @@ export function HistoricalEODReports() {
                         onClick={() =>
                           handleDeleteReport(safeGetString(report.id))
                         }
-                        className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                        className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 flex-1 sm:flex-initial"
                       >
                         <Trash2 className="h-3 w-3 mr-1" />
                         Delete
@@ -459,35 +507,42 @@ export function HistoricalEODReports() {
 
       {/* Summary Statistics */}
       {reports.length > 0 && (
-        <div className="mt-6 pt-4 border-t">
+        <div className="mt-6 pt-4 border-t px-1 sm:px-0">
           <h2 className="text-lg font-semibold mb-3">📈 Summary Statistics</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-green-500/10 p-4 rounded-lg border border-green-500/20">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div className="bg-green-500/10 p-3 sm:p-4 rounded-lg border border-green-500/20">
+              <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
+                <SaudiRiyalSymbol
+                  size={18}
+                  className="text-green-600 dark:text-green-400 sm:hidden"
+                />
                 <SaudiRiyalSymbol
                   size={20}
-                  className="text-green-600 dark:text-green-400"
+                  className="text-green-600 dark:text-green-400 hidden sm:block"
                 />
-                {formatters.formatCurrency(
-                  reports.reduce(
-                    (sum, report) => sum + safeParseNumber(report.totalWithVat),
-                    0
-                  )
-                )}
+                <span className="truncate">
+                  {formatters.formatCurrency(
+                    reports.reduce(
+                      (sum, report) =>
+                        sum + safeParseNumber(report.totalWithVat),
+                      0
+                    )
+                  )}
+                </span>
               </div>
-              <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+              <p className="text-xs sm:text-sm text-green-700 dark:text-green-300 mt-1">
                 Total Revenue ({reports.length} reports)
               </p>
             </div>
 
-            <div className="bg-blue-500/10 p-4 rounded-lg border border-blue-500/20">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="bg-blue-500/10 p-3 sm:p-4 rounded-lg border border-blue-500/20">
+              <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {reports.reduce(
                   (sum, report) => sum + safeParseNumber(report.totalOrders),
                   0
                 )}
               </div>
-              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+              <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 mt-1">
                 Total Orders (Avg:{" "}
                 {Math.round(
                   reports.reduce(
@@ -499,8 +554,8 @@ export function HistoricalEODReports() {
               </p>
             </div>
 
-            <div className="bg-purple-500/10 p-4 rounded-lg border border-purple-500/20">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            <div className="bg-purple-500/10 p-3 sm:p-4 rounded-lg border border-purple-500/20">
+              <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {formatters.formatPercentage(
                   reports.reduce(
                     (sum, report) =>
@@ -509,7 +564,7 @@ export function HistoricalEODReports() {
                   ) / reports.length
                 )}
               </div>
-              <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+              <p className="text-xs sm:text-sm text-purple-700 dark:text-purple-300 mt-1">
                 Avg Completion Rate
               </p>
             </div>

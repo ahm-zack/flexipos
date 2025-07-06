@@ -158,6 +158,7 @@ export const reportTypeEnum = pgEnum('report_type', ['daily', 'custom', 'weekly'
 // EOD Reports table schema
 export const eodReports = pgTable('eod_reports', {
   id: uuid('id').primaryKey().defaultRandom(),
+  reportNumber: text('report_number').unique(),
   reportDate: date('report_date').notNull(),
   startDateTime: timestamp('start_date_time', { withTimezone: true }).notNull(),
   endDateTime: timestamp('end_date_time', { withTimezone: true }).notNull(),

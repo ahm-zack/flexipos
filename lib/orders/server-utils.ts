@@ -22,18 +22,50 @@ export async function generateOrderNumber(): Promise<string> {
     
     return orderNumber;
   } catch (error) {
-    console.error('Error generating order number:', error);
-    // Fallback to timestamp-based generation if database function fails
-    return generateFallbackOrderNumber();
+    console.error('Error generating order number using database function:', error);
+    // Fallback to application-level generation if database function fails
+    return await generateApplicationOrderNumber();
   }
 }
 
 /**
- * Fallback order number generation (timestamp-based)
+ * Application-level order number generation
  * Used if database sequence is not available
+ * This ensures we always get ORD-0001 format
  */
-function generateFallbackOrderNumber(): string {
+async function generateApplicationOrderNumber(): Promise<string> {
+  try {
+    // Get the highest existing order number
+    const result = await db.execute(sql`
+      SELECT order_number 
+      FROM orders 
+      WHERE order_number ~ '^ORD-[0-9]+$'
+      ORDER BY order_number DESC 
+      LIMIT 1
+    `);
+    
+    let nextNumber = 1;
+    
+    if (result.length > 0 && result[0].order_number) {
+      const currentNumber = result[0].order_number as string;
+      const numberPart = currentNumber.replace('ORD-', '');
+      nextNumber = parseInt(numberPart, 10) + 1;
+    }
+    
+    return `ORD-${nextNumber.toString().padStart(4, '0')}`;
+  } catch (error) {
+    console.error('Error generating application-level order number:', error);
+    // Ultimate fallback - use timestamp-based but in correct format
+    return generateTimestampOrderNumber();
+  }
+}
+
+/**
+ * Ultimate fallback order number generation (timestamp-based)
+ * Used if both database and application generation fail
+ */
+function generateTimestampOrderNumber(): string {
   const timestamp = Date.now();
   const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `ORD-${timestamp}-${randomSuffix}`;
+  return `ORD-${timestamp.toString().slice(-4)}-${randomSuffix}`;
 }

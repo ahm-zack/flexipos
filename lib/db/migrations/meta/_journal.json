@@ -29,6 +29,13 @@
       "when": 1751771572766,
       "tag": "0003_special_excalibur",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1751824571165,
+      "tag": "0004_square_hitman",
+      "breakpoints": true
     }
   ]
 }

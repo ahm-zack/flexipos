@@ -529,6 +529,7 @@ export type EODReportRequest = z.infer<typeof EODReportRequestSchema>;
 // Saved EOD Report schema (for database storage)
 export const SavedEODReportSchema = z.object({
   id: z.string().uuid(),
+  reportNumber: z.string().optional(), // EOD-0001, EOD-0002, etc.
   reportDate: z.date(),
   startDateTime: z.date(),
   endDateTime: z.date(),
