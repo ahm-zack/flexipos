@@ -31,7 +31,7 @@ export function NavMain({
       <SidebarMenu>
         {/* Menu Label - non-clickable section header */}
         <SidebarMenuItem>
-          <div className="h-12 text-lg font-semibold flex items-center px-3 text-sidebar-foreground/70">
+          <div className="h-12 text-lg font-semibold flex items-center px-3 text-sidebar-foreground/70 transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-data-[collapsible=icon]:opacity-0">
             <span>{items[0]?.title}</span>
           </div>
         </SidebarMenuItem>
@@ -42,12 +42,14 @@ export function NavMain({
             <SidebarMenuButton
               asChild
               className={cn(
-                "h-11 text-base font-medium",
+                "h-11 text-base font-medium transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
                 pathname === subItem.url && "bg-accent text-accent-foreground"
               )}
             >
               <a href={subItem.url}>
-                <span>{subItem.title}</span>
+                <span className="transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-data-[collapsible=icon]:opacity-0">
+                  {subItem.title}
+                </span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

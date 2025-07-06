@@ -33,13 +33,15 @@ export function NavSecondary({
               <SidebarMenuButton
                 asChild
                 className={cn(
-                  "h-11 text-base font-medium",
+                  "h-11 text-base font-medium transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
                   pathname === item.url && "bg-accent text-accent-foreground"
                 )}
               >
                 <a href={item.url}>
-                  <item.icon className="size-5" />
-                  <span>{item.title}</span>
+                  <item.icon className="size-5 transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]" />
+                  <span className="transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-data-[collapsible=icon]:opacity-0">
+                    {item.title}
+                  </span>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>

@@ -11,7 +11,8 @@ export function ConditionalCartContainer() {
     pathname.includes("/admin/items") ||
     pathname.includes("/admin/users") ||
     pathname.includes("/admin/reports") ||
-    pathname.includes("/admin/orders");
+    pathname.includes("/admin/orders") ||
+    pathname.includes("/admin/reports");
 
   if (isManagementPage) {
     return null;
