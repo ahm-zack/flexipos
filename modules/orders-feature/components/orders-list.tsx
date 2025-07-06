@@ -24,8 +24,10 @@ import {
 } from "lucide-react";
 import { getOrderStatusText } from "@/lib/orders/utils";
 import { EditOrderDialog } from "@/components/edit-order-dialog";
+import { RestaurantReceipt } from "@/components/restaurant-receipt";
 import { Order } from "@/lib/orders";
 import { ApiOrderResponse } from "@/lib/order-service";
+import { useOrderForReceipt } from "@/hooks/use-order-receipt";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -36,6 +38,7 @@ export function OrdersList() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
+  const [printingOrderId, setPrintingOrderId] = useState<string | null>(null);
   const limit = 10;
 
   // Build filters object for API with proper typing
@@ -46,6 +49,9 @@ export function OrdersList() {
   };
 
   const { data, isLoading, error } = useOrders(filters, currentPage, limit);
+
+  // Fetch order details for printing
+  const { data: printOrderData } = useOrderForReceipt(printingOrderId || "");
 
   // Filter data client-side for search and payment methods
   const filteredOrders =
@@ -129,8 +135,11 @@ export function OrdersList() {
   };
 
   const handlePrintOrder = (orderId: string) => {
-    // TODO: Implement print functionality
-    console.log("Print order:", orderId);
+    setPrintingOrderId(orderId);
+  };
+
+  const handleClosePrint = () => {
+    setPrintingOrderId(null);
   };
 
   const toggleOrderExpansion = (orderId: string) => {
@@ -587,6 +596,26 @@ export function OrdersList() {
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
       />
+
+      {/* Restaurant Receipt */}
+      {printingOrderId && printOrderData && (
+        <RestaurantReceipt
+          order={{
+            id: printOrderData.id,
+            orderNumber: printOrderData.orderNumber,
+            customerName: printOrderData.customerName || undefined,
+            items: printOrderData.items,
+            totalAmount: printOrderData.totalAmount,
+            paymentMethod: printOrderData.paymentMethod,
+            status: printOrderData.status,
+            createdAt: printOrderData.createdAt,
+            updatedAt: printOrderData.updatedAt,
+            createdBy: printOrderData.createdBy,
+          }}
+          cashierName={printOrderData.cashierName}
+          onClose={handleClosePrint}
+        />
+      )}
     </div>
   );
 }
