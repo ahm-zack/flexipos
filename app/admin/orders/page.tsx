@@ -1,5 +1,6 @@
 import { orderService } from "@/lib/order-service";
 import { OrdersList } from "@/modules/orders-feature/components/orders-list";
+import { OrdersProvider } from "@/modules/orders-feature/contexts/orders-context";
 import { orderKeys } from "@/modules/orders-feature/hooks/use-orders";
 import {
   dehydrate,
@@ -24,7 +25,9 @@ export default async function OrdersPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <OrdersList />
+      <OrdersProvider>
+        <OrdersList />
+      </OrdersProvider>
     </HydrationBoundary>
   );
 }

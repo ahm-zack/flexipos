@@ -48,12 +48,21 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Update existing reports with numbers if any exist
-UPDATE eod_reports 
-SET report_number = 'EOD-' || LPAD(ROW_NUMBER() OVER (ORDER BY created_at)::TEXT, 4, '0')
-WHERE report_number IS NULL;
+DO $$
+DECLARE
+    rec RECORD;
+    counter INTEGER := 1;
+BEGIN
+    FOR rec IN SELECT id FROM eod_reports WHERE report_number IS NULL ORDER BY created_at LOOP
+        UPDATE eod_reports 
+        SET report_number = 'EOD-' || LPAD(counter::TEXT, 4, '0')
+        WHERE id = rec.id;
+        counter := counter + 1;
+    END LOOP;
+END $$;
 
 -- Update sequence to continue correctly
-SELECT setval('eod_report_number_seq', COALESCE((SELECT COUNT(*) FROM eod_reports), 0));
+SELECT setval('eod_report_number_seq', GREATEST((SELECT COUNT(*) FROM eod_reports), 1));
 
 -- Create index for performance
 CREATE INDEX IF NOT EXISTS idx_eod_reports_report_number ON eod_reports(report_number);
