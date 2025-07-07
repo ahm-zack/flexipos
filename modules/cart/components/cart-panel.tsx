@@ -270,14 +270,17 @@ export function CartPanel({ className }: CartPanelProps) {
                 <PriceDisplay price={cart.total} symbolSize={14} />
               </div>
               <div className="flex justify-between text-sm">
-                <span>VAT (15%)</span>
-                <PriceDisplay price={cart.total * 0.15} symbolSize={14} />
+                <span>VAT (15% included)</span>
+                <PriceDisplay
+                  price={(cart.total * 0.15) / 1.15}
+                  symbolSize={14}
+                />
               </div>
               <Separator />
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total</span>
                 <PriceDisplay
-                  price={cart.total * 1.15}
+                  price={cart.total}
                   symbolSize={16}
                   className="font-semibold text-lg"
                 />
