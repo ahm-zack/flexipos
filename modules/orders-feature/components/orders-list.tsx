@@ -32,7 +32,6 @@ export function OrdersList() {
     ordersData,
     filteredOrders,
     totalFilteredCount,
-    hasActiveFilters,
     isLoading,
     error,
     // UI State
@@ -376,17 +375,10 @@ export function OrdersList() {
             ))}
           </div>
 
-          {((hasActiveFilters && totalFilteredCount > pagination.limit) ||
-            (!hasActiveFilters &&
-              ordersData &&
-              ordersData.total > ordersData.limit)) && (
+          {totalFilteredCount > pagination.limit && (
             <Pagination
               currentPage={pagination.currentPage}
-              totalPages={
-                hasActiveFilters
-                  ? Math.ceil(totalFilteredCount / pagination.limit)
-                  : Math.ceil(ordersData.total / ordersData.limit)
-              }
+              totalPages={Math.ceil(totalFilteredCount / pagination.limit)}
               onPageChange={handlePageChange}
               isLoading={isLoading}
             />

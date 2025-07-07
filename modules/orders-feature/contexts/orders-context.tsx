@@ -5,7 +5,14 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useMemo,
+  useCallback,
+} from "react";
 import { useOrders } from "../hooks/use-orders";
 import { useOrderForReceipt } from "@/hooks/use-order-receipt";
 import { Order } from "@/lib/orders";
@@ -113,12 +120,21 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     printingOrderId: null,
   });
 
-  // API calls - fetch all data when filters are active, paginated when no filters
-  const hasActiveFilters = Boolean(
-    filters.searchTerm ||
-      filters.activeFilters.size > 0 ||
-      filters.dateFrom ||
-      filters.dateTo
+  // API calls - always fetch all orders once for better UX
+  const hasActiveFilters = useMemo(
+    () =>
+      Boolean(
+        filters.searchTerm ||
+          filters.activeFilters.size > 0 ||
+          filters.dateFrom ||
+          filters.dateTo
+      ),
+    [
+      filters.searchTerm,
+      filters.activeFilters,
+      filters.dateFrom,
+      filters.dateTo,
+    ]
   );
 
   const {
@@ -127,8 +143,8 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     error,
   } = useOrders(
     {},
-    hasActiveFilters ? 1 : pagination.currentPage,
-    hasActiveFilters ? 1000 : pagination.limit // Fetch large number when filtering
+    1, // Always fetch from page 1
+    1000 // Fetch large number of orders once for client-side filtering
   );
 
   const { data: printOrderData } = useOrderForReceipt(
@@ -136,59 +152,79 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
   );
 
   // Filter data client-side for search, payment methods, status, and date range
-  const allFilteredOrders =
-    ordersData?.orders?.filter((order) => {
-      // Search filter
-      if (
-        filters.searchTerm &&
-        !order.orderNumber
-          .toLowerCase()
-          .includes(filters.searchTerm.toLowerCase())
-      ) {
-        return false;
-      }
+  const allFilteredOrders = useMemo(
+    () =>
+      ordersData?.orders?.filter((order) => {
+        // Search filter
+        if (
+          filters.searchTerm &&
+          !order.orderNumber
+            .toLowerCase()
+            .includes(filters.searchTerm.toLowerCase())
+        ) {
+          return false;
+        }
 
-      // Payment method filters
-      if (filters.activeFilters.has("cash") && order.paymentMethod !== "cash")
-        return false;
-      if (filters.activeFilters.has("card") && order.paymentMethod !== "card")
-        return false;
-      if (filters.activeFilters.has("mixed") && order.paymentMethod !== "mixed")
-        return false;
+        // Payment method filters
+        if (filters.activeFilters.has("cash") && order.paymentMethod !== "cash")
+          return false;
+        if (filters.activeFilters.has("card") && order.paymentMethod !== "card")
+          return false;
+        if (
+          filters.activeFilters.has("mixed") &&
+          order.paymentMethod !== "mixed"
+        )
+          return false;
 
-      // Status filters
-      if (
-        filters.activeFilters.has("completed") &&
-        order.status !== "completed"
-      )
-        return false;
-      if (filters.activeFilters.has("modified") && order.status !== "modified")
-        return false;
-      if (filters.activeFilters.has("canceled") && order.status !== "canceled")
-        return false;
+        // Status filters
+        if (
+          filters.activeFilters.has("completed") &&
+          order.status !== "completed"
+        )
+          return false;
+        if (
+          filters.activeFilters.has("modified") &&
+          order.status !== "modified"
+        )
+          return false;
+        if (
+          filters.activeFilters.has("canceled") &&
+          order.status !== "canceled"
+        )
+          return false;
 
-      // Date range filters
-      const orderDate = new Date(order.createdAt);
-      if (filters.dateFrom && orderDate < filters.dateFrom) return false;
-      if (filters.dateTo && orderDate > filters.dateTo) return false;
+        // Date range filters
+        const orderDate = new Date(order.createdAt);
+        if (filters.dateFrom && orderDate < filters.dateFrom) return false;
+        if (filters.dateTo && orderDate > filters.dateTo) return false;
 
-      return true;
-    }) || [];
+        return true;
+      }) || [],
+    [
+      ordersData?.orders,
+      filters.searchTerm,
+      filters.activeFilters,
+      filters.dateFrom,
+      filters.dateTo,
+    ]
+  );
 
-  // Handle pagination client-side when filters are active
-  const filteredOrders = hasActiveFilters
-    ? allFilteredOrders.slice(
+  // Handle pagination client-side for all scenarios
+  const filteredOrders = useMemo(
+    () =>
+      allFilteredOrders.slice(
         (pagination.currentPage - 1) * pagination.limit,
         pagination.currentPage * pagination.limit
-      )
-    : allFilteredOrders;
+      ),
+    [allFilteredOrders, pagination.currentPage, pagination.limit]
+  );
 
   // Filter Actions
-  const setSearchTerm = (term: string) => {
+  const setSearchTerm = useCallback((term: string) => {
     setFilters((prev) => ({ ...prev, searchTerm: term }));
-  };
+  }, []);
 
-  const toggleFilter = (filterKey: string) => {
+  const toggleFilter = useCallback((filterKey: string) => {
     setFilters((prev) => {
       const newActiveFilters = new Set(prev.activeFilters);
 
@@ -215,9 +251,9 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     });
 
     setPagination((prev) => ({ ...prev, currentPage: 1 })); // Reset to first page when filtering
-  };
+  }, []);
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setFilters({
       searchTerm: "",
       activeFilters: new Set(),
@@ -225,79 +261,88 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       dateTo: undefined,
     });
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
-  };
+  }, []);
 
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     setFilters((prev) => ({ ...prev, searchTerm: "" }));
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
-  };
+  }, []);
 
-  const setDateFrom = (date: Date | undefined) => {
+  const setDateFrom = useCallback((date: Date | undefined) => {
     setFilters((prev) => ({ ...prev, dateFrom: date }));
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
-  };
+  }, []);
 
-  const setDateTo = (date: Date | undefined) => {
+  const setDateTo = useCallback((date: Date | undefined) => {
     setFilters((prev) => ({ ...prev, dateTo: date }));
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
-  };
+  }, []);
 
-  const clearDateFilters = () => {
+  const clearDateFilters = useCallback(() => {
     setFilters((prev) => ({ ...prev, dateFrom: undefined, dateTo: undefined }));
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
-  };
+  }, []);
 
-  const getFilterButtonVariant = (filterKey: string) => {
-    return filters.activeFilters.has(filterKey) ? "default" : "outline";
-  };
+  const getFilterButtonVariant = useCallback(
+    (filterKey: string) => {
+      return filters.activeFilters.has(filterKey) ? "default" : "outline";
+    },
+    [filters.activeFilters]
+  );
 
   // Pagination Actions
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setPagination((prev) => ({ ...prev, currentPage: page }));
     setUIState((prev) => ({ ...prev, expandedOrders: new Set() })); // Reset expanded orders when changing page
 
     // Scroll to top of orders list when changing pages
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
 
   // Order Actions
-  const convertToOrder = (apiOrder: ApiOrderResponse): Order => ({
-    id: apiOrder.id,
-    orderNumber: apiOrder.orderNumber,
-    customerName: apiOrder.customerName || undefined,
-    items: apiOrder.items,
-    totalAmount: apiOrder.totalAmount,
-    paymentMethod: apiOrder.paymentMethod,
-    status: apiOrder.status,
-    createdAt: apiOrder.createdAt,
-    updatedAt: apiOrder.updatedAt,
-    createdBy: apiOrder.createdBy,
-  });
+  const convertToOrder = useCallback(
+    (apiOrder: ApiOrderResponse): Order => ({
+      id: apiOrder.id,
+      orderNumber: apiOrder.orderNumber,
+      customerName: apiOrder.customerName || undefined,
+      items: apiOrder.items,
+      totalAmount: apiOrder.totalAmount,
+      paymentMethod: apiOrder.paymentMethod,
+      status: apiOrder.status,
+      createdAt: apiOrder.createdAt,
+      updatedAt: apiOrder.updatedAt,
+      createdBy: apiOrder.createdBy,
+    }),
+    []
+  );
 
-  const handleEditOrder = (apiOrder: ApiOrderResponse) => {
-    // Prevent editing cancelled orders
-    if (apiOrder.status === "canceled") {
-      console.warn("Cannot edit cancelled order:", apiOrder.orderNumber);
-      return;
-    }
+  const handleEditOrder = useCallback(
+    (apiOrder: ApiOrderResponse) => {
+      // Prevent editing cancelled orders
+      if (apiOrder.status === "canceled") {
+        console.warn("Cannot edit cancelled order:", apiOrder.orderNumber);
+        return;
+      }
 
-    const order = convertToOrder(apiOrder);
-    setUIState((prev) => ({
-      ...prev,
-      editingOrder: order,
-      isEditDialogOpen: true,
-    }));
-  };
+      const order = convertToOrder(apiOrder);
+      setUIState((prev) => ({
+        ...prev,
+        editingOrder: order,
+        isEditDialogOpen: true,
+      }));
+    },
+    [convertToOrder]
+  );
 
-  const handlePrintOrder = (orderId: string) => {
+  const handlePrintOrder = useCallback((orderId: string) => {
     setUIState((prev) => ({ ...prev, printingOrderId: orderId }));
-  };
+  }, []);
 
-  const handleClosePrint = () => {
+  const handleClosePrint = useCallback(() => {
     setUIState((prev) => ({ ...prev, printingOrderId: null }));
-  };
+  }, []);
 
-  const handleCloseEdit = (open: boolean) => {
+  const handleCloseEdit = useCallback((open: boolean) => {
     if (!open) {
       setUIState((prev) => ({
         ...prev,
@@ -305,9 +350,9 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
         isEditDialogOpen: false,
       }));
     }
-  };
+  }, []);
 
-  const toggleOrderExpansion = (orderId: string) => {
+  const toggleOrderExpansion = useCallback((orderId: string) => {
     setUIState((prev) => {
       const newExpanded = new Set(prev.expandedOrders);
       if (newExpanded.has(orderId)) {
@@ -317,10 +362,10 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       }
       return { ...prev, expandedOrders: newExpanded };
     });
-  };
+  }, []);
 
   // UI Helpers
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = useCallback((status: string) => {
     switch (status) {
       case "completed":
         return "default" as const;
@@ -331,9 +376,9 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       default:
         return "outline" as const;
     }
-  };
+  }, []);
 
-  const getStatusBadgeClassName = (status: string) => {
+  const getStatusBadgeClassName = useCallback((status: string) => {
     switch (status) {
       case "completed":
         return "bg-green-700 text-white";
@@ -342,9 +387,9 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       default:
         return "";
     }
-  };
+  }, []);
 
-  const getPaymentMethodDisplay = (paymentMethod: string) => {
+  const getPaymentMethodDisplay = useCallback((paymentMethod: string) => {
     // Note: Icons are imported in the component that uses this context
     // to avoid circular dependencies
     const paymentMethods = {
@@ -357,63 +402,98 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       paymentMethods[paymentMethod as keyof typeof paymentMethods] ||
       paymentMethods.cash
     );
-  };
+  }, []);
 
-  const contextValue: OrdersContextValue = {
-    // Data
-    ordersData,
-    isLoading,
-    error,
-    filteredOrders,
-    allFilteredOrders,
-    totalFilteredCount: allFilteredOrders.length,
-    hasActiveFilters,
-    printOrderData,
+  const contextValue: OrdersContextValue = useMemo(
+    () => ({
+      // Data
+      ordersData,
+      isLoading,
+      error,
+      filteredOrders,
+      allFilteredOrders,
+      totalFilteredCount: allFilteredOrders.length,
+      hasActiveFilters,
+      printOrderData,
 
-    // State
-    filters,
-    pagination,
-    uiState,
+      // State
+      filters,
+      pagination,
+      uiState,
 
-    // Direct access to UI state for easier destructuring
-    expandedOrders: uiState.expandedOrders,
-    editingOrder: uiState.editingOrder,
-    isEditDialogOpen: uiState.isEditDialogOpen,
-    printingOrderId: uiState.printingOrderId,
+      // Direct access to UI state for easier destructuring
+      expandedOrders: uiState.expandedOrders,
+      editingOrder: uiState.editingOrder,
+      isEditDialogOpen: uiState.isEditDialogOpen,
+      printingOrderId: uiState.printingOrderId,
 
-    // Filter Actions
-    setSearchTerm,
-    toggleFilter,
-    clearAllFilters,
-    clearSearch,
-    setDateFrom,
-    setDateTo,
-    clearDateFilters,
-    getFilterButtonVariant,
+      // Filter Actions
+      setSearchTerm,
+      toggleFilter,
+      clearAllFilters,
+      clearSearch,
+      setDateFrom,
+      setDateTo,
+      clearDateFilters,
+      getFilterButtonVariant,
 
-    // Pagination Actions
-    handlePageChange,
+      // Pagination Actions
+      handlePageChange,
 
-    // Order Actions
-    handleEditOrder,
-    handlePrintOrder,
-    handleClosePrint,
-    handleCloseEdit,
-    toggleOrderExpansion,
-    convertToOrder,
+      // Order Actions
+      handleEditOrder,
+      handlePrintOrder,
+      handleClosePrint,
+      handleCloseEdit,
+      toggleOrderExpansion,
+      convertToOrder,
 
-    // UI Helpers
-    getStatusBadgeVariant,
-    getStatusBadgeClassName,
-    getPaymentMethodDisplay: (paymentMethod: string) => {
-      const base = getPaymentMethodDisplay(paymentMethod);
-      // Icons will be added in the consuming component
-      return {
-        ...base,
-        icon: () => null, // Placeholder, will be overridden in component
-      };
-    },
-  };
+      // UI Helpers
+      getStatusBadgeVariant,
+      getStatusBadgeClassName,
+      getPaymentMethodDisplay: (paymentMethod: string) => {
+        const base = getPaymentMethodDisplay(paymentMethod);
+        // Icons will be added in the consuming component
+        return {
+          ...base,
+          icon: () => null, // Placeholder, will be overridden in component
+        };
+      },
+    }),
+    [
+      // Data dependencies
+      ordersData,
+      isLoading,
+      error,
+      filteredOrders,
+      allFilteredOrders,
+      hasActiveFilters,
+      printOrderData,
+      // State dependencies
+      filters,
+      pagination,
+      uiState,
+      // Function dependencies
+      setSearchTerm,
+      toggleFilter,
+      clearAllFilters,
+      clearSearch,
+      setDateFrom,
+      setDateTo,
+      clearDateFilters,
+      getFilterButtonVariant,
+      handlePageChange,
+      handleEditOrder,
+      handlePrintOrder,
+      handleClosePrint,
+      handleCloseEdit,
+      toggleOrderExpansion,
+      convertToOrder,
+      getStatusBadgeVariant,
+      getStatusBadgeClassName,
+      getPaymentMethodDisplay,
+    ]
+  );
 
   return (
     <OrdersContext.Provider value={contextValue}>

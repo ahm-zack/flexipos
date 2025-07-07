@@ -48,6 +48,7 @@ export function OrdersHeader() {
     totalFilteredCount,
     hasActiveFilters,
     filters,
+    pagination,
     setSearchTerm,
     toggleFilter,
     clearSearch,
@@ -67,7 +68,7 @@ export function OrdersHeader() {
               <span className="text-sm font-medium text-muted-foreground">
                 {hasActiveFilters
                   ? `${filteredOrders.length} of ${totalFilteredCount} filtered`
-                  : `${filteredOrders.length} of ${ordersData.total} orders`}
+                  : `${filteredOrders.length} of ${totalFilteredCount} orders`}
               </span>
             </div>
             {hasActiveFilters && (
@@ -79,17 +80,8 @@ export function OrdersHeader() {
             )}
             <div className="px-3 py-1 bg-muted rounded-full">
               <span className="text-sm font-medium text-muted-foreground">
-                Page{" "}
-                {hasActiveFilters
-                  ? Math.floor(
-                      (filteredOrders.length > 0 ? 1 : 0) +
-                        (filteredOrders.length - 1) / 10
-                    ) || 1
-                  : ordersData.page}{" "}
-                of{" "}
-                {hasActiveFilters
-                  ? Math.ceil(totalFilteredCount / 10) || 1
-                  : Math.ceil(ordersData.total / ordersData.limit)}
+                Page {pagination.currentPage} of{" "}
+                {Math.ceil(totalFilteredCount / pagination.limit) || 1}
               </span>
             </div>
           </div>
