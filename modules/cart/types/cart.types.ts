@@ -1,3 +1,10 @@
+export interface CartItemModifier {
+  id: string;
+  name: string;
+  type: 'extra' | 'without';
+  price: number;
+}
+
 export interface CartItem {
   id: string;
   name: string;
@@ -6,6 +13,8 @@ export interface CartItem {
   category: string;
   description?: string;
   image?: string;
+  modifiers?: CartItemModifier[];
+  modifiersTotal?: number; // Total price of selected modifiers
 }
 
 export interface Cart {

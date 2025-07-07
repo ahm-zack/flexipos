@@ -10,6 +10,14 @@ import {
   type RestaurantConfig,
 } from "@/lib/restaurant-config";
 
+// Type for saved modifiers in order items
+interface SavedModifier {
+  id: string;
+  name: string;
+  type: "extra" | "without";
+  price: number;
+}
+
 interface RestaurantReceiptProps {
   order: Order;
   restaurantInfo?: Partial<RestaurantConfig>;
@@ -83,12 +91,13 @@ export function RestaurantReceipt({
                 body {
                   font-family: 'Courier New', monospace;
                   font-size: 12px;
-                  line-height: 1.3;
+                  font-weight: 600;
+                  line-height: 1.2;
                   color: #000;
                   background: #fff;
-                  width: 58mm; /* Standard thermal printer width */
+                  width: 80mm; /* Standard thermal printer width */
                   margin: 0;
-                  padding: 8px;
+                  padding: 2px;
                 }
                 
                 .receipt {
@@ -98,15 +107,18 @@ export function RestaurantReceipt({
                 
                 .text-center { text-align: center; }
                 .text-right { text-align: right; }
-                .text-bold { font-weight: bold; }
-                .mb-1 { margin-bottom: 4px; }
-                .mb-2 { margin-bottom: 8px; }
-                .mb-3 { margin-bottom: 12px; }
-                .mb-4 { margin-bottom: 16px; }
-                .border-t { border-top: 1px dashed #000; }
-                .border-b { border-bottom: 1px dashed #000; }
-                .py-1 { padding-top: 4px; padding-bottom: 4px; }
-                .py-2 { padding-top: 8px; padding-bottom: 8px; }
+                .text-bold { font-weight: 800; }
+                .text-extra-bold { font-weight: 900; font-size: 14px; }
+                .text-large { font-size: 16px; font-weight: 800; }
+                .mb-1 { margin-bottom: 2px; }
+                .mb-2 { margin-bottom: 4px; }
+                .mb-3 { margin-bottom: 6px; }
+                .mb-4 { margin-bottom: 8px; }
+                .border-t { border-top: 2px solid #000; }
+                .border-b { border-bottom: 2px solid #000; }
+                .border-double { border-top: 3px double #000; border-bottom: 3px double #000; }
+                .py-1 { padding-top: 2px; padding-bottom: 2px; }
+                .py-2 { padding-top: 4px; padding-bottom: 4px; }
                 
                 .flex {
                   display: flex;
@@ -128,8 +140,9 @@ export function RestaurantReceipt({
                 .item-row {
                   display: flex;
                   justify-content: space-between;
-                  margin-bottom: 2px;
+                  margin-bottom: 1px;
                   font-size: 11px;
+                  font-weight: 600;
                 }
                 
                 .item-name {
@@ -151,10 +164,33 @@ export function RestaurantReceipt({
                   text-align: right;
                 }
                 
+                .modifier-indent {
+                  margin-left: 6px;
+                  font-style: italic;
+                  color: #000;
+                  font-weight: 500;
+                }
+                
+                .text-gray-600 {
+                  color: #000;
+                  font-weight: 500;
+                }
+                
+                .order-number-highlight {
+                  font-size: 18px;
+                  font-weight: 900;
+                  background: #000;
+                  color: #fff;
+                  padding: 4px 8px;
+                  border-radius: 4px;
+                  letter-spacing: 1px;
+                }
+                
                 .total-row {
                   display: flex;
                   justify-content: space-between;
-                  font-weight: bold;
+                  font-weight: 900;
+                  font-size: 13px;
                 }
                 
                 @media print {
@@ -188,23 +224,49 @@ export function RestaurantReceipt({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-auto">
         {/* Receipt Header with Print Button */}
-        <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between no-print">
-          <h2 className="text-lg font-semibold text-black">
+        <div className="sticky top-0 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 px-6 py-4 flex items-center justify-between no-print shadow-sm">
+          <h2 className="text-xl font-bold text-gray-800 tracking-tight">
             Restaurant Receipt
           </h2>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               onClick={handlePrint}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 transition-all duration-200 font-medium text-sm shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             >
-              🖨️ Print Receipt
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                />
+              </svg>
+              Print
             </button>
             {onClose && (
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 transition-all duration-200 font-medium text-sm shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
-                ✕ Close
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+                Close
               </button>
             )}
           </div>
@@ -213,41 +275,49 @@ export function RestaurantReceipt({
         {/* Actual Receipt Content */}
         <div
           ref={receiptRef}
-          className="receipt p-6 font-mono text-sm bg-white"
+          className="receipt p-2 font-mono text-sm bg-white"
           style={{
             fontFamily: "Courier New, monospace",
-            lineHeight: "1.3",
-            width: "58mm",
+            lineHeight: "1.2",
+            fontWeight: "600",
+            width: "80mm",
             margin: "0 auto",
             backgroundColor: "white",
             color: "black",
           }}
         >
           {/* Restaurant Header */}
-          <div className="text-center mb-4">
-            <div className="text-bold text-lg mb-1">{config.name}</div>
-            <div className="arabic text-base mb-2">{config.nameAr}</div>
-            <div className="text-xs mb-1">{config.address}</div>
-            <div className="arabic text-xs mb-1">{config.addressAr}</div>
-            <div className="text-xs mb-1">Tel: {config.phone}</div>
-            <div className="text-xs mb-1">VAT: {config.vatNumber}</div>
-            <div className="text-xs mb-2">CR: {config.crNumber}</div>
+          <div className="text-center mb-3">
+            <div className="text-large mb-1">
+              ★ {config.name.toUpperCase()} ★
+            </div>
+            <div className="arabic text-extra-bold mb-2">{config.nameAr}</div>
+            <div className="text-xs text-bold mb-1">{config.address}</div>
+            <div className="arabic text-xs text-bold mb-1">
+              {config.addressAr}
+            </div>
+            <div className="text-xs text-bold mb-2">CR: {config.crNumber}</div>
           </div>
 
           {/* Divider */}
-          <div className="border-t border-b py-2 mb-3">
-            <div className="text-center text-bold">Simplified Tax Invoice</div>
-            <div className="text-center arabic text-bold">
+          <div className="border-double py-2 mb-2">
+            <div className="text-center text-extra-bold">
+              SIMPLIFIED TAX INVOICE
+            </div>
+            <div className="text-center arabic text-extra-bold">
               فاتورة ضريبية مبسطة
             </div>
           </div>
 
-          {/* Order Information */}
-          <div className="mb-3 text-xs">
-            <div className="flex justify-between mb-1">
-              <span>Order No:</span>
-              <span className="text-bold">{order.orderNumber}</span>
+          {/* Prominent Order Number */}
+          <div className="text-center mb-3">
+            <div className="order-number-highlight">
+              ORDER #{order.orderNumber}
             </div>
+          </div>
+
+          {/* Order Information */}
+          <div className="mb-2 text-xs text-bold">
             <div className="flex justify-between mb-1">
               <span>Date:</span>
               <span>
@@ -271,7 +341,9 @@ export function RestaurantReceipt({
             )}
             <div className="flex justify-between mb-1">
               <span>Payment:</span>
-              <span className="capitalize">{order.paymentMethod}</span>
+              <span className="capitalize text-bold">
+                {order.paymentMethod}
+              </span>
             </div>
           </div>
 
@@ -279,25 +351,58 @@ export function RestaurantReceipt({
           <div className="border-t py-1 mb-2"></div>
 
           {/* Items */}
-          <div className="mb-3">
+          <div className="mb-2">
             {order.items.map((item, index) => (
               <div key={index} className="mb-2">
                 <div className="item-row">
-                  <div className="item-name text-bold">{item.name}</div>
+                  <div className="item-name text-extra-bold">{item.name}</div>
                 </div>
                 <div className="item-row text-xs">
-                  <div className="item-name arabic">{item.nameAr}</div>
+                  <div className="item-name arabic text-bold">
+                    {item.nameAr}
+                  </div>
                 </div>
                 <div className="item-row">
                   <div className="flex">
-                    <span className="item-qty">{item.quantity}x</span>
-                    <span>@{item.unitPrice.toFixed(2)}</span>
+                    <span className="item-qty text-bold">{item.quantity}x</span>
+                    <span className="text-bold">
+                      @{item.unitPrice.toFixed(2)}
+                    </span>
                   </div>
-                  <div className="item-price text-bold">
+                  <div className="item-price text-extra-bold">
                     <SaudiRiyalSymbol size={10} className="inline mr-1" />
                     {item.totalPrice.toFixed(2)}
                   </div>
                 </div>
+                {/* Display modifiers if they exist */}
+                {item.details?.savedModifiers &&
+                  item.details.savedModifiers.length > 0 && (
+                    <div className="modifier-indent">
+                      {item.details.savedModifiers.map(
+                        (modifier: SavedModifier, modIndex: number) => (
+                          <div key={modIndex} className="item-row text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600 italic">
+                                {modifier.type === "extra" ? "+ " : "- "}
+                                {modifier.name}
+                              </span>
+                              {modifier.type === "extra" &&
+                                modifier.price > 0 && (
+                                  <span className="text-gray-600">
+                                    +
+                                    <SaudiRiyalSymbol
+                                      size={8}
+                                      className="inline"
+                                    />
+                                    {modifier.price.toFixed(2)}
+                                  </span>
+                                )}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
               </div>
             ))}
           </div>
@@ -306,14 +411,14 @@ export function RestaurantReceipt({
           <div className="border-t py-2">
             {/* Totals */}
             <div className="space-y-1">
-              <div className="flex justify-between text-xs">
+              <div className="flex justify-between text-xs text-bold">
                 <span>Net Amount:</span>
                 <span>
                   <SaudiRiyalSymbol size={10} className="inline mr-1" />
                   {netAmount.toFixed(2)}
                 </span>
               </div>
-              <div className="flex justify-between text-xs">
+              <div className="flex justify-between text-xs text-bold">
                 <span>VAT (15%):</span>
                 <span>
                   <SaudiRiyalSymbol size={10} className="inline mr-1" />
@@ -334,8 +439,8 @@ export function RestaurantReceipt({
 
           {/* ZATCA QR Code */}
           {qrCodeDataURL && (
-            <div className="text-center mt-4 mb-3">
-              <div className="text-xs mb-2 text-bold">ZATCA QR Code</div>
+            <div className="text-center mt-3 mb-2">
+              <div className="text-xs mb-1 text-extra-bold">ZATCA QR CODE</div>
               <div className="qr-code flex justify-center">
                 <Image
                   src={qrCodeDataURL}
@@ -349,10 +454,10 @@ export function RestaurantReceipt({
           )}
 
           {/* Footer */}
-          <div className="text-center text-xs mt-4">
-            <div className="mb-1">{config.thankYouMessage.en}</div>
-            <div className="arabic">{config.thankYouMessage.ar}</div>
-            <div className="mt-2 text-xs">
+          <div className="text-center text-xs mt-3">
+            <div className="mb-1 text-bold">{config.thankYouMessage.en}</div>
+            <div className="arabic text-bold">{config.thankYouMessage.ar}</div>
+            <div className="mt-2 text-xs border-t pt-1">
               Generated: {new Date().toLocaleString("en-GB")}
             </div>
           </div>

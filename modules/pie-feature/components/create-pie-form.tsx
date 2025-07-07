@@ -170,7 +170,7 @@ export function CreatePieForm({ open, onOpenChange }: CreatePieFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Pie</DialogTitle>
           <DialogDescription>
@@ -322,6 +322,10 @@ export function CreatePieForm({ open, onOpenChange }: CreatePieFormProps) {
                 }
                 placeholder="0.00"
               />
+              <p className="text-xs text-muted-foreground">
+                Base price for this pie. Modifier prices will be added
+                separately when customers select them.
+              </p>
             </div>
           </div>
 

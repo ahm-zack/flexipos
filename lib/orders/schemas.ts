@@ -8,9 +8,34 @@ export type OrderStatus = z.infer<typeof OrderStatusEnum>;
 export const PaymentMethodEnum = z.enum(['cash', 'card', 'mixed']);
 export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
 
-// Order item schema - represents a single item in an order
+// Modifier schema for cart items
+export const CartItemModifierSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.enum(['extra', 'without']),
+  price: z.number(),
+});
+
+export type CartItemModifier = z.infer<typeof CartItemModifierSchema>;
+
+// Cart item schema (for incoming order requests)
+export const CartItemSchema = z.object({
+  id: z.string().min(1), // Allow any string ID (not just UUID) for cart flexibility
+  name: z.string().min(1), // Item display name
+  price: z.number().min(0), // Base price
+  quantity: z.number().int().min(1), // Quantity
+  category: z.string().min(1), // Category (Pizza, Pie, etc.)
+  description: z.string().optional(), // Optional description
+  image: z.string().optional(), // Optional image URL
+  modifiers: z.array(CartItemModifierSchema).optional(), // Optional modifiers
+  modifiersTotal: z.number().optional(), // Total price of modifiers
+});
+
+export type CartItem = z.infer<typeof CartItemSchema>;
+
+// Order item schema - represents a single item in an order (stored format)
 export const OrderItemSchema = z.object({
-  id: z.string().uuid(), // Item ID (pizza, pie, sandwich, etc.)
+  id: z.string().min(1), // Cart item ID (can be composite like "uuid-timestamp")
   type: z.enum(['pizza', 'pie', 'sandwich', 'mini_pie']), // Item type
   name: z.string().min(1), // Item name (English)
   nameAr: z.string().min(1), // Item name (Arabic)
@@ -38,10 +63,10 @@ export const OrderSchema = z.object({
 
 export type Order = z.infer<typeof OrderSchema>;
 
-// Create order schema (for new orders)
+// Create order schema (for new orders) - uses cart item structure
 export const CreateOrderSchema = z.object({
   customerName: z.string().optional(),
-  items: z.array(OrderItemSchema).min(1, 'At least one item is required'),
+  items: z.array(CartItemSchema).min(1, 'At least one item is required'),
   totalAmount: z.number().min(0, 'Total amount must be positive'),
   paymentMethod: PaymentMethodEnum, // No default here, let it come from the client
   createdBy: z.string().uuid(),
@@ -116,21 +141,6 @@ export const CreateModifiedOrderSchema = z.object({
 });
 
 export type CreateModifiedOrder = z.infer<typeof CreateModifiedOrderSchema>;
-
-// Cart item schema (for frontend cart management)
-export const CartItemSchema = z.object({
-  id: z.string().uuid(),
-  type: z.enum(['pizza', 'pie', 'sandwich', 'mini_pie']),
-  name: z.string().min(1),
-  nameAr: z.string().min(1),
-  quantity: z.number().int().min(1),
-  unitPrice: z.number().min(0),
-  totalPrice: z.number().min(0),
-  details: z.record(z.any()).optional(),
-  imageUrl: z.string().optional(),
-});
-
-export type CartItem = z.infer<typeof CartItemSchema>;
 
 // Cart schema
 export const CartSchema = z.object({

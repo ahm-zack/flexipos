@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 import { useUpdatePie } from "../hooks/use-pies";
 import { uploadMenuImage } from "@/lib/image-upload";
+import { ModifierManager } from "@/components/modifier-manager";
 import type { Pie } from "@/lib/db/schema";
 import type { UpdatePie } from "@/lib/schemas";
 
@@ -180,7 +181,7 @@ export function EditPieForm({ pie, open, onOpenChange }: EditPieFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Pie</DialogTitle>
           <DialogDescription>
@@ -343,7 +344,19 @@ export function EditPieForm({ pie, open, onOpenChange }: EditPieFormProps) {
                 }
                 placeholder="0.00"
               />
+              <p className="text-xs text-muted-foreground">
+                Note: Modifier prices are separate and will be added to this
+                base price during checkout.
+              </p>
             </div>
+
+            {/* Modifiers */}
+            {pie && (
+              <div className="space-y-2">
+                <Label>Modifiers</Label>
+                <ModifierManager itemId={pie.id} itemType="pie" />
+              </div>
+            )}
           </div>
 
           <DialogFooter>

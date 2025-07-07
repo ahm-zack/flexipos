@@ -168,7 +168,7 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Pizza</DialogTitle>
           <DialogDescription>
@@ -283,6 +283,10 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
                 }
                 placeholder="0.00"
               />
+              <p className="text-xs text-muted-foreground">
+                Base price for this pizza. Modifier prices will be added
+                separately when customers select them.
+              </p>
             </div>
           </div>
 

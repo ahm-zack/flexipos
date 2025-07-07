@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 import { useUpdateSandwich } from "../hooks/use-sandwiches";
 import { uploadMenuImage } from "@/lib/image-upload";
+import { ModifierManager } from "@/components/modifier-manager";
 import type { Sandwich } from "@/lib/db/schema";
 import type { EditSandwichFormData } from "@/lib/schemas";
 
@@ -184,7 +185,7 @@ export function EditSandwichForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Sandwich</DialogTitle>
           <DialogDescription>
@@ -332,7 +333,19 @@ export function EditSandwichForm({
                 }
                 placeholder="0.00"
               />
+              <p className="text-xs text-muted-foreground">
+                Note: Modifier prices are separate and will be added to this
+                base price during checkout.
+              </p>
             </div>
+
+            {/* Modifiers */}
+            {sandwich && (
+              <div className="space-y-2">
+                <Label>Modifiers</Label>
+                <ModifierManager itemId={sandwich.id} itemType="sandwich" />
+              </div>
+            )}
           </div>
 
           <DialogFooter>

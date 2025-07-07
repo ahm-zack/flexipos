@@ -53,6 +53,9 @@ export const miniPieTypeEnum = pgEnum('mini_pie_type', [
 // Define mini pie size enum (typically small for party pies)
 export const miniPieSizeEnum = pgEnum('mini_pie_size', ['small', 'medium', 'large']);
 
+// Define modifier type enum for extras and withouts
+export const modifierTypeEnum = pgEnum('modifier_type', ['extra', 'without']);
+
 // Users table schema
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
@@ -145,6 +148,40 @@ export type MiniPie = typeof miniPies.$inferSelect;
 export type NewMiniPie = typeof miniPies.$inferInsert;
 export type MiniPieType = typeof miniPieTypeEnum.enumValues[number];
 export type MiniPieSize = typeof miniPieSizeEnum.enumValues[number];
+
+// Menu Item Modifiers table - stores extras and withouts for each menu item
+export const menuItemModifiers = pgTable('menu_item_modifiers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  menuItemId: uuid('menu_item_id').notNull(), // References menu items (pizzas, pies, sandwiches, mini_pies)
+  menuItemType: text('menu_item_type').notNull(), // 'pizza', 'pie', 'sandwich', 'mini_pie'
+  name: text('name').notNull(), // Name of the modifier (e.g., "Extra Cheese", "No Onions")
+  type: modifierTypeEnum('type').notNull(), // 'extra' or 'without'
+  price: decimal('price', { precision: 10, scale: 2 }).notNull().default('0.00'), // Price (0 for 'without' items)
+  displayOrder: integer('display_order').notNull().default(0), // For drag-to-reorder functionality
+  isActive: text('is_active').notNull().default('true'), // Using text for boolean (Drizzle compatibility)
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Order Item Modifiers table - stores selected modifiers for order items
+export const orderItemModifiers = pgTable('order_item_modifiers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  orderId: uuid('order_id').notNull(), // References the order
+  menuItemId: uuid('menu_item_id').notNull(), // Which menu item this modifier belongs to
+  menuItemType: text('menu_item_type').notNull(), // 'pizza', 'pie', 'sandwich', 'mini_pie'
+  modifierId: uuid('modifier_id').notNull().references(() => menuItemModifiers.id),
+  modifierName: text('modifier_name').notNull(), // Store name for historical records
+  modifierType: modifierTypeEnum('modifier_type').notNull(), // 'extra' or 'without'
+  priceAtTime: decimal('price_at_time', { precision: 10, scale: 2 }).notNull(), // Price when order was made
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Export modifier types
+export type MenuItemModifier = typeof menuItemModifiers.$inferSelect;
+export type NewMenuItemModifier = typeof menuItemModifiers.$inferInsert;
+export type OrderItemModifier = typeof orderItemModifiers.$inferSelect;
+export type NewOrderItemModifier = typeof orderItemModifiers.$inferInsert;
+export type ModifierType = typeof modifierTypeEnum.enumValues[number];
 
 // Define payment method enum for EOD reports
 export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'mixed']);

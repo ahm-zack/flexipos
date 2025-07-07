@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 import { useUpdatePizza } from "../hooks/use-pizzas";
 import { uploadMenuImage } from "@/lib/image-upload";
+import { ModifierManager } from "@/components/modifier-manager";
 import type { Pizza } from "@/lib/db/schema";
 import type { UpdatePizza } from "@/lib/schemas";
 
@@ -186,7 +187,7 @@ export function EditPizzaForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Pizza</DialogTitle>
           <DialogDescription>
@@ -330,7 +331,19 @@ export function EditPizzaForm({
                 }
                 placeholder="0.00"
               />
+              <p className="text-xs text-muted-foreground">
+                Note: Modifier prices are separate and will be added to this
+                base price during checkout.
+              </p>
             </div>
+
+            {/* Modifiers */}
+            {pizza && (
+              <div className="space-y-2">
+                <Label>Modifiers</Label>
+                <ModifierManager itemId={pizza.id} itemType="pizza" />
+              </div>
+            )}
           </div>
 
           <DialogFooter>

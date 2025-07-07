@@ -48,23 +48,9 @@ export function CartPanel({ className }: CartPanelProps) {
       return;
     }
 
-    // Transform cart items to order items format
-    const orderItems = cart.items.map((item) => ({
-      id: item.id,
-      type: "pizza" as const, // You might want to add type to your cart items
-      name: item.name,
-      nameAr: item.name, // You might want to add Arabic name to cart items
-      quantity: item.quantity,
-      unitPrice: item.price,
-      totalPrice: item.price * item.quantity,
-      details: {
-        category: item.category,
-        description: item.description,
-      },
-    }));
-
+    // Send cart items directly - the order service will handle the conversion
     const orderData = {
-      items: orderItems,
+      items: cart.items, // Send cart items directly
       totalAmount: cart.total,
       paymentMethod,
       createdBy: currentUser.id, // Use the actual authenticated user's ID
@@ -150,15 +136,69 @@ export function CartPanel({ className }: CartPanelProps) {
                           {item.description}
                         </p>
                       )}
+
+                      {/* Modifiers Display */}
+                      {item.modifiers && item.modifiers.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {item.modifiers.map((modifier) => (
+                            <div
+                              key={modifier.id}
+                              className="flex items-center justify-between text-xs"
+                            >
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                {modifier.type === "extra" ? (
+                                  <span className="text-green-600">+</span>
+                                ) : (
+                                  <span className="text-red-600">-</span>
+                                )}
+                                {modifier.name}
+                              </span>
+                              {modifier.type === "extra" && (
+                                <span className="text-green-600 font-medium">
+                                  +
+                                  <PriceDisplay
+                                    price={modifier.price}
+                                    symbolSize={10}
+                                    className="text-xs"
+                                  />
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between mt-3">
-                        <span className="font-semibold text-primary">
-                          <PriceDisplay
-                            price={item.price * item.quantity}
-                            symbolSize={14}
-                            variant="primary"
-                            className="font-semibold"
-                          />
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-primary">
+                            <PriceDisplay
+                              price={
+                                (item.price + (item.modifiersTotal || 0)) *
+                                item.quantity
+                              }
+                              symbolSize={14}
+                              variant="primary"
+                              className="font-semibold"
+                            />
+                          </span>
+                          {item.modifiersTotal && item.modifiersTotal > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              Base:{" "}
+                              <PriceDisplay
+                                price={item.price * item.quantity}
+                                symbolSize={10}
+                                className="text-xs"
+                              />
+                              {" + "}
+                              Extras:{" "}
+                              <PriceDisplay
+                                price={item.modifiersTotal * item.quantity}
+                                symbolSize={10}
+                                className="text-xs text-green-600"
+                              />
+                            </span>
+                          )}
+                        </div>
 
                         {/* Quantity Controls */}
                         <div className="flex items-center gap-2">

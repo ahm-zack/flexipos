@@ -35,22 +35,12 @@ function cartReducer(
   switch (action.type) {
     case "ADD_ITEM": {
       const wasEmpty = state.cart.items.length === 0;
-      const existingItem = state.cart.items.find(
-        (item) => item.id === action.payload.id
-      );
 
-      let newItems: CartItem[];
-      if (existingItem) {
-        // Update quantity if item exists
-        newItems = state.cart.items.map((item) =>
-          item.id === action.payload.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        // Add new item
-        newItems = [...state.cart.items, { ...action.payload, quantity: 1 }];
-      }
+      // For items with modifiers, always create a new cart entry to allow different combinations
+      const newItems = [
+        ...state.cart.items,
+        { ...action.payload, quantity: 1 },
+      ];
 
       const newCart = calculateCartTotals({ ...state.cart, items: newItems });
 
@@ -129,10 +119,12 @@ function cartReducer(
 
 // Helper function to calculate cart totals
 function calculateCartTotals(cart: Cart): Cart {
-  const total = cart.items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const total = cart.items.reduce((sum, item) => {
+    const basePrice = item.price * item.quantity;
+    const modifiersPrice = (item.modifiersTotal || 0) * item.quantity;
+    return sum + basePrice + modifiersPrice;
+  }, 0);
+
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return {

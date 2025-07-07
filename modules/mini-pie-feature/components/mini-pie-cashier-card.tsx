@@ -2,42 +2,28 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Plus, ShoppingCart } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { PriceDisplay } from "@/components/currency";
-import { useCart } from "@/modules/cart";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import type { MiniPie } from "@/lib/db/schema";
-import type { CartItem } from "@/modules/cart/types/cart.types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { AddToCartWithModifiersButton } from "@/components/add-to-cart-with-modifiers-button";
 
 interface MiniPieCashierCardProps {
   miniPie: MiniPie;
 }
 
 export function MiniPieCashierCard({ miniPie }: MiniPieCashierCardProps) {
-  const { addItem } = useCart();
-  const [isAdding, setIsAdding] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const handleAddToCart = async () => {
-    setIsAdding(true);
-
-    const cartItem: Omit<CartItem, "quantity"> = {
-      id: miniPie.id,
-      name: `${miniPie.type} - ${miniPie.nameAr}`,
-      price: parseFloat(miniPie.priceWithVat),
-      category: "Mini Pie",
-    };
-
-    try {
-      addItem(cartItem);
-      setTimeout(() => setIsAdding(false), 500);
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      setIsAdding(false);
-    }
+  const menuItem = {
+    id: miniPie.id,
+    name: `${miniPie.type} - ${miniPie.nameAr}`,
+    price: parseFloat(miniPie.priceWithVat),
+    category: "Mini Pie",
+    description: miniPie.nameEn,
+    image: miniPie.imageUrl,
+    itemType: "mini_pie" as const,
   };
 
   return (
@@ -47,7 +33,6 @@ export function MiniPieCashierCard({ miniPie }: MiniPieCashierCardProps) {
         "rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden",
         "cursor-pointer transform hover:scale-[1.02] active:scale-[0.98]"
       )}
-      onClick={handleAddToCart}
     >
       {/* Image Section */}
       <div className="relative aspect-[4/3] overflow-hidden">
@@ -77,27 +62,11 @@ export function MiniPieCashierCard({ miniPie }: MiniPieCashierCardProps) {
 
         {/* Add to Cart Button Overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button
+          <AddToCartWithModifiersButton
+            item={menuItem}
             size="lg"
-            disabled={isAdding}
             className="bg-white/90 hover:bg-white text-gray-900 shadow-lg backdrop-blur-sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddToCart();
-            }}
-          >
-            {isAdding ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-900 border-t-transparent mr-2" />
-                Adding...
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Add to Cart
-              </>
-            )}
-          </Button>
+          />
         </div>
       </div>
 
@@ -133,17 +102,12 @@ export function MiniPieCashierCard({ miniPie }: MiniPieCashierCardProps) {
           />
 
           {/* Quick Add Button */}
-          <Button
+          <AddToCartWithModifiersButton
+            item={menuItem}
             size="sm"
             variant="outline"
             className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddToCart();
-            }}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+          />
         </div>
       </div>
     </div>

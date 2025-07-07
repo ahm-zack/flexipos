@@ -167,7 +167,7 @@ export function CreateSandwichForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Sandwich</DialogTitle>
           <DialogDescription>
@@ -307,6 +307,10 @@ export function CreateSandwichForm({
                 }
                 placeholder="0.00"
               />
+              <p className="text-xs text-muted-foreground">
+                Base price for this sandwich. Modifier prices will be added
+                separately when customers select them.
+              </p>
             </div>
           </div>
 

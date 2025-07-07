@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 import { useUpdateMiniPie } from "../hooks/use-mini-pies";
 import { uploadMenuImage } from "@/lib/image-upload";
+import { ModifierManager } from "@/components/modifier-manager";
 import type { MiniPie } from "@/lib/db/schema";
 import type { EditMiniPieFormData } from "@/lib/schemas";
 
@@ -167,7 +168,7 @@ export function EditMiniPieForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Mini Pie</DialogTitle>
           <DialogDescription>
@@ -311,6 +312,16 @@ export function EditMiniPieForm({
                 }
                 placeholder="0.00"
               />
+              <p className="text-xs text-muted-foreground">
+                Note: Modifier prices are separate and will be added to this
+                base price during checkout.
+              </p>
+            </div>
+
+            {/* Modifiers */}
+            <div className="space-y-2">
+              <Label>Modifiers</Label>
+              <ModifierManager itemId={miniPie.id} itemType="mini_pie" />
             </div>
           </div>
 

@@ -27,7 +27,6 @@ export function PizzaManagementView() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [pizzaToEdit, setPizzaToEdit] = useState<Pizza | null>(null);
-
   const { data: pizzas, isLoading, error } = usePizzas();
   const deletePizzaMutation = useDeletePizza();
 

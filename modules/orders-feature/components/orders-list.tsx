@@ -26,6 +26,14 @@ import { cn } from "@/lib/utils";
 import { useOrdersContext } from "../contexts/orders-context";
 import { OrdersHeader } from "./orders-header";
 
+// Type for saved modifiers in order items
+interface SavedModifier {
+  id: string;
+  name: string;
+  type: "extra" | "without";
+  price: number;
+}
+
 export function OrdersList() {
   const {
     // Data
@@ -345,14 +353,47 @@ export function OrdersList() {
                         ).map((item, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between text-xs animate-in fade-in-0 duration-200"
+                            className="space-y-1 animate-in fade-in-0 duration-200"
                           >
-                            <span className="text-foreground truncate flex-1">
-                              {item.name}
-                            </span>
-                            <span className="text-muted-foreground ml-2">
-                              {item.quantity}x
-                            </span>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-foreground truncate flex-1">
+                                {item.name}
+                              </span>
+                              <span className="text-muted-foreground ml-2">
+                                {item.quantity}x
+                              </span>
+                            </div>
+                            {/* Display modifiers if they exist */}
+                            {item.details?.savedModifiers &&
+                              item.details.savedModifiers.length > 0 && (
+                                <div className="space-y-0.5">
+                                  {item.details.savedModifiers.map(
+                                    (
+                                      modifier: SavedModifier,
+                                      modIndex: number
+                                    ) => (
+                                      <div
+                                        key={modIndex}
+                                        className="flex items-center justify-between text-xs"
+                                      >
+                                        <span className="text-muted-foreground italic">
+                                          {modifier.type === "extra"
+                                            ? "+ "
+                                            : "- "}
+                                          {modifier.name}
+                                        </span>
+                                        {modifier.type === "extra" &&
+                                          modifier.price > 0 && (
+                                            <span className="text-muted-foreground text-xs flex items-center gap-0.5">
+                                              +<SaudiRiyalSymbol size={10} />
+                                              {modifier.price.toFixed(2)}
+                                            </span>
+                                          )}
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              )}
                           </div>
                         ))}
                         {order.items.length > 2 && (
