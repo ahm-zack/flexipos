@@ -31,6 +31,8 @@ export function OrdersList() {
     // Data
     ordersData,
     filteredOrders,
+    totalFilteredCount,
+    hasActiveFilters,
     isLoading,
     error,
     // UI State
@@ -71,17 +73,57 @@ export function OrdersList() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Orders</h1>
-          <div className="flex items-center gap-4">
-            <div className="px-3 py-1 bg-muted rounded-full">
-              <span className="text-sm font-medium text-muted-foreground">
-                Loading...
-              </span>
+      <div className="space-y-4 mb-6">
+        {/* Header Skeleton - matches OrdersHeader structure */}
+        <div className="space-y-4">
+          {/* Title and Stats Row Skeleton */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="h-9 bg-muted rounded w-32 animate-pulse"></div>
+            <div className="flex items-center gap-4">
+              <div className="px-3 py-1 bg-muted rounded-full animate-pulse">
+                <div className="h-5 bg-muted rounded w-20"></div>
+              </div>
+              <div className="px-3 py-1 bg-muted rounded-full animate-pulse">
+                <div className="h-5 bg-muted rounded w-16"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search and Filters Row Skeleton */}
+          <div className="flex flex-col gap-4">
+            {/* Search Bar and Filter Buttons Row */}
+            <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
+              {/* Search Bar Skeleton */}
+              <div className="relative w-full max-w-md">
+                <div className="h-10 bg-muted rounded border animate-pulse"></div>
+              </div>
+
+              {/* Filter Buttons Skeleton */}
+              <div className="flex flex-col sm:flex-row gap-2 lg:flex-row lg:gap-2">
+                <div className="h-9 bg-muted rounded w-24 animate-pulse"></div>
+                <div className="h-9 bg-muted rounded w-20 animate-pulse"></div>
+              </div>
+            </div>
+
+            {/* Date and Time Filters Row Skeleton */}
+            <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
+              <div className="flex flex-col sm:flex-row gap-2 lg:flex-row lg:gap-2">
+                <div className="h-9 bg-muted rounded w-28 animate-pulse"></div>
+                <div className="h-9 bg-muted rounded w-24 animate-pulse"></div>
+                <div className="h-9 bg-muted rounded w-28 animate-pulse"></div>
+                <div className="h-9 bg-muted rounded w-24 animate-pulse"></div>
+              </div>
+            </div>
+
+            {/* Active Filters Row Skeleton */}
+            <div className="flex flex-wrap gap-2">
+              <div className="h-7 bg-muted rounded w-20 animate-pulse"></div>
+              <div className="h-7 bg-muted rounded w-16 animate-pulse"></div>
             </div>
           </div>
         </div>
+
+        {/* Orders Cards Skeleton */}
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[...Array(8)].map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -188,7 +230,7 @@ export function OrdersList() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-32">
                         {/* Only show Edit button for non-cancelled orders */}
-                        {order.status !== "canceled" && (
+                        {order.status == "completed" && (
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
@@ -334,10 +376,17 @@ export function OrdersList() {
             ))}
           </div>
 
-          {ordersData && ordersData.total > ordersData.limit && (
+          {((hasActiveFilters && totalFilteredCount > pagination.limit) ||
+            (!hasActiveFilters &&
+              ordersData &&
+              ordersData.total > ordersData.limit)) && (
             <Pagination
               currentPage={pagination.currentPage}
-              totalPages={Math.ceil(ordersData.total / ordersData.limit)}
+              totalPages={
+                hasActiveFilters
+                  ? Math.ceil(totalFilteredCount / pagination.limit)
+                  : Math.ceil(ordersData.total / ordersData.limit)
+              }
               onPageChange={handlePageChange}
               isLoading={isLoading}
             />

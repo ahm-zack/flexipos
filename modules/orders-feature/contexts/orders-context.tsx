@@ -37,6 +37,9 @@ interface OrdersContextValue {
   isLoading: boolean;
   error: ReturnType<typeof useOrders>["error"];
   filteredOrders: ApiOrderResponse[];
+  allFilteredOrders: ApiOrderResponse[];
+  totalFilteredCount: number;
+  hasActiveFilters: boolean;
   printOrderData: ReturnType<typeof useOrderForReceipt>["data"];
 
   // Filters
@@ -110,31 +113,30 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     printingOrderId: null,
   });
 
-  // API calls
-  const apiFilters = {
-    ...(filters.activeFilters.has("completed") && {
-      status: "completed" as const,
-    }),
-    ...(filters.activeFilters.has("modified") && {
-      status: "modified" as const,
-    }),
-    ...(filters.activeFilters.has("canceled") && {
-      status: "canceled" as const,
-    }),
-  };
+  // API calls - fetch all data when filters are active, paginated when no filters
+  const hasActiveFilters = Boolean(
+    filters.searchTerm ||
+      filters.activeFilters.size > 0 ||
+      filters.dateFrom ||
+      filters.dateTo
+  );
 
   const {
     data: ordersData,
     isLoading,
     error,
-  } = useOrders(apiFilters, pagination.currentPage, pagination.limit);
+  } = useOrders(
+    {},
+    hasActiveFilters ? 1 : pagination.currentPage,
+    hasActiveFilters ? 1000 : pagination.limit // Fetch large number when filtering
+  );
 
   const { data: printOrderData } = useOrderForReceipt(
     uiState.printingOrderId || ""
   );
 
-  // Filter data client-side for search, payment methods, and date range
-  const filteredOrders =
+  // Filter data client-side for search, payment methods, status, and date range
+  const allFilteredOrders =
     ordersData?.orders?.filter((order) => {
       // Search filter
       if (
@@ -154,6 +156,17 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       if (filters.activeFilters.has("mixed") && order.paymentMethod !== "mixed")
         return false;
 
+      // Status filters
+      if (
+        filters.activeFilters.has("completed") &&
+        order.status !== "completed"
+      )
+        return false;
+      if (filters.activeFilters.has("modified") && order.status !== "modified")
+        return false;
+      if (filters.activeFilters.has("canceled") && order.status !== "canceled")
+        return false;
+
       // Date range filters
       const orderDate = new Date(order.createdAt);
       if (filters.dateFrom && orderDate < filters.dateFrom) return false;
@@ -161,6 +174,14 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
 
       return true;
     }) || [];
+
+  // Handle pagination client-side when filters are active
+  const filteredOrders = hasActiveFilters
+    ? allFilteredOrders.slice(
+        (pagination.currentPage - 1) * pagination.limit,
+        pagination.currentPage * pagination.limit
+      )
+    : allFilteredOrders;
 
   // Filter Actions
   const setSearchTerm = (term: string) => {
@@ -344,6 +365,9 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     isLoading,
     error,
     filteredOrders,
+    allFilteredOrders,
+    totalFilteredCount: allFilteredOrders.length,
+    hasActiveFilters,
     printOrderData,
 
     // State
