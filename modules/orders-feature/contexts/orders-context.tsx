@@ -120,7 +120,7 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     printingOrderId: null,
   });
 
-  // API calls - always fetch all orders once for better UX
+  // Compute if any filters are active
   const hasActiveFilters = useMemo(
     () =>
       Boolean(
@@ -137,97 +137,52 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     ]
   );
 
+  // --- SERVER-SIDE PAGINATION/FILTERING ---
+  // Prepare filters for API (convert Set to Array or whatever your API expects)
+  const apiFilters = useMemo(() => {
+    // Map status filter
+    let status: "completed" | "canceled" | "modified" | undefined = undefined;
+    if (filters.activeFilters.has("completed")) status = "completed";
+    if (filters.activeFilters.has("canceled")) status = "canceled";
+    if (filters.activeFilters.has("modified")) status = "modified";
+
+    // Map payment method filter
+    let paymentMethod: "cash" | "card" | "mixed" | undefined = undefined;
+    if (filters.activeFilters.has("cash")) paymentMethod = "cash";
+    if (filters.activeFilters.has("card")) paymentMethod = "card";
+    if (filters.activeFilters.has("mixed")) paymentMethod = "mixed";
+
+    // Map searchTerm to orderNumber (for order number search)
+    const orderNumber = filters.searchTerm || undefined;
+
+    return {
+      status,
+      paymentMethod,
+      orderNumber,
+      dateFrom: filters.dateFrom ? filters.dateFrom.toISOString() : undefined,
+      dateTo: filters.dateTo ? filters.dateTo.toISOString() : undefined,
+    };
+  }, [filters]);
+
   const {
     data: ordersData,
     isLoading,
     error,
-  } = useOrders(
-    {},
-    1, // Always fetch from page 1
-    10
-  );
+  } = useOrders(apiFilters, pagination.currentPage, pagination.limit);
 
   const { data: printOrderData } = useOrderForReceipt(
     uiState.printingOrderId || ""
   );
 
-  // Filter data client-side for search, payment methods, status, and date range
-  const allFilteredOrders = useMemo(
-    () =>
-      ordersData?.orders?.filter((order) => {
-        // Search filter
-        if (
-          filters.searchTerm &&
-          !order.orderNumber
-            .toLowerCase()
-            .includes(filters.searchTerm.toLowerCase())
-        ) {
-          return false;
-        }
-
-        // Payment method filters
-        if (filters.activeFilters.has("cash") && order.paymentMethod !== "cash")
-          return false;
-        if (filters.activeFilters.has("card") && order.paymentMethod !== "card")
-          return false;
-        if (
-          filters.activeFilters.has("mixed") &&
-          order.paymentMethod !== "mixed"
-        )
-          return false;
-
-        // Status filters
-        if (
-          filters.activeFilters.has("completed") &&
-          order.status !== "completed"
-        )
-          return false;
-        if (
-          filters.activeFilters.has("modified") &&
-          order.status !== "modified"
-        )
-          return false;
-        if (
-          filters.activeFilters.has("canceled") &&
-          order.status !== "canceled"
-        )
-          return false;
-
-        // Date range filters
-        const orderDate = new Date(order.createdAt);
-        if (filters.dateFrom && orderDate < filters.dateFrom) return false;
-        if (filters.dateTo && orderDate > filters.dateTo) return false;
-
-        return true;
-      }) || [],
-    [
-      ordersData?.orders,
-      filters.searchTerm,
-      filters.activeFilters,
-      filters.dateFrom,
-      filters.dateTo,
-    ]
-  );
-
-  // Handle pagination client-side for all scenarios
-  const filteredOrders = useMemo(
-    () =>
-      allFilteredOrders.slice(
-        (pagination.currentPage - 1) * pagination.limit,
-        pagination.currentPage * pagination.limit
-      ),
-    [allFilteredOrders, pagination.currentPage, pagination.limit]
-  );
-
   // Filter Actions
   const setSearchTerm = useCallback((term: string) => {
     setFilters((prev) => ({ ...prev, searchTerm: term }));
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   }, []);
 
   const toggleFilter = useCallback((filterKey: string) => {
     setFilters((prev) => {
       const newActiveFilters = new Set(prev.activeFilters);
-
       // If it's a payment method filter, clear other payment method filters
       if (["cash", "card", "mixed"].includes(filterKey)) {
         ["cash", "card", "mixed"].forEach((key) =>
@@ -246,11 +201,9 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
           newActiveFilters.add(filterKey);
         }
       }
-
       return { ...prev, activeFilters: newActiveFilters };
     });
-
-    setPagination((prev) => ({ ...prev, currentPage: 1 })); // Reset to first page when filtering
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   }, []);
 
   const clearAllFilters = useCallback(() => {
@@ -294,8 +247,6 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
   const handlePageChange = useCallback((page: number) => {
     setPagination((prev) => ({ ...prev, currentPage: page }));
     setUIState((prev) => ({ ...prev, expandedOrders: new Set() })); // Reset expanded orders when changing page
-
-    // Scroll to top of orders list when changing pages
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
@@ -410,9 +361,9 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       ordersData,
       isLoading,
       error,
-      filteredOrders,
-      allFilteredOrders,
-      totalFilteredCount: allFilteredOrders.length,
+      filteredOrders: ordersData?.orders || [], // Use server data directly
+      allFilteredOrders: ordersData?.orders || [], // For compatibility, but same as above
+      totalFilteredCount: ordersData?.total || 0, // Use server total
       hasActiveFilters,
       printOrderData,
 
@@ -453,7 +404,6 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       getStatusBadgeClassName,
       getPaymentMethodDisplay: (paymentMethod: string) => {
         const base = getPaymentMethodDisplay(paymentMethod);
-        // Icons will be added in the consuming component
         return {
           ...base,
           icon: () => null, // Placeholder, will be overridden in component
@@ -461,19 +411,14 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       },
     }),
     [
-      // Data dependencies
       ordersData,
       isLoading,
       error,
-      filteredOrders,
-      allFilteredOrders,
       hasActiveFilters,
       printOrderData,
-      // State dependencies
       filters,
       pagination,
       uiState,
-      // Function dependencies
       setSearchTerm,
       toggleFilter,
       clearAllFilters,

@@ -38,8 +38,6 @@ export function OrdersList() {
   const {
     // Data
     ordersData,
-    filteredOrders,
-    totalFilteredCount,
     isLoading,
     error,
     // UI State
@@ -194,10 +192,10 @@ export function OrdersList() {
       {/* Header with Title, Search, and Filters */}
       <OrdersHeader />
 
-      {ordersData && filteredOrders.length > 0 ? (
+      {ordersData && ordersData.orders && ordersData.orders.length > 0 ? (
         <>
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredOrders.map((order) => (
+            {ordersData.orders.map((order) => (
               <Card
                 key={order.id}
                 className={cn(
@@ -416,10 +414,10 @@ export function OrdersList() {
             ))}
           </div>
 
-          {totalFilteredCount > pagination.limit && (
+          {ordersData.total > pagination.limit && (
             <Pagination
               currentPage={pagination.currentPage}
-              totalPages={Math.ceil(totalFilteredCount / pagination.limit)}
+              totalPages={Math.ceil(ordersData.total / pagination.limit)}
               onPageChange={handlePageChange}
               isLoading={isLoading}
             />
