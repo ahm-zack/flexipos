@@ -176,6 +176,7 @@ export const OrderFiltersSchema = z.object({
   dateFrom: z.string().datetime().optional(),
   dateTo: z.string().datetime().optional(),
   customerName: z.string().optional(),
+  orderNumber: z.string().optional(), // <-- add this line
 });
 
 export type OrderFilters = z.infer<typeof OrderFiltersSchema>;

@@ -34,6 +34,7 @@ const fetchOrders = async (
   if (filters.status) searchParams.append('status', filters.status);
   if (filters.createdBy) searchParams.append('createdBy', filters.createdBy);
   if (filters.customerName) searchParams.append('customerName', filters.customerName);
+  if (filters.orderNumber) searchParams.append('orderNumber', filters.orderNumber);
   if (filters.dateFrom) searchParams.append('dateFrom', filters.dateFrom);
   if (filters.dateTo) searchParams.append('dateTo', filters.dateTo);
 

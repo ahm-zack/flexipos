@@ -173,7 +173,10 @@ export const orderService = {
       if (filters.customerName) {
         whereConditions.push(like(orders.customerName, `%${filters.customerName}%`));
       }
-      
+      // Add orderNumber filter for partial match
+      if (filters.orderNumber) {
+        whereConditions.push(like(orders.orderNumber, `%${filters.orderNumber}%`));
+      }
       if (filters.dateFrom) {
         whereConditions.push(sql`${orders.createdAt} >= ${filters.dateFrom}`);
       }

@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const customerName = searchParams.get('customerName');
     const dateFrom = searchParams.get('dateFrom');
     const dateTo = searchParams.get('dateTo');
+    const orderNumber = searchParams.get('orderNumber');
 
     // Build filters object
     const filters = {
@@ -22,6 +23,7 @@ export async function GET(request: NextRequest) {
       ...(customerName && { customerName }),
       ...(dateFrom && { dateFrom }),
       ...(dateTo && { dateTo }),
+      ...(orderNumber && { orderNumber }),
     };
 
     const result = await orderService.getOrders(filters, page, limit);

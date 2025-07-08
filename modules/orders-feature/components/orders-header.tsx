@@ -31,10 +31,21 @@ import {
   Filter,
   ChevronDown,
   Clock,
+  Loader2,
 } from "lucide-react";
 import { useOrdersContext } from "../contexts/orders-context";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// Debounce hook
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debounced;
+}
 
 export function OrdersHeader() {
   const [fromDateOpen, setFromDateOpen] = useState(false);
@@ -55,7 +66,25 @@ export function OrdersHeader() {
     setDateFrom,
     setDateTo,
     clearDateFilters,
+    isLoading,
   } = useOrdersContext();
+
+  // Debounced search state
+  const [input, setInput] = useState(filters.searchTerm);
+  const debouncedInput = useDebouncedValue(input, 500);
+  useEffect(() => {
+    // Only trigger search if input is empty or at least 3 chars
+    if (debouncedInput === "" || debouncedInput.length >= 3) {
+      setSearchTerm(debouncedInput);
+    }
+    // Otherwise, do not update searchTerm (keeps previous results)
+  }, [debouncedInput, setSearchTerm]);
+  useEffect(() => {
+    setInput(filters.searchTerm);
+  }, [filters.searchTerm]);
+
+  // Helper: Only show full skeleton if no data yet
+  const showFullSkeleton = isLoading && (!ordersData || !ordersData.orders);
 
   return (
     <div className="space-y-4 mb-6">
@@ -98,15 +127,21 @@ export function OrdersHeader() {
             <Input
               type="text"
               placeholder="Search by order number..."
-              value={filters.searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
               className="pl-10 pr-10"
             />
-            {filters.searchTerm && (
+            {/* Only show spinner if not full skeleton */}
+            {isLoading && !showFullSkeleton && (
+              <span className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                <Loader2 className="animate-spin h-4 w-4 text-muted-foreground" />
+              </span>
+            )}
+            {input && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={clearSearch}
+                onClick={() => setInput("")}
                 className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted"
               >
                 <X className="h-4 w-4" />
