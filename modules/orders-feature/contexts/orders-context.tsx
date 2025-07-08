@@ -141,11 +141,10 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     data: ordersData,
     isLoading,
     error,
-  } = useOrders(
-    {},
-    1, // Always fetch from page 1
-    1000 // Fetch large number of orders once for client-side filtering
-  );
+  } = useOrders();
+  // {},
+  // 1, // Always fetch from page 1
+  // 50
 
   const { data: printOrderData } = useOrderForReceipt(
     uiState.printingOrderId || ""
