@@ -25,6 +25,8 @@ import { useOrdersContext } from "../contexts/orders-context";
 import { OrdersHeader } from "./orders-header";
 import React, { useState, useMemo } from "react";
 import { useOrders } from "../hooks/use-orders";
+import { Dialog } from "@/components/ui/dialog";
+import { RestaurantReceipt } from "@/components/restaurant-receipt";
 
 // Type for saved modifiers in order items
 interface SavedModifier {
@@ -48,6 +50,11 @@ export function OrdersList() {
     getStatusBadgeVariant,
     getStatusBadgeClassName,
     clearAllFilters,
+    // Print
+    printingOrderId,
+    printOrderData,
+    handleClosePrint,
+    convertToOrder,
   } = useOrdersContext();
 
   // Local pagination state
@@ -475,6 +482,16 @@ export function OrdersList() {
           </Card>
         </div>
       )}
+
+      {/* Print Receipt Dialog */}
+      <Dialog open={!!printingOrderId} onOpenChange={handleClosePrint}>
+        {printingOrderId && printOrderData && (
+          <RestaurantReceipt
+            order={convertToOrder(printOrderData)}
+            onClose={handleClosePrint}
+          />
+        )}
+      </Dialog>
 
       {/* Edit Order Dialog */}
       <EditOrderDialog

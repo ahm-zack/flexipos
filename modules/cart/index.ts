@@ -1,6 +1,6 @@
 // Components
 export { CartBadge } from './components/cart-badge';
-export { CartPanel } from './components/cart-panel';
+export { CartPanel } from './components/cart-panel-old';
 export { CartContainer } from './components/cart-container';
 export { AddToCartButton } from './components/add-to-cart-button';
 
