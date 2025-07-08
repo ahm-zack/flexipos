@@ -210,39 +210,11 @@ export const orderService = {
 
       // Transform results and add modifiers
       const orderResponses: ApiOrderResponse[] = [];
-      
       for (const row of ordersWithUsers) {
         const baseOrder = transformDatabaseOrderToApi(row.order);
-        
-        // Fetch modifiers for each order item
-        const itemsWithModifiers = await Promise.all(
-          baseOrder.items.map(async (item) => {
-            // Extract the original menu item ID from the composite cart item ID
-            // Cart item ID format: {menuItemId}-{timestamp}
-            const originalMenuItemId = item.id.split('-').slice(0, -1).join('-');
-            const modifiersResult = await getOrderModifiers(row.order.id, originalMenuItemId);
-            if (modifiersResult.success && modifiersResult.data) {
-              // Add modifiers to item details
-              return {
-                ...item,
-                details: {
-                  ...item.details,
-                  savedModifiers: modifiersResult.data.map((modifier: OrderItemModifier) => ({
-                    id: modifier.modifierId,
-                    name: modifier.modifierName,
-                    type: modifier.modifierType,
-                    price: parseFloat(modifier.priceAtTime),
-                  })),
-                },
-              };
-            }
-            return item;
-          })
-        );
-
+        // Use items as-is; modifiers are already present in the JSONB column
         orderResponses.push({
           ...baseOrder,
-          items: itemsWithModifiers,
           cashierName: row.cashierName || undefined,
         });
       }

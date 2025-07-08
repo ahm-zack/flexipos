@@ -364,10 +364,10 @@ export function OrdersList() {
                               </span>
                             </div>
                             {/* Display modifiers if they exist */}
-                            {item.details?.savedModifiers &&
-                              item.details.savedModifiers.length > 0 && (
+                            {item.details?.modifiers &&
+                              item.details.modifiers.length > 0 && (
                                 <div className="space-y-0.5">
-                                  {item.details.savedModifiers.map(
+                                  {item.details.modifiers.map(
                                     (
                                       modifier: SavedModifier,
                                       modIndex: number
