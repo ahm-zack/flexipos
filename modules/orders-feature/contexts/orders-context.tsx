@@ -141,10 +141,11 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     data: ordersData,
     isLoading,
     error,
-  } = useOrders();
-  // {},
-  // 1, // Always fetch from page 1
-  // 50
+  } = useOrders(
+    {},
+    1, // Always fetch from page 1
+    10
+  );
 
   const { data: printOrderData } = useOrderForReceipt(
     uiState.printingOrderId || ""
