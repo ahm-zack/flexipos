@@ -20,11 +20,11 @@ import {
 } from "lucide-react";
 import { getOrderStatusText } from "@/lib/orders/utils";
 import { EditOrderDialog } from "@/components/edit-order-dialog";
-import { RestaurantReceipt } from "@/components/restaurant-receipt";
-import { useOrderForReceipt } from "@/hooks/use-order-receipt";
 import { cn } from "@/lib/utils";
 import { useOrdersContext } from "../contexts/orders-context";
 import { OrdersHeader } from "./orders-header";
+import React, { useState, useMemo } from "react";
+import { useOrders } from "../hooks/use-orders";
 
 // Type for saved modifiers in order items
 interface SavedModifier {
@@ -36,32 +36,50 @@ interface SavedModifier {
 
 export function OrdersList() {
   const {
-    // Data
-    ordersData,
-    isLoading,
-    error,
-    // UI State
+    // Context
+    filters,
     expandedOrders,
     editingOrder,
     isEditDialogOpen,
-    printingOrderId,
-    // Actions
-    handlePageChange,
     handleEditOrder,
     handlePrintOrder,
-    handleClosePrint,
     handleCloseEdit,
     toggleOrderExpansion,
-    // UI Helpers
     getStatusBadgeVariant,
     getStatusBadgeClassName,
-    // Context state
-    pagination,
     clearAllFilters,
   } = useOrdersContext();
 
-  // Fetch order details for printing
-  const { data: printOrderData } = useOrderForReceipt(printingOrderId || "");
+  // Local pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit] = useState(10); // You can make this dynamic if needed
+
+  // Build apiFilters from context filters
+  const apiFilters = useMemo(() => {
+    let status: "completed" | "canceled" | "modified" | undefined = undefined;
+    if (filters.activeFilters.has("completed")) status = "completed";
+    if (filters.activeFilters.has("canceled")) status = "canceled";
+    if (filters.activeFilters.has("modified")) status = "modified";
+    let paymentMethod: "cash" | "card" | "mixed" | undefined = undefined;
+    if (filters.activeFilters.has("cash")) paymentMethod = "cash";
+    if (filters.activeFilters.has("card")) paymentMethod = "card";
+    if (filters.activeFilters.has("mixed")) paymentMethod = "mixed";
+    const orderNumber = filters.searchTerm || undefined;
+    return {
+      status,
+      paymentMethod,
+      orderNumber,
+      dateFrom: filters.dateFrom ? filters.dateFrom.toISOString() : undefined,
+      dateTo: filters.dateTo ? filters.dateTo.toISOString() : undefined,
+      activeFiltersKey: Array.from(filters.activeFilters).sort().join(","),
+    };
+  }, [filters]);
+
+  const {
+    data: ordersData,
+    isLoading,
+    error,
+  } = useOrders(apiFilters, currentPage, limit);
 
   const getPaymentMethodDisplay = (paymentMethod: string) => {
     switch (paymentMethod) {
@@ -414,11 +432,11 @@ export function OrdersList() {
             ))}
           </div>
 
-          {ordersData.total > pagination.limit && (
+          {ordersData.total > limit && (
             <Pagination
-              currentPage={pagination.currentPage}
-              totalPages={Math.ceil(ordersData.total / pagination.limit)}
-              onPageChange={handlePageChange}
+              currentPage={currentPage}
+              totalPages={Math.ceil(ordersData.total / limit)}
+              onPageChange={setCurrentPage}
               isLoading={isLoading}
             />
           )}
@@ -464,26 +482,6 @@ export function OrdersList() {
         open={isEditDialogOpen}
         onOpenChange={(open) => handleCloseEdit(open)}
       />
-
-      {/* Restaurant Receipt */}
-      {printingOrderId && printOrderData && (
-        <RestaurantReceipt
-          order={{
-            id: printOrderData.id,
-            orderNumber: printOrderData.orderNumber,
-            customerName: printOrderData.customerName || undefined,
-            items: printOrderData.items,
-            totalAmount: printOrderData.totalAmount,
-            paymentMethod: printOrderData.paymentMethod,
-            status: printOrderData.status,
-            createdAt: printOrderData.createdAt,
-            updatedAt: printOrderData.updatedAt,
-            createdBy: printOrderData.createdBy,
-          }}
-          cashierName={printOrderData.cashierName}
-          onClose={handleClosePrint}
-        />
-      )}
     </div>
   );
 }

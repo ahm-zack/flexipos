@@ -13,7 +13,6 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { useOrders } from "../hooks/use-orders";
 import { useOrderForReceipt } from "@/hooks/use-order-receipt";
 import { Order } from "@/lib/orders";
 import { ApiOrderResponse } from "@/lib/order-service";
@@ -26,11 +25,6 @@ interface OrdersFilters {
   dateTo: Date | undefined;
 }
 
-interface OrdersPagination {
-  currentPage: number;
-  limit: number;
-}
-
 interface OrdersUIState {
   expandedOrders: Set<string>;
   editingOrder: Order | null;
@@ -40,27 +34,11 @@ interface OrdersUIState {
 
 interface OrdersContextValue {
   // Data
-  ordersData: ReturnType<typeof useOrders>["data"];
-  isLoading: boolean;
-  error: ReturnType<typeof useOrders>["error"];
-  filteredOrders: ApiOrderResponse[];
-  allFilteredOrders: ApiOrderResponse[];
-  totalFilteredCount: number;
   hasActiveFilters: boolean;
   printOrderData: ReturnType<typeof useOrderForReceipt>["data"];
 
   // Filters
   filters: OrdersFilters;
-  pagination: OrdersPagination;
-  uiState: OrdersUIState;
-
-  // Direct access to UI state for easier destructuring
-  expandedOrders: Set<string>;
-  editingOrder: Order | null;
-  isEditDialogOpen: boolean;
-  printingOrderId: string | null;
-
-  // Filter Actions
   setSearchTerm: (term: string) => void;
   toggleFilter: (filterKey: string) => void;
   clearAllFilters: () => void;
@@ -70,8 +48,12 @@ interface OrdersContextValue {
   clearDateFilters: () => void;
   getFilterButtonVariant: (filterKey: string) => "default" | "outline";
 
-  // Pagination Actions
-  handlePageChange: (page: number) => void;
+  // UI State
+  uiState: OrdersUIState;
+  expandedOrders: Set<string>;
+  editingOrder: Order | null;
+  isEditDialogOpen: boolean;
+  printingOrderId: string | null;
 
   // Order Actions
   handleEditOrder: (apiOrder: ApiOrderResponse) => void;
@@ -108,11 +90,6 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     dateTo: undefined,
   });
 
-  const [pagination, setPagination] = useState<OrdersPagination>({
-    currentPage: 1,
-    limit: 10,
-  });
-
   const [uiState, setUIState] = useState<OrdersUIState>({
     expandedOrders: new Set<string>(),
     editingOrder: null,
@@ -137,39 +114,6 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     ]
   );
 
-  // --- SERVER-SIDE PAGINATION/FILTERING ---
-  // Prepare filters for API (convert Set to Array or whatever your API expects)
-  const apiFilters = useMemo(() => {
-    // Map status filter
-    let status: "completed" | "canceled" | "modified" | undefined = undefined;
-    if (filters.activeFilters.has("completed")) status = "completed";
-    if (filters.activeFilters.has("canceled")) status = "canceled";
-    if (filters.activeFilters.has("modified")) status = "modified";
-
-    // Map payment method filter
-    let paymentMethod: "cash" | "card" | "mixed" | undefined = undefined;
-    if (filters.activeFilters.has("cash")) paymentMethod = "cash";
-    if (filters.activeFilters.has("card")) paymentMethod = "card";
-    if (filters.activeFilters.has("mixed")) paymentMethod = "mixed";
-
-    // Map searchTerm to orderNumber (for order number search)
-    const orderNumber = filters.searchTerm || undefined;
-
-    return {
-      status,
-      paymentMethod,
-      orderNumber,
-      dateFrom: filters.dateFrom ? filters.dateFrom.toISOString() : undefined,
-      dateTo: filters.dateTo ? filters.dateTo.toISOString() : undefined,
-    };
-  }, [filters]);
-
-  const {
-    data: ordersData,
-    isLoading,
-    error,
-  } = useOrders(apiFilters, pagination.currentPage, pagination.limit);
-
   const { data: printOrderData } = useOrderForReceipt(
     uiState.printingOrderId || ""
   );
@@ -177,7 +121,6 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
   // Filter Actions
   const setSearchTerm = useCallback((term: string) => {
     setFilters((prev) => ({ ...prev, searchTerm: term }));
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   }, []);
 
   const toggleFilter = useCallback((filterKey: string) => {
@@ -203,7 +146,6 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       }
       return { ...prev, activeFilters: newActiveFilters };
     });
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   }, []);
 
   const clearAllFilters = useCallback(() => {
@@ -213,27 +155,22 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       dateFrom: undefined,
       dateTo: undefined,
     });
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   }, []);
 
   const clearSearch = useCallback(() => {
     setFilters((prev) => ({ ...prev, searchTerm: "" }));
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   }, []);
 
   const setDateFrom = useCallback((date: Date | undefined) => {
     setFilters((prev) => ({ ...prev, dateFrom: date }));
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   }, []);
 
   const setDateTo = useCallback((date: Date | undefined) => {
     setFilters((prev) => ({ ...prev, dateTo: date }));
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   }, []);
 
   const clearDateFilters = useCallback(() => {
     setFilters((prev) => ({ ...prev, dateFrom: undefined, dateTo: undefined }));
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   }, []);
 
   const getFilterButtonVariant = useCallback(
@@ -242,13 +179,6 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     },
     [filters.activeFilters]
   );
-
-  // Pagination Actions
-  const handlePageChange = useCallback((page: number) => {
-    setPagination((prev) => ({ ...prev, currentPage: page }));
-    setUIState((prev) => ({ ...prev, expandedOrders: new Set() })); // Reset expanded orders when changing page
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
 
   // Order Actions
   const convertToOrder = useCallback(
@@ -358,27 +288,10 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
   const contextValue: OrdersContextValue = useMemo(
     () => ({
       // Data
-      ordersData,
-      isLoading,
-      error,
-      filteredOrders: ordersData?.orders || [], // Use server data directly
-      allFilteredOrders: ordersData?.orders || [], // For compatibility, but same as above
-      totalFilteredCount: ordersData?.total || 0, // Use server total
       hasActiveFilters,
       printOrderData,
-
-      // State
+      // Filters
       filters,
-      pagination,
-      uiState,
-
-      // Direct access to UI state for easier destructuring
-      expandedOrders: uiState.expandedOrders,
-      editingOrder: uiState.editingOrder,
-      isEditDialogOpen: uiState.isEditDialogOpen,
-      printingOrderId: uiState.printingOrderId,
-
-      // Filter Actions
       setSearchTerm,
       toggleFilter,
       clearAllFilters,
@@ -387,10 +300,12 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       setDateTo,
       clearDateFilters,
       getFilterButtonVariant,
-
-      // Pagination Actions
-      handlePageChange,
-
+      // UI State
+      uiState,
+      expandedOrders: uiState.expandedOrders,
+      editingOrder: uiState.editingOrder,
+      isEditDialogOpen: uiState.isEditDialogOpen,
+      printingOrderId: uiState.printingOrderId,
       // Order Actions
       handleEditOrder,
       handlePrintOrder,
@@ -398,7 +313,6 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       handleCloseEdit,
       toggleOrderExpansion,
       convertToOrder,
-
       // UI Helpers
       getStatusBadgeVariant,
       getStatusBadgeClassName,
@@ -411,13 +325,9 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       },
     }),
     [
-      ordersData,
-      isLoading,
-      error,
       hasActiveFilters,
       printOrderData,
       filters,
-      pagination,
       uiState,
       setSearchTerm,
       toggleFilter,
@@ -427,7 +337,6 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       setDateTo,
       clearDateFilters,
       getFilterButtonVariant,
-      handlePageChange,
       handleEditOrder,
       handlePrintOrder,
       handleClosePrint,

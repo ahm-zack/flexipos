@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { orderService } from '@/lib/order-service';
-import { CreateOrderSchema } from '@/lib/orders/schemas';
+import { CreateOrderSchema, OrderFiltersSchema } from '@/lib/orders/schemas';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,20 +15,23 @@ export async function GET(request: NextRequest) {
     const dateFrom = searchParams.get('dateFrom');
     const dateTo = searchParams.get('dateTo');
     const orderNumber = searchParams.get('orderNumber');
+    const paymentMethod = searchParams.get('paymentMethod');
+    
 
     // Build filters object
-    const filters = {
+    const filtersRaw = {
       ...(status && { status }),
       ...(createdBy && { createdBy }),
       ...(customerName && { customerName }),
       ...(dateFrom && { dateFrom }),
       ...(dateTo && { dateTo }),
       ...(orderNumber && { orderNumber }),
+      ...(paymentMethod && { paymentMethod }),
     };
+    const filters = OrderFiltersSchema.parse(filtersRaw);
 
     const result = await orderService.getOrders(filters, page, limit);
-    
-    if (!result.success) {
+    if (!result.success || !result.data) {
       return NextResponse.json(result, { status: 500 });
     }
 

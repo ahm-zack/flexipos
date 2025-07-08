@@ -184,6 +184,10 @@ export const orderService = {
       if (filters.dateTo) {
         whereConditions.push(sql`${orders.createdAt} <= ${filters.dateTo}`);
       }
+      // Add paymentMethod filter
+      if (filters.paymentMethod) {
+        whereConditions.push(eq(orders.paymentMethod, filters.paymentMethod));
+      }
 
       // Combine conditions
       const whereClause = whereConditions.length > 0 

@@ -37,6 +37,7 @@ const fetchOrders = async (
   if (filters.orderNumber) searchParams.append('orderNumber', filters.orderNumber);
   if (filters.dateFrom) searchParams.append('dateFrom', filters.dateFrom);
   if (filters.dateTo) searchParams.append('dateTo', filters.dateTo);
+  if (filters.paymentMethod) searchParams.append('paymentMethod', filters.paymentMethod);
 
   const response = await fetch(`/api/orders?${searchParams.toString()}`);
   if (!response.ok) {
@@ -242,12 +243,17 @@ const fetchModifiedOrders = async (): Promise<ApiModifiedOrder[]> => {
 
 // Hooks
 export const useOrders = (
-  filters: OrderFilters = {}, 
+  filters: OrderFilters & { activeFiltersKey?: string } = {}, 
   page: number = 1, 
   limit: number = 10
 ) => {
+  // Add a serializable key for activeFilters if present
+  const serializableFilters = {
+    ...filters,
+    activeFiltersKey: filters.activeFiltersKey || '',
+  };
   return useQuery({
-    queryKey: orderKeys.list(filters, page, limit),
+    queryKey: orderKeys.list(serializableFilters, page, limit),
     queryFn: () => fetchOrders(filters, page, limit),
     staleTime: 1 * 60 * 1000, // 1 minute (orders change frequently)
   });

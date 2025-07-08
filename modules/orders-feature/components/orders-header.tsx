@@ -31,7 +31,6 @@ import {
   Filter,
   ChevronDown,
   Clock,
-  Loader2,
 } from "lucide-react";
 import { useOrdersContext } from "../contexts/orders-context";
 import { format } from "date-fns";
@@ -54,19 +53,12 @@ export function OrdersHeader() {
   const [toTimeOpen, setToTimeOpen] = useState(false);
 
   const {
-    ordersData,
-    filteredOrders,
-    totalFilteredCount,
-    hasActiveFilters,
     filters,
-    pagination,
     setSearchTerm,
     toggleFilter,
-    clearSearch,
     setDateFrom,
     setDateTo,
     clearDateFilters,
-    isLoading,
   } = useOrdersContext();
 
   // Debounced search state
@@ -83,38 +75,11 @@ export function OrdersHeader() {
     setInput(filters.searchTerm);
   }, [filters.searchTerm]);
 
-  // Helper: Only show full skeleton if no data yet
-  const showFullSkeleton = isLoading && (!ordersData || !ordersData.orders);
-
   return (
     <div className="space-y-4 mb-6">
-      {/* Title and Stats Row */}
+      {/* Title Row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-3xl font-bold">Orders</h1>
-        {ordersData?.total && (
-          <div className="flex items-center gap-4">
-            <div className="px-3 py-1 bg-muted rounded-full">
-              <span className="text-sm font-medium text-muted-foreground">
-                {hasActiveFilters
-                  ? `${filteredOrders.length} of ${totalFilteredCount} filtered`
-                  : `${filteredOrders.length} of ${totalFilteredCount} orders`}
-              </span>
-            </div>
-            {hasActiveFilters && (
-              <div className="px-3 py-1 bg-muted rounded-full">
-                <span className="text-sm font-medium text-muted-foreground">
-                  ({totalFilteredCount} of {ordersData.total} total)
-                </span>
-              </div>
-            )}
-            <div className="px-3 py-1 bg-muted rounded-full">
-              <span className="text-sm font-medium text-muted-foreground">
-                Page {pagination.currentPage} of{" "}
-                {Math.ceil(totalFilteredCount / pagination.limit) || 1}
-              </span>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Search and Filters Row */}
@@ -131,12 +96,6 @@ export function OrdersHeader() {
               onChange={(e) => setInput(e.target.value)}
               className="pl-10 pr-10"
             />
-            {/* Only show spinner if not full skeleton */}
-            {isLoading && !showFullSkeleton && (
-              <span className="absolute right-10 top-1/2 transform -translate-y-1/2">
-                <Loader2 className="animate-spin h-4 w-4 text-muted-foreground" />
-              </span>
-            )}
             {input && (
               <Button
                 variant="ghost"
