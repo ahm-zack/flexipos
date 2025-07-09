@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ModifierSelectionDialog } from "@/components/modifier-selection-dialog";
 
+interface ModifierType {
+  id: string;
+  type: "extra" | "without";
+  name: string;
+  price: number;
+}
+
 interface AddToCartWithModifiersButtonProps {
   item: {
     id: string;
@@ -15,6 +22,7 @@ interface AddToCartWithModifiersButtonProps {
     description?: string;
     image?: string;
     itemType: "pizza" | "pie" | "sandwich" | "mini_pie";
+    modifiers?: ModifierType[];
   };
   className?: string;
   variant?: "default" | "outline" | "secondary";
@@ -71,7 +79,7 @@ export function AddToCartWithModifiersButton({
       <ModifierSelectionDialog
         open={isDialogOpen}
         onOpenChange={handleDialogClose}
-        item={item}
+        item={{ ...item, modifiers: item.modifiers ?? [] }}
       />
     </>
   );
