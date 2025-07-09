@@ -1,7 +1,12 @@
 "use client";
 
 import React, { createContext, useContext, useReducer, useEffect } from "react";
-import { Cart, CartItem, CartContextType } from "../types/cart.types";
+import {
+  Cart,
+  CartItem,
+  CartContextType,
+  CartItemModifier,
+} from "../types/cart.types";
 
 // Cart reducer actions
 type CartAction =
@@ -27,6 +32,50 @@ const initialState = {
   isOpen: false,
 };
 
+// Helper function to create a unique hash for item + modifiers combination
+function createItemHash(item: CartItem): string {
+  // Include base item ID and name
+  const baseHash = `${item.id}-${item.name}`;
+
+  // Sort modifiers for consistent hashing
+  const sortedModifiers = [...(item.modifiers || [])].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+
+  // Create modifier hash including name, type, and price
+  const modifierHash = sortedModifiers
+    .map((m) => `${m.name}-${m.type}-${m.price}`)
+    .join(",");
+
+  return `${baseHash}|${modifierHash}`;
+}
+
+// Helper function to calculate modifiers total
+function calculateModifiersTotal(modifiers: CartItemModifier[]): number {
+  return (
+    modifiers?.reduce((sum, modifier) => {
+      return sum + (modifier.type === "extra" ? modifier.price : 0);
+    }, 0) || 0
+  );
+}
+
+// Helper function to calculate cart totals
+function calculateCartTotals(cart: Cart): Cart {
+  const total = cart.items.reduce((sum, item) => {
+    const basePrice = item.price * item.quantity;
+    const modifiersPrice = (item.modifiersTotal || 0) * item.quantity;
+    return sum + basePrice + modifiersPrice;
+  }, 0);
+
+  const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+
+  return {
+    ...cart,
+    total: Math.round(total * 100) / 100, // Round to 2 decimal places
+    itemCount,
+  };
+}
+
 // Cart reducer
 function cartReducer(
   state: { cart: Cart; isOpen: boolean },
@@ -36,13 +85,24 @@ function cartReducer(
     case "ADD_ITEM": {
       const wasEmpty = state.cart.items.length === 0;
 
-      const hash = createItemHash(action.payload as CartItem);
-      // check if it exists
+      // Calculate modifiers total for the new item
+      const modifiersTotal = calculateModifiersTotal(
+        action.payload.modifiers || []
+      );
+      const newItemWithModifiersTotal = {
+        ...action.payload,
+        modifiersTotal,
+      };
+
+      const hash = createItemHash(newItemWithModifiersTotal as CartItem);
+
+      // Check if item with same base item + modifiers exists
       const existingItemIndex = state.cart.items.findIndex(
         (item) => createItemHash(item) === hash
       );
+
       if (existingItemIndex !== -1) {
-        // If item with same modifiers exists, just increase quantity
+        // If item with same modifiers exists, increase quantity
         const newItems = state.cart.items.map((item, index) =>
           index === existingItemIndex
             ? { ...item, quantity: item.quantity + 1 }
@@ -52,10 +112,10 @@ function cartReducer(
         return { ...state, cart: newCart };
       }
 
-      // For items with modifiers, always create a new cart entry to allow different combinations
+      // If item doesn't exist or has different modifiers, add as new item
       const newItems = [
         ...state.cart.items,
-        { ...action.payload, quantity: 1 },
+        { ...newItemWithModifiersTotal, quantity: 1 },
       ];
 
       const newCart = calculateCartTotals({ ...state.cart, items: newItems });
@@ -133,23 +193,6 @@ function cartReducer(
   }
 }
 
-// Helper function to calculate cart totals
-function calculateCartTotals(cart: Cart): Cart {
-  const total = cart.items.reduce((sum, item) => {
-    const basePrice = item.price * item.quantity;
-    const modifiersPrice = (item.modifiersTotal || 0) * item.quantity;
-    return sum + basePrice + modifiersPrice;
-  }, 0);
-
-  const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-
-  return {
-    ...cart,
-    total: Math.round(total * 100) / 100, // Round to 2 decimal places
-    itemCount,
-  };
-}
-
 // Create context
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
@@ -209,11 +252,4 @@ export function useCart() {
     throw new Error("useCart must be used within a CartProvider");
   }
   return context;
-}
-
-function createItemHash(item: CartItem): string {
-  const sortedModifiers = [...(item.modifiers || [])].sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
-  return `${sortedModifiers.map((m) => `${m.name}`).join(",")}`;
 }
