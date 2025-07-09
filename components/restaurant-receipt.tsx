@@ -9,6 +9,7 @@ import {
   RESTAURANT_CONFIG,
   type RestaurantConfig,
 } from "@/lib/restaurant-config";
+import { Button } from "./ui/button";
 
 // Type for saved modifiers in order items
 interface SavedModifier {
@@ -227,7 +228,7 @@ export function RestaurantReceipt({
         <div className="sticky top-0 bg-card px-6 py-4 flex items-center justify-between no-print shadow-sm">
           {/* Print Button (top left) */}
           <div className="flex gap-3">
-            <button
+            <Button
               onClick={handlePrint}
               className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 transition-all duration-200 font-medium text-sm shadow-md hover:shadow-lg"
             >
@@ -245,29 +246,13 @@ export function RestaurantReceipt({
                 />
               </svg>
               Print
-            </button>
+            </Button>
           </div>
           {/* Close Button (top right, small, red, trash icon) */}
           {onClose && (
-            <button
-              onClick={onClose}
-              className="absolute top-3 right-3 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-all duration-200 shadow-md hover:shadow-lg"
-              title="Close"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6m5 6v6m4-6v6"
-                />
-              </svg>
-            </button>
+            <Button onClick={onClose} variant="outline" title="Close">
+              x
+            </Button>
           )}
         </div>
 
