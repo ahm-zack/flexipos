@@ -1,7 +1,7 @@
 "use client";
 
 import { CartBadge } from "./cart-badge";
-import { CartPanel } from "./cart-panel-old";
+import { CartPanel } from "./cart-panel";
 import { cn } from "@/lib/utils";
 
 interface CartContainerProps {

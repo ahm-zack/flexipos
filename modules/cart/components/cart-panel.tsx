@@ -18,17 +18,36 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart } from "../hooks/use-cart";
 import { PriceDisplay } from "@/components/currency";
 import { cn } from "@/lib/utils";
-import { useCreateOrder } from "@/modules/orders-feature";
+import { ApiOrder, useCreateOrder } from "@/modules/orders-feature";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { useQueryClient } from "@tanstack/react-query";
-import { orderKeys } from "@/modules/orders-feature/hooks/use-orders";
 import { useState } from "react";
-import { useOrderForReceipt } from "@/hooks/use-order-receipt";
 import { RestaurantReceipt } from "@/components/restaurant-receipt";
+import { Dialog } from "@radix-ui/react-dialog";
+import { useCreatedOrderStore } from "../hooks/useCreatedOrderStore";
 
 interface CartPanelProps {
   className?: string;
+}
+
+export function ReceiptModal({
+  order,
+  onClose,
+}: {
+  order: ApiOrder;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog>
+      <RestaurantReceipt
+        order={{
+          ...order,
+          customerName: order.customerName || undefined,
+        }}
+        onClose={onClose}
+      />
+    </Dialog>
+  );
 }
 
 export function CartPanel({ className }: CartPanelProps) {
@@ -38,13 +57,10 @@ export function CartPanel({ className }: CartPanelProps) {
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "mixed">(
     "cash"
   );
-  const [printOrderId, setPrintOrderId] = useState<string | null>(null);
 
   const createOrder = useCreateOrder();
   const { user: currentUser, loading: userLoading } = useCurrentUser();
-  const queryClient = useQueryClient();
-  const { data: printOrderData, isSuccess: printOrderLoaded } =
-    useOrderForReceipt(printOrderId || "");
+  const setCreatedOrder = useCreatedOrderStore((s) => s.setCreatedOrder);
 
   // Handle order creation
   const handleProceedToCheckout = () => {
@@ -68,15 +84,12 @@ export function CartPanel({ className }: CartPanelProps) {
     createOrder.mutate(orderData, {
       onSuccess: (data) => {
         toast.success(`Order #${data.orderNumber} created successfully!`);
+        // queryClient.invalidateQueries({ queryKey: orderKeys.all });
+        // Show receipt and print after 2 seconds
         clearCart();
         closeCart();
-        queryClient.invalidateQueries({ queryKey: orderKeys.all });
-        // Show receipt and print after 2 seconds
-        if (data.id) {
-          setTimeout(() => {
-            setPrintOrderId(data.id);
-          }, 2000);
-        }
+        setCreatedOrder(data);
+        console.log("Order created:", data);
       },
       onError: (error) => {
         toast.error(`Failed to create order: ${error.message}`);
@@ -88,17 +101,6 @@ export function CartPanel({ className }: CartPanelProps) {
 
   return (
     <>
-      {/* Print Receipt Modal */}
-      {printOrderId && printOrderLoaded && printOrderData && (
-        <RestaurantReceipt
-          order={{
-            ...printOrderData,
-            customerName: printOrderData.customerName || undefined,
-          }}
-          onClose={() => setPrintOrderId(null)}
-        />
-      )}
-
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"

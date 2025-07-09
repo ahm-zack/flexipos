@@ -10,6 +10,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getUserByEmail } from "@/lib/user-service-drizzle";
 import { ConditionalCartContainer } from "@/components/conditional-cart-container";
 import React from "react";
+import { CreatedOrderReciptModal } from "@/modules/providers/CreatedOrderReciptsModal";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -56,6 +57,7 @@ export async function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Conditional Cart - Hidden on management pages */}
         <ConditionalCartContainer />
+        <CreatedOrderReciptModal />
       </SidebarInset>
     </SidebarProvider>
   );

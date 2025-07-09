@@ -36,6 +36,22 @@ function cartReducer(
     case "ADD_ITEM": {
       const wasEmpty = state.cart.items.length === 0;
 
+      const hash = createItemHash(action.payload as CartItem);
+      // check if it exists
+      const existingItemIndex = state.cart.items.findIndex(
+        (item) => createItemHash(item) === hash
+      );
+      if (existingItemIndex !== -1) {
+        // If item with same modifiers exists, just increase quantity
+        const newItems = state.cart.items.map((item, index) =>
+          index === existingItemIndex
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+        const newCart = calculateCartTotals({ ...state.cart, items: newItems });
+        return { ...state, cart: newCart };
+      }
+
       // For items with modifiers, always create a new cart entry to allow different combinations
       const newItems = [
         ...state.cart.items,
@@ -193,4 +209,11 @@ export function useCart() {
     throw new Error("useCart must be used within a CartProvider");
   }
   return context;
+}
+
+function createItemHash(item: CartItem): string {
+  const sortedModifiers = [...(item.modifiers || [])].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+  return `${sortedModifiers.map((m) => `${m.name}`).join(",")}`;
 }
