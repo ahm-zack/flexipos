@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { miniPieService } from "@/lib/mini-pie-service";
-import { editMiniPieFormSchema } from "@/lib/schemas";
+import { UpdateMiniPieSchema } from "@/lib/schemas";
 
 export async function GET(
   request: NextRequest,
@@ -34,15 +34,16 @@ export async function PUT(
     const body = await request.json();
     
     // Validate the request body
-    const validationResult = editMiniPieFormSchema.safeParse(body);
+    const validationResult = UpdateMiniPieSchema.safeParse(body);
     if (!validationResult.success) {
+      console.error("Validation error in PUT /api/mini-pies/[id]:", validationResult.error.issues, "Payload:", body);
       return NextResponse.json(
         { success: false, error: "Invalid data", details: validationResult.error.issues },
         { status: 400 }
       );
     }
 
-    const miniPieData = {
+    const miniPieData: Record<string, unknown> = {
       type: validationResult.data.type,
       nameAr: validationResult.data.nameAr,
       nameEn: validationResult.data.nameEn,
@@ -50,6 +51,9 @@ export async function PUT(
       priceWithVat: validationResult.data.priceWithVat,
       imageUrl: validationResult.data.imageUrl || "",
     };
+    if (validationResult.data.modifiers !== undefined) {
+      miniPieData.modifiers = validationResult.data.modifiers;
+    }
 
     const result = await miniPieService.updateMiniPie(id, miniPieData);
     

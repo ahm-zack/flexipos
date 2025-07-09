@@ -25,6 +25,7 @@ export function PizzaCashierCard({ pizza }: PizzaCashierCardProps) {
     description: pizza.nameEn,
     image: pizza.imageUrl,
     itemType: "pizza" as const,
+    modifiers: pizza.modifiers || [],
   };
 
   return (
@@ -64,14 +65,23 @@ export function PizzaCashierCard({ pizza }: PizzaCashierCardProps) {
               {pizza.nameAr}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="secondary"
-              className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 border-orange-200 dark:border-orange-800"
-            >
-              {pizza.crust}
-            </Badge>
-          </div>
+          {/* Show modifiers if present */}
+          {pizza.modifiers && pizza.modifiers.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {pizza.modifiers.map((mod) => (
+                <Badge
+                  key={mod.id}
+                  variant={mod.type === "extra" ? "default" : "secondary"}
+                  className="text-xs"
+                >
+                  {mod.type === "extra" ? "+" : "No "} {mod.name}
+                  {mod.type === "extra" && mod.price > 0
+                    ? ` (+${mod.price})`
+                    : ""}
+                </Badge>
+              ))}
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <PriceDisplay
               price={parseFloat(pizza.priceWithVat)}

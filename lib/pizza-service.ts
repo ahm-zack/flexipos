@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { pizzas, type Pizza, type NewPizza, type PizzaType } from '@/lib/db/schema';
+import type { Modifier } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export interface PizzaServiceResult<T> {
@@ -8,12 +9,19 @@ export interface PizzaServiceResult<T> {
   error?: string;
 }
 
+function ensureModifiers<T extends { modifiers: unknown }>(row: T): Omit<T, 'modifiers'> & { modifiers: Modifier[] } {
+  return {
+    ...row,
+    modifiers: Array.isArray(row.modifiers) ? row.modifiers as Modifier[] : [],
+  };
+}
+
 export const pizzaService = {
   // Get all pizzas
   async getPizzas(): Promise<PizzaServiceResult<Pizza[]>> {
     try {
       const allPizzas = await db.select().from(pizzas);
-      return { success: true, data: allPizzas };
+      return { success: true, data: allPizzas.map(ensureModifiers) };
     } catch (error) {
       console.error('Error fetching pizzas:', error);
       return { success: false, error: 'Failed to fetch pizzas' };
@@ -29,7 +37,7 @@ export const pizzaService = {
         return { success: false, error: 'Pizza not found' };
       }
 
-      return { success: true, data: pizza[0] };
+      return { success: true, data: ensureModifiers(pizza[0]) };
     } catch (error) {
       console.error('Error fetching pizza by ID:', error);
       return { success: false, error: 'Failed to fetch pizza' };
@@ -41,11 +49,12 @@ export const pizzaService = {
     try {
       const newPizza = await db.insert(pizzas).values({
         ...pizzaData,
+        modifiers: pizzaData.modifiers ?? [],
         createdAt: new Date(),
         updatedAt: new Date(),
       }).returning();
 
-      return { success: true, data: newPizza[0] };
+      return { success: true, data: ensureModifiers(newPizza[0]) };
     } catch (error) {
       console.error('Error creating pizza:', error);
       return { success: false, error: 'Failed to create pizza' };
@@ -58,6 +67,7 @@ export const pizzaService = {
       const updatedPizza = await db.update(pizzas)
         .set({
           ...pizzaData,
+          modifiers: pizzaData.modifiers ?? [],
           updatedAt: new Date(),
         })
         .where(eq(pizzas.id, id))
@@ -67,7 +77,7 @@ export const pizzaService = {
         return { success: false, error: 'Pizza not found' };
       }
 
-      return { success: true, data: updatedPizza[0] };
+      return { success: true, data: ensureModifiers(updatedPizza[0]) };
     } catch (error) {
       console.error('Error updating pizza:', error);
       return { success: false, error: 'Failed to update pizza' };
@@ -94,7 +104,7 @@ export const pizzaService = {
   async getPizzasByType(type: PizzaType): Promise<PizzaServiceResult<Pizza[]>> {
     try {
       const pizzasByType = await db.select().from(pizzas).where(eq(pizzas.type, type));
-      return { success: true, data: pizzasByType };
+      return { success: true, data: pizzasByType.map(ensureModifiers) };
     } catch (error) {
       console.error('Error fetching pizzas by type:', error);
       return { success: false, error: 'Failed to fetch pizzas by type' };

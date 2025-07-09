@@ -15,11 +15,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Plus, Minus, ShoppingCart } from "lucide-react";
-import { useModifiers } from "@/hooks/use-modifiers";
 import { useCart } from "@/modules/cart/hooks/use-cart";
 import { PriceDisplay } from "@/components/currency";
 import { toast } from "sonner";
-import type { ApiModifier } from "@/lib/modifiers-service";
+import type { Modifier } from "@/lib/schemas";
 import type {
   CartItem,
   CartItemModifier,
@@ -36,6 +35,7 @@ interface ModifierSelectionDialogProps {
     description?: string;
     image?: string;
     itemType: "pizza" | "pie" | "sandwich" | "mini_pie";
+    modifiers: Modifier[];
   };
 }
 
@@ -44,15 +44,9 @@ export function ModifierSelectionDialog({
   onOpenChange,
   item,
 }: ModifierSelectionDialogProps) {
-  const [selectedModifiers, setSelectedModifiers] = useState<ApiModifier[]>([]);
+  const [selectedModifiers, setSelectedModifiers] = useState<Modifier[]>([]);
   const [quantity, setQuantity] = useState(1);
-
   const { addItem } = useCart();
-  const { modifiers, isLoading } = useModifiers({
-    menuItemId: item.id,
-    menuItemType: item.itemType,
-    autoFetch: true,
-  });
 
   // Reset state when dialog opens/closes
   useEffect(() => {
@@ -62,7 +56,7 @@ export function ModifierSelectionDialog({
     }
   }, [open]);
 
-  const handleModifierToggle = (modifier: ApiModifier, checked: boolean) => {
+  const handleModifierToggle = (modifier: Modifier, checked: boolean) => {
     if (checked) {
       setSelectedModifiers((prev) => [...prev, modifier]);
     } else {
@@ -117,6 +111,7 @@ export function ModifierSelectionDialog({
   const itemTotal = item.price + calculateModifiersTotal();
   const grandTotal = itemTotal * quantity;
 
+  const modifiers = item.modifiers || [];
   const extrasModifiers = modifiers.filter((m) => m.type === "extra");
   const withoutsModifiers = modifiers.filter((m) => m.type === "without");
 
@@ -187,24 +182,8 @@ export function ModifierSelectionDialog({
             </CardContent>
           </Card>
 
-          {/* Loading State */}
-          {isLoading && (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-center py-8">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                    <p className="text-sm text-muted-foreground">
-                      Loading modifiers...
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Extras */}
-          {!isLoading && extrasModifiers.length > 0 && (
+          {extrasModifiers.length > 0 && (
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -245,7 +224,7 @@ export function ModifierSelectionDialog({
           )}
 
           {/* Withouts */}
-          {!isLoading && withoutsModifiers.length > 0 && (
+          {withoutsModifiers.length > 0 && (
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -283,7 +262,7 @@ export function ModifierSelectionDialog({
           )}
 
           {/* No Modifiers Available */}
-          {!isLoading && modifiers.length === 0 && (
+          {modifiers.length === 0 && (
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center py-8">

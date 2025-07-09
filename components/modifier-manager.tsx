@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,16 +16,12 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, X, GripVertical, Trash2 } from "lucide-react";
-import { useModifiers } from "@/hooks/use-modifiers";
-import type {
-  ApiModifier,
-  CreateModifierRequest,
-} from "@/lib/modifiers-service";
+import type { Modifier } from "@/lib/schemas";
+import { v4 as uuidv4 } from "uuid";
 
 interface ModifierManagerProps {
-  itemType: "pizza" | "pie" | "sandwich" | "mini_pie";
-  itemId?: string;
-  onModifiersChange?: (modifiers: ApiModifier[]) => void;
+  modifiers: Modifier[];
+  onModifiersChange: (modifiers: Modifier[]) => void;
 }
 
 interface NewModifier {
@@ -35,11 +31,11 @@ interface NewModifier {
 }
 
 export function ModifierManager({
-  itemType,
-  itemId,
+  modifiers,
   onModifiersChange,
 }: ModifierManagerProps) {
-  const [modifiers, setModifiers] = useState<ApiModifier[]>([]);
+  const isInitialMount = useRef(true);
+  const [localModifiers, setLocalModifiers] = useState<Modifier[]>(modifiers);
   const [newModifier, setNewModifier] = useState<NewModifier>({
     name: "",
     type: "extra",
@@ -48,155 +44,71 @@ export function ModifierManager({
   const [isAddingModifier, setIsAddingModifier] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-  const {
-    modifiers: existingModifiers,
-    createModifier,
-    deleteModifier,
-    reorderModifiers,
-    isLoading,
-  } = useModifiers({
-    menuItemId: itemId,
-    menuItemType: itemType,
-    autoFetch: !!itemId,
-  });
-
-  // Load existing modifiers when component mounts or itemId changes
   useEffect(() => {
-    if (existingModifiers) {
-      setModifiers(existingModifiers);
-    }
-  }, [existingModifiers]);
+    setLocalModifiers(modifiers);
+    isInitialMount.current = false;
+    // Do NOT call onModifiersChange here!
+  }, [modifiers]);
 
-  // Notify parent component when modifiers change
-  useEffect(() => {
-    if (onModifiersChange) {
-      onModifiersChange(modifiers);
-    }
-  }, [modifiers, onModifiersChange]);
+  // No useEffect for onModifiersChange!
 
-  const handleAddModifier = async () => {
+  const handleAddModifier = () => {
     if (!newModifier.name.trim()) {
       toast.error("Please enter a modifier name");
       return;
     }
-
     if (newModifier.type === "extra" && !newModifier.price.trim()) {
       toast.error("Please enter a price for extras");
       return;
     }
-
-    try {
-      const modifierData: CreateModifierRequest = {
-        menuItemId: itemId || "",
-        menuItemType: itemType,
-        name: newModifier.name.trim(),
-        type: newModifier.type,
-        price: newModifier.type === "extra" ? parseFloat(newModifier.price) : 0,
-        displayOrder: modifiers.length,
-      };
-
-      if (itemId) {
-        // Item exists, create modifier via API
-        await createModifier(modifierData);
-      } else {
-        // Item doesn't exist yet, add to local state
-        const tempModifier: ApiModifier = {
-          id: `temp-${Date.now()}`,
-          menuItemId: itemId || "",
-          menuItemType: itemType,
-          name: modifierData.name,
-          type: modifierData.type,
-          price: modifierData.price,
-          displayOrder: modifierData.displayOrder || 0,
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        setModifiers((prev) => [...prev, tempModifier]);
-      }
-
-      // Reset form
-      setNewModifier({
-        name: "",
-        type: "extra",
-        price: "",
-      });
-      setIsAddingModifier(false);
-
-      toast.success("Modifier added successfully");
-    } catch (error) {
-      toast.error("Failed to add modifier");
-      console.error("Error adding modifier:", error);
-    }
+    const tempModifier: Modifier = {
+      id: uuidv4(),
+      name: newModifier.name.trim(),
+      type: newModifier.type,
+      price: newModifier.type === "extra" ? parseFloat(newModifier.price) : 0,
+    };
+    setLocalModifiers((prev) => {
+      const updated = [...prev, tempModifier];
+      onModifiersChange(updated);
+      return updated;
+    });
+    setNewModifier({ name: "", type: "extra", price: "" });
+    setIsAddingModifier(false);
+    toast.success("Modifier added successfully");
   };
 
-  const handleDeleteModifier = async (modifierId: string) => {
-    try {
-      if (modifierId.startsWith("temp-")) {
-        // Remove from local state
-        setModifiers((prev) => prev.filter((m) => m.id !== modifierId));
-      } else {
-        // Delete via API
-        await deleteModifier(modifierId);
-      }
-      toast.success("Modifier deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete modifier");
-      console.error("Error deleting modifier:", error);
-    }
+  const handleDeleteModifier = (modifierId: string) => {
+    setLocalModifiers((prev) => {
+      const updated = prev.filter((m) => m.id !== modifierId);
+      onModifiersChange(updated);
+      return updated;
+    });
+    toast.success("Modifier deleted successfully");
   };
 
+  // Drag-and-drop reorder
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = "move";
   };
-
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
   };
-
-  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
-
-    if (draggedIndex === null || draggedIndex === dropIndex) {
+    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+      setLocalModifiers((prev) => {
+        const updated = [...prev];
+        const [removed] = updated.splice(draggedIndex, 1);
+        updated.splice(dropIndex, 0, removed);
+        onModifiersChange(updated);
+        return updated;
+      });
       setDraggedIndex(null);
       return;
     }
-
-    const newModifiers = [...modifiers];
-    const draggedItem = newModifiers[draggedIndex];
-
-    // Remove dragged item
-    newModifiers.splice(draggedIndex, 1);
-
-    // Insert at new position
-    newModifiers.splice(dropIndex, 0, draggedItem);
-
-    // Update display order
-    const reorderedModifiers = newModifiers.map((modifier, index) => ({
-      ...modifier,
-      displayOrder: index,
-    }));
-
-    setModifiers(reorderedModifiers);
     setDraggedIndex(null);
-
-    // Update order in backend if item exists
-    if (itemId && !reorderedModifiers.some((m) => m.id.startsWith("temp-"))) {
-      try {
-        await reorderModifiers(
-          reorderedModifiers.map((m, index) => ({
-            id: m.id,
-            displayOrder: index,
-          }))
-        );
-        toast.success("Modifier order updated");
-      } catch (error) {
-        toast.error("Failed to update modifier order");
-        console.error("Error reordering modifiers:", error);
-      }
-    }
   };
 
   const formatPrice = (price: number) => {
@@ -213,7 +125,7 @@ export function ModifierManager({
         <CardTitle className="flex items-center gap-2">
           <span>Modifiers</span>
           <Badge variant="secondary" className="text-xs">
-            {modifiers.length}
+            {localModifiers.length}
           </Badge>
         </CardTitle>
         <p className="text-sm text-muted-foreground">
@@ -223,11 +135,11 @@ export function ModifierManager({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Existing Modifiers */}
-        {modifiers.length > 0 && (
+        {localModifiers.length > 0 && (
           <div className="space-y-2">
             <Label>Current Modifiers</Label>
             <div className="space-y-1">
-              {modifiers.map((modifier, index) => (
+              {localModifiers.map((modifier, index) => (
                 <div
                   key={modifier.id}
                   draggable
@@ -349,7 +261,7 @@ export function ModifierManager({
                     id="modifier-price"
                     type="number"
                     step="0.01"
-                    min="0"
+                    min={0}
                     value={newModifier.price}
                     onChange={(e) =>
                       setNewModifier((prev) => ({
@@ -365,19 +277,14 @@ export function ModifierManager({
             </div>
 
             <div className="flex gap-2">
-              <Button
-                onClick={handleAddModifier}
-                disabled={isLoading}
-                size="sm"
-                className="flex-1"
-              >
-                {isLoading ? "Adding..." : "Add Modifier"}
+              <Button onClick={handleAddModifier} size="sm" className="flex-1">
+                Add Modifier
               </Button>
             </div>
           </div>
         )}
 
-        {modifiers.length === 0 && !isAddingModifier && (
+        {localModifiers.length === 0 && !isAddingModifier && (
           <div className="text-center py-6 text-muted-foreground">
             <p className="text-sm">No modifiers added yet</p>
             <p className="text-xs">

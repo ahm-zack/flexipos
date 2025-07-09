@@ -21,7 +21,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
+export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -38,10 +38,16 @@ export async function PUT(
       );
     }
 
-    const updateData = {
-      ...validationResult.data,
+    // Remove modifiers from the spread to avoid accidental overwrite
+    const { modifiers, ...rest } = validationResult.data;
+    const updateData: Record<string, unknown> = {
+      ...rest,
       priceWithVat: validationResult.data.priceWithVat?.toString(),
     };
+    // Only include modifiers if present in the request
+    if (modifiers !== undefined) {
+      updateData.modifiers = modifiers;
+    }
     const result = await sandwichService.updateSandwich(id, updateData);
     
     if (!result.success) {
@@ -50,7 +56,7 @@ export async function PUT(
 
     return NextResponse.json(result.data);
   } catch (error) {
-    console.error('Error in PUT /api/sandwiches/[id]:', error);
+    console.error('Error in PATCH /api/sandwiches/[id]:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import { uploadMenuImage } from "@/lib/image-upload";
 import { ModifierManager } from "@/components/modifier-manager";
 import type { Pie } from "@/lib/db/schema";
 import type { UpdatePie } from "@/lib/schemas";
+import type { Modifier } from "@/lib/schemas";
 
 interface EditPieFormProps {
   pie: Pie | null;
@@ -43,6 +44,7 @@ export function EditPieForm({ pie, open, onOpenChange }: EditPieFormProps) {
     nameEn: "",
     imageUrl: "",
     priceWithVat: "",
+    modifiers: [],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -61,6 +63,7 @@ export function EditPieForm({ pie, open, onOpenChange }: EditPieFormProps) {
         nameEn: pie.nameEn,
         imageUrl: pie.imageUrl || "",
         priceWithVat: pie.priceWithVat,
+        modifiers: pie.modifiers || [],
       });
 
       // Set preview to existing image if available
@@ -176,6 +179,10 @@ export function EditPieForm({ pie, open, onOpenChange }: EditPieFormProps) {
     ) as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
+
+  const handleModifiersChange = useCallback((modifiers: Modifier[]) => {
+    queueMicrotask(() => setFormData((f) => ({ ...f, modifiers })));
+  }, []);
 
   if (!pie) return null;
 
@@ -351,12 +358,13 @@ export function EditPieForm({ pie, open, onOpenChange }: EditPieFormProps) {
             </div>
 
             {/* Modifiers */}
-            {pie && (
-              <div className="space-y-2">
-                <Label>Modifiers</Label>
-                <ModifierManager itemId={pie.id} itemType="pie" />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Modifiers</Label>
+              <ModifierManager
+                modifiers={formData.modifiers || []}
+                onModifiersChange={handleModifiersChange}
+              />
+            </div>
           </div>
 
           <DialogFooter>

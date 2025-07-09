@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Image from "next/image";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,9 @@ import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 import { useCreateMiniPie } from "../hooks/use-mini-pies";
 import { uploadMenuImage } from "@/lib/image-upload";
-import type { CreateMiniPieFormData } from "@/lib/schemas";
+import type { CreateMiniPie } from "@/lib/schemas";
+import type { Modifier } from "@/lib/schemas";
+import { ModifierManager } from "@/components/modifier-manager";
 
 interface CreateMiniPieFormProps {
   open: boolean;
@@ -36,13 +38,14 @@ export function CreateMiniPieForm({
   open,
   onOpenChange,
 }: CreateMiniPieFormProps) {
-  const [formData, setFormData] = useState<CreateMiniPieFormData>({
+  const [formData, setFormData] = useState<CreateMiniPie>({
     type: "Mini Spinach Pie",
     nameAr: "",
     nameEn: "",
     size: "medium",
     priceWithVat: "",
     imageUrl: "",
+    modifiers: [],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -59,6 +62,7 @@ export function CreateMiniPieForm({
       size: "medium",
       priceWithVat: "",
       imageUrl: "",
+      modifiers: [],
     });
     setSelectedFile(null);
     setPreviewUrl("");
@@ -102,7 +106,7 @@ export function CreateMiniPieForm({
       }
 
       // Create mini pie data
-      const miniPieData: CreateMiniPieFormData = {
+      const miniPieData: CreateMiniPie = {
         ...formData,
         imageUrl: imageUrl || formData.imageUrl, // Use uploaded URL or keep existing
       };
@@ -130,7 +134,7 @@ export function CreateMiniPieForm({
   };
 
   const handleInputChange = (
-    field: keyof CreateMiniPieFormData,
+    field: keyof CreateMiniPie,
     value: string | undefined
   ) => {
     setFormData((prev) => ({
@@ -172,6 +176,10 @@ export function CreateMiniPieForm({
     const fileInput = document.getElementById("imageFile") as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
+
+  const handleModifiersChange = useCallback((modifiers: Modifier[]) => {
+    queueMicrotask(() => setFormData((f) => ({ ...f, modifiers })));
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -323,6 +331,14 @@ export function CreateMiniPieForm({
                 Base price for this mini pie. Modifier prices will be added
                 separately when customers select them.
               </p>
+            </div>
+
+            {/* Modifiers Field */}
+            <div className="space-y-2">
+              <ModifierManager
+                modifiers={formData.modifiers}
+                onModifiersChange={handleModifiersChange}
+              />
             </div>
           </div>
 

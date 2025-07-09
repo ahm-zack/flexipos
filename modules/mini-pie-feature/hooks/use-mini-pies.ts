@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteMenuImage } from '@/lib/image-upload';
-import type { CreateMiniPieFormData, EditMiniPieFormData } from '@/lib/schemas';
+import type { CreateMiniPie, UpdateMiniPie } from '@/lib/schemas';
 import type { MiniPie } from '@/lib/db/schema';
 
 // Query key factory
@@ -25,7 +25,7 @@ const fetchMiniPies = async (): Promise<MiniPie[]> => {
   return data.data;
 };
 
-const createMiniPie = async (miniPieData: CreateMiniPieFormData): Promise<MiniPie> => {
+const createMiniPie = async (miniPieData: CreateMiniPie): Promise<MiniPie> => {
   const response = await fetch("/api/mini-pies", {
     method: "POST",
     headers: {
@@ -47,7 +47,7 @@ const createMiniPie = async (miniPieData: CreateMiniPieFormData): Promise<MiniPi
   return data.data;
 };
 
-const updateMiniPie = async ({ id, data }: { id: string; data: EditMiniPieFormData }): Promise<MiniPie> => {
+const updateMiniPie = async ({ id, data }: { id: string; data: UpdateMiniPie }): Promise<MiniPie> => {
   const response = await fetch(`/api/mini-pies/${id}`, {
     method: "PUT",
     headers: {

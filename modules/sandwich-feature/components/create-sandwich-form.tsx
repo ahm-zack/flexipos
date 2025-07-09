@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Image from "next/image";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,8 @@ import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 import { useCreateSandwich } from "../hooks/use-sandwiches";
 import { uploadMenuImage } from "@/lib/image-upload";
-import type { CreateSandwichFormData } from "@/lib/schemas";
+import type { CreateSandwich, Modifier } from "@/lib/schemas";
+import { ModifierManager } from "@/components/modifier-manager";
 
 interface CreateSandwichFormProps {
   open: boolean;
@@ -36,12 +37,14 @@ export function CreateSandwichForm({
   open,
   onOpenChange,
 }: CreateSandwichFormProps) {
-  const [formData, setFormData] = useState<CreateSandwichFormData>({
+  const [formData, setFormData] = useState<CreateSandwich>({
     type: "Beef Sandwich with Cheese",
     nameAr: "",
     nameEn: "",
     size: "medium",
     priceWithVat: "",
+    imageUrl: "",
+    modifiers: [],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -57,6 +60,8 @@ export function CreateSandwichForm({
       nameEn: "",
       size: "medium",
       priceWithVat: "",
+      imageUrl: "",
+      modifiers: [],
     });
     setSelectedFile(null);
     setPreviewUrl("");
@@ -80,28 +85,32 @@ export function CreateSandwichForm({
     });
 
     try {
+      let imageUrl = formData.imageUrl;
       // Upload image if selected
       if (selectedFile) {
         const uploadedUrl = await uploadMenuImage(selectedFile, "sandwiches");
-        if (!uploadedUrl) {
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        } else {
           // Continue without image if upload fails
-          console.warn("Image upload failed, continuing without image");
           toast.warning(
             "Image upload failed, but sandwich will be created without image",
-            {
-              id: toastId,
-            }
+            { id: toastId }
           );
         }
       }
 
       // Create sandwich data
-      const sandwichData: CreateSandwichFormData = {
+      const sandwichData: CreateSandwich = {
         ...formData,
-        image: selectedFile || undefined,
+        imageUrl,
+        priceWithVat: String(formData.priceWithVat),
+        modifiers: formData.modifiers,
       };
-
-      await createSandwichMutation.mutateAsync(sandwichData);
+      await createSandwichMutation.mutateAsync({
+        ...sandwichData,
+        priceWithVat: String(sandwichData.priceWithVat),
+      });
 
       toast.success("Sandwich created successfully!", {
         id: toastId,
@@ -122,7 +131,7 @@ export function CreateSandwichForm({
   };
 
   const handleInputChange = (
-    field: keyof CreateSandwichFormData,
+    field: keyof CreateSandwich,
     value: string | undefined
   ) => {
     setFormData((prev) => ({
@@ -164,6 +173,10 @@ export function CreateSandwichForm({
     const fileInput = document.getElementById("imageFile") as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
+
+  const handleModifiersChange = useCallback((modifiers: Modifier[]) => {
+    queueMicrotask(() => setFormData((f) => ({ ...f, modifiers })));
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -311,6 +324,14 @@ export function CreateSandwichForm({
                 Base price for this sandwich. Modifier prices will be added
                 separately when customers select them.
               </p>
+            </div>
+
+            {/* Modifiers Field */}
+            <div className="space-y-2">
+              <ModifierManager
+                modifiers={formData.modifiers}
+                onModifiersChange={handleModifiersChange}
+              />
             </div>
           </div>
 

@@ -1,0 +1,6 @@
+Deleted files:
+- app/api/modifiers/route.ts
+- app/api/modifiers/[id]/route.ts
+- app/api/modifiers/reorder/route.ts
+- lib/modifiers-service.ts
+- lib/schemas/modifiers.ts

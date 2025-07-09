@@ -25,6 +25,7 @@ export function MiniPieCashierCard({ miniPie }: MiniPieCashierCardProps) {
     description: miniPie.nameEn,
     image: miniPie.imageUrl,
     itemType: "mini_pie" as const,
+    modifiers: miniPie.modifiers || [],
   };
 
   return (
@@ -64,6 +65,23 @@ export function MiniPieCashierCard({ miniPie }: MiniPieCashierCardProps) {
               {miniPie.nameAr}
             </p>
           </div>
+          {/* Show modifiers if present */}
+          {miniPie.modifiers && miniPie.modifiers.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {miniPie.modifiers.map((mod) => (
+                <Badge
+                  key={mod.id}
+                  variant={mod.type === "extra" ? "default" : "secondary"}
+                  className="text-xs"
+                >
+                  {mod.type === "extra" ? "+" : "No "} {mod.name}
+                  {mod.type === "extra" && mod.price > 0
+                    ? ` (+${mod.price})`
+                    : ""}
+                </Badge>
+              ))}
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <Badge
               variant="secondary"

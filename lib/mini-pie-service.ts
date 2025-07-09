@@ -2,13 +2,14 @@ import { db } from "@/lib/db";
 import { miniPies, type NewMiniPie } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import type { UpdateMiniPie } from "@/lib/schemas";
+import { ensureModifiers } from "@/lib/utils/ensureModifiers";
 
 export const miniPieService = {
   // Get all mini pies
   async getMiniPies() {
     try {
       const data = await db.select().from(miniPies).orderBy(miniPies.createdAt);
-      return { success: true, data };
+      return { success: true, data: data.map(ensureModifiers) };
     } catch (error) {
       console.error("Error fetching mini pies:", error);
       return { success: false, error: "Failed to fetch mini pies" };
@@ -22,7 +23,7 @@ export const miniPieService = {
       if (result.length === 0) {
         return { success: false, error: "Mini pie not found" };
       }
-      return { success: true, data: result[0] };
+      return { success: true, data: ensureModifiers(result[0]) };
     } catch (error) {
       console.error("Error fetching mini pie:", error);
       return { success: false, error: "Failed to fetch mini pie" };
@@ -32,8 +33,13 @@ export const miniPieService = {
   // Create new mini pie
   async createMiniPie(miniPieData: NewMiniPie) {
     try {
-      const [newMiniPie] = await db.insert(miniPies).values(miniPieData).returning();
-      return { success: true, data: newMiniPie };
+      const [newMiniPie] = await db.insert(miniPies).values({
+        ...miniPieData,
+        modifiers: miniPieData.modifiers ?? [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).returning();
+      return { success: true, data: ensureModifiers(newMiniPie) };
     } catch (error) {
       console.error("Error creating mini pie:", error);
       return { success: false, error: "Failed to create mini pie" };
@@ -43,21 +49,20 @@ export const miniPieService = {
   // Update existing mini pie
   async updateMiniPie(id: string, miniPieData: UpdateMiniPie) {
     try {
-      // Convert priceWithVat to string if it's a number
       const updatedData = {
         ...miniPieData,
         priceWithVat: miniPieData.priceWithVat !== undefined 
           ? String(miniPieData.priceWithVat) 
           : undefined,
+        modifiers: miniPieData.modifiers ?? [],
         updatedAt: new Date()
       };
-
       const [updatedMiniPie] = await db
         .update(miniPies)
         .set(updatedData)
         .where(eq(miniPies.id, id))
         .returning();
-      return { success: true, data: updatedMiniPie };
+      return { success: true, data: ensureModifiers(updatedMiniPie) };
     } catch (error) {
       console.error("Error updating mini pie:", error);
       return { success: false, error: "Failed to update mini pie" };

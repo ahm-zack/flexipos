@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       imageUrl: validatedData.imageUrl || '',
       extras: validatedData.extras || null,
       priceWithVat: validatedData.priceWithVat.toString(),
+      modifiers: validatedData.modifiers || [],
     });
 
     if (!result.success) {

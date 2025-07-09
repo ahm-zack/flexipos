@@ -44,6 +44,15 @@ export type PizzaType = z.infer<typeof PizzaTypeEnum>;
 export type PizzaCrust = z.infer<typeof PizzaCrustEnum>;
 export type PizzaExtras = z.infer<typeof PizzaExtrasEnum>;
 
+// Modifier zod schema for use in item forms
+export const ModifierSchema = z.object({
+  id: z.string().uuid(),
+  type: z.enum(['extra', 'without']),
+  name: z.string().min(1, 'Modifier name is required'),
+  price: z.number().min(0, 'Price must be 0 or positive'),
+});
+export type Modifier = z.infer<typeof ModifierSchema>;
+
 // Pizza schema
 export const PizzaSchema = z.object({
   id: z.string().uuid(),
@@ -60,6 +69,7 @@ export const PizzaSchema = z.object({
     },
     { message: 'Price must be a positive number' }
   ),
+  modifiers: z.array(ModifierSchema),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
 });
@@ -84,6 +94,7 @@ export const CreatePizzaSchema = z.object({
     },
     { message: 'Price must be a positive number' }
   ),
+  modifiers: z.array(ModifierSchema),
 });
 
 export type CreatePizza = z.infer<typeof CreatePizzaSchema>;
@@ -94,7 +105,10 @@ export const UpdatePizzaSchema = z.object({
   nameAr: z.string().min(1).optional(),
   nameEn: z.string().min(1).optional(),
   crust: PizzaCrustEnum.optional(),
-  imageUrl: z.string().url().optional(),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ).optional(),
   extras: PizzaExtrasEnum.optional(),
   priceWithVat: z.string().or(z.number()).refine(
     (val) => {
@@ -103,6 +117,7 @@ export const UpdatePizzaSchema = z.object({
     },
     { message: 'Price must be a positive number' }
   ).optional(),
+  modifiers: z.array(ModifierSchema).optional(),
 });
 
 export type UpdatePizza = z.infer<typeof UpdatePizzaSchema>;
@@ -140,6 +155,7 @@ export const PieSchema = z.object({
     },
     { message: 'Price must be a positive number' }
   ),
+  modifiers: z.array(ModifierSchema),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
 });
@@ -163,6 +179,7 @@ export const CreatePieSchema = z.object({
     },
     { message: 'Price must be a positive number' }
   ),
+  modifiers: z.array(ModifierSchema),
 });
 
 export type CreatePie = z.infer<typeof CreatePieSchema>;
@@ -173,7 +190,10 @@ export const UpdatePieSchema = z.object({
   nameAr: z.string().min(1).optional(),
   nameEn: z.string().min(1).optional(),
   size: PieSizeEnum.optional(),
-  imageUrl: z.string().url().optional(),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ).optional(),
   priceWithVat: z.string().or(z.number()).refine(
     (val) => {
       const num = typeof val === 'string' ? parseFloat(val) : val;
@@ -181,6 +201,7 @@ export const UpdatePieSchema = z.object({
     },
     { message: 'Price must be a positive number' }
   ).optional(),
+  modifiers: z.array(ModifierSchema).optional(),
 });
 
 export type UpdatePie = z.infer<typeof UpdatePieSchema>;
@@ -247,6 +268,7 @@ export const SandwichSchema = z.object({
     },
     { message: 'Price must be a positive number' }
   ),
+  modifiers: z.array(ModifierSchema),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
 });
@@ -270,6 +292,7 @@ export const CreateSandwichSchema = z.object({
     },
     { message: 'Price must be a positive number' }
   ),
+  modifiers: z.array(ModifierSchema),
 });
 
 export type CreateSandwich = z.infer<typeof CreateSandwichSchema>;
@@ -280,7 +303,10 @@ export const UpdateSandwichSchema = z.object({
   nameAr: z.string().min(1).optional(),
   nameEn: z.string().min(1).optional(),
   size: SandwichSizeEnum.optional(),
-  imageUrl: z.string().url().optional(),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ).optional(),
   priceWithVat: z.string().or(z.number()).refine(
     (val) => {
       const num = typeof val === 'string' ? parseFloat(val) : val;
@@ -288,6 +314,7 @@ export const UpdateSandwichSchema = z.object({
     },
     { message: 'Price must be a positive number' }
   ).optional(),
+  modifiers: z.array(ModifierSchema).optional(),
 });
 
 export type UpdateSandwich = z.infer<typeof UpdateSandwichSchema>;
@@ -311,6 +338,7 @@ export const createSandwichFormSchema = z.object({
     "Price must be a valid positive number"
   ),
   image: z.instanceof(File).optional(),
+  modifiers: z.array(ModifierSchema),
 });
 
 export const editSandwichFormSchema = createSandwichFormSchema.extend({
@@ -351,6 +379,7 @@ export const MiniPieSchema = z.object({
     },
     { message: 'Price must be a positive number' }
   ),
+  modifiers: z.array(ModifierSchema),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
 });
@@ -374,6 +403,7 @@ export const CreateMiniPieSchema = z.object({
     },
     { message: 'Price must be a positive number' }
   ),
+  modifiers: z.array(ModifierSchema),
 });
 
 export type CreateMiniPie = z.infer<typeof CreateMiniPieSchema>;
@@ -384,7 +414,10 @@ export const UpdateMiniPieSchema = z.object({
   nameAr: z.string().min(1).optional(),
   nameEn: z.string().min(1).optional(),
   size: MiniPieSizeEnum.optional(),
-  imageUrl: z.string().url().optional(),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ).optional(),
   priceWithVat: z.string().or(z.number()).refine(
     (val) => {
       const num = typeof val === 'string' ? parseFloat(val) : val;
@@ -392,44 +425,10 @@ export const UpdateMiniPieSchema = z.object({
     },
     { message: 'Price must be a positive number' }
   ).optional(),
+  modifiers: z.array(ModifierSchema).optional(),
 });
 
 export type UpdateMiniPie = z.infer<typeof UpdateMiniPieSchema>;
-
-// Form validation schemas for mini pie forms
-export const createMiniPieFormSchema = z.object({
-  type: z.enum([
-    'Mini Zaatar Pie',
-    'Mini Cheese Pie',
-    'Mini Spinach Pie',
-    'Mini Meat Pie (Ba\'lakiya style)',
-    'Mini Halloumi Cheese Pie', 
-    'Mini Hot Dog Pie',
-    'Mini Pizza Pie'
-  ], {
-    required_error: "Please select a mini pie type",
-  }),
-  nameAr: z.string().min(1, "Arabic name is required"),
-  nameEn: z.string().min(1, "English name is required"),
-  size: z.enum(['small', 'medium', 'large'], {
-    required_error: "Please select a mini pie size",
-  }),
-  priceWithVat: z.string().min(1, "Price is required").refine(
-    (val) => !isNaN(Number(val)) && Number(val) > 0,
-    "Price must be a valid positive number"
-  ),
-  imageUrl: z.string().refine(
-    (val) => val === '' || z.string().url().safeParse(val).success,
-    { message: 'Must be a valid URL or empty' }
-  ),
-});
-
-export const editMiniPieFormSchema = createMiniPieFormSchema.extend({
-  id: z.string().uuid("Invalid mini pie ID"),
-});
-
-export type CreateMiniPieFormData = z.infer<typeof createMiniPieFormSchema>;
-export type EditMiniPieFormData = z.infer<typeof editMiniPieFormSchema>;
 
 // EOD Report Schemas
 

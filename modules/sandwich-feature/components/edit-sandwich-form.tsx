@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ import { useUpdateSandwich } from "../hooks/use-sandwiches";
 import { uploadMenuImage } from "@/lib/image-upload";
 import { ModifierManager } from "@/components/modifier-manager";
 import type { Sandwich } from "@/lib/db/schema";
-import type { EditSandwichFormData } from "@/lib/schemas";
+import type { EditSandwichFormData, Modifier } from "@/lib/schemas";
 
 interface EditSandwichFormProps {
   sandwich: Sandwich | null;
@@ -48,6 +48,7 @@ export function EditSandwichForm({
     nameEn: "",
     imageUrl: "",
     priceWithVat: "",
+    modifiers: [],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -67,6 +68,7 @@ export function EditSandwichForm({
         nameEn: sandwich.nameEn,
         imageUrl: sandwich.imageUrl || "",
         priceWithVat: sandwich.priceWithVat,
+        modifiers: sandwich.modifiers || [],
       });
 
       // Set preview to existing image if available
@@ -180,6 +182,10 @@ export function EditSandwichForm({
     ) as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
+
+  const handleModifiersChange = useCallback((modifiers: Modifier[]) => {
+    queueMicrotask(() => setFormData((f) => ({ ...f, modifiers })));
+  }, []);
 
   if (!sandwich) return null;
 
@@ -340,12 +346,13 @@ export function EditSandwichForm({
             </div>
 
             {/* Modifiers */}
-            {sandwich && (
-              <div className="space-y-2">
-                <Label>Modifiers</Label>
-                <ModifierManager itemId={sandwich.id} itemType="sandwich" />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Modifiers</Label>
+              <ModifierManager
+                modifiers={formData.modifiers || []}
+                onModifiersChange={handleModifiersChange}
+              />
+            </div>
           </div>
 
           <DialogFooter>

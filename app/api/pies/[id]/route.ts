@@ -51,7 +51,11 @@ export async function PUT(
     const validatedData = UpdatePieSchema.parse(body);
     
     // Update pie in database
-    const result = await pieService.updatePie(id, validatedData);
+    const updateData = {
+      ...validatedData,
+      modifiers: validatedData.modifiers ?? [],
+    };
+    const result = await pieService.updatePie(id, updateData);
     
     if (!result.success) {
       return NextResponse.json(result, { status: 500 });

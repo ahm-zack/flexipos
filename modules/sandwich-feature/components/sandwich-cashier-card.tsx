@@ -25,6 +25,7 @@ export function SandwichCashierCard({ sandwich }: SandwichCashierCardProps) {
     description: `${sandwich.size} ${sandwich.type}`,
     image: sandwich.imageUrl,
     itemType: "sandwich" as const,
+    modifiers: sandwich.modifiers || [],
   };
 
   return (
@@ -64,14 +65,23 @@ export function SandwichCashierCard({ sandwich }: SandwichCashierCardProps) {
               {sandwich.nameAr}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="secondary"
-              className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800"
-            >
-              {sandwich.size}
-            </Badge>
-          </div>
+          {/* Show modifiers if present */}
+          {sandwich.modifiers && sandwich.modifiers.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {sandwich.modifiers.map((mod) => (
+                <Badge
+                  key={mod.id}
+                  variant={mod.type === "extra" ? "default" : "secondary"}
+                  className="text-xs"
+                >
+                  {mod.type === "extra" ? "+" : "No "} {mod.name}
+                  {mod.type === "extra" && mod.price > 0
+                    ? ` (+${mod.price})`
+                    : ""}
+                </Badge>
+              ))}
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <PriceDisplay
               price={parseFloat(sandwich.priceWithVat)}

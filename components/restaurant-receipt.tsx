@@ -10,15 +10,11 @@ import {
   type RestaurantConfig,
 } from "@/lib/restaurant-config";
 import { Button } from "./ui/button";
+import type { Modifier } from "@/lib/schemas";
 
-// Type for saved modifiers in order items
-interface SavedModifier {
-  id: string;
-  name: string;
-  type: "extra" | "without";
-  price: number;
-}
+// Removed unused SavedModifier interface
 
+// Type for component props
 interface RestaurantReceiptProps {
   order: Order;
   restaurantInfo?: Partial<RestaurantConfig>;
@@ -358,12 +354,12 @@ export function RestaurantReceipt({
                     {item.totalPrice.toFixed(2)}
                   </div>
                 </div>
-                {/* Display modifiers if they exist */}
-                {item.details?.savedModifiers &&
-                  item.details.savedModifiers.length > 0 && (
+                {/* Display modifiers if they exist (NEW MODEL) */}
+                {item.details?.modifiers &&
+                  item.details.modifiers.length > 0 && (
                     <div className="modifier-indent">
-                      {item.details.savedModifiers.map(
-                        (modifier: SavedModifier, modIndex: number) => (
+                      {item.details.modifiers.map(
+                        (modifier: Modifier, modIndex: number) => (
                           <div key={modIndex} className="item-row text-xs">
                             <div className="flex justify-between">
                               <span className="text-gray-600 italic">

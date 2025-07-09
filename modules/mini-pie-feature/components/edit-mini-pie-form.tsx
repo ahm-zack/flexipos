@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,7 @@ import { Upload, X } from "lucide-react";
 import { useUpdateMiniPie } from "../hooks/use-mini-pies";
 import { uploadMenuImage } from "@/lib/image-upload";
 import { ModifierManager } from "@/components/modifier-manager";
-import type { MiniPie } from "@/lib/db/schema";
-import type { EditMiniPieFormData } from "@/lib/schemas";
+import type { MiniPie, Modifier, UpdateMiniPie } from "@/lib/schemas";
 
 interface EditMiniPieFormProps {
   miniPie: MiniPie;
@@ -40,14 +39,14 @@ export function EditMiniPieForm({
   open,
   onOpenChange,
 }: EditMiniPieFormProps) {
-  const [formData, setFormData] = useState<EditMiniPieFormData>({
-    id: miniPie.id,
+  const [formData, setFormData] = useState<UpdateMiniPie>({
     type: miniPie.type,
     nameAr: miniPie.nameAr,
     nameEn: miniPie.nameEn,
     size: miniPie.size,
     priceWithVat: miniPie.priceWithVat,
     imageUrl: miniPie.imageUrl || "",
+    modifiers: miniPie.modifiers || [],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -60,13 +59,13 @@ export function EditMiniPieForm({
   useEffect(() => {
     if (miniPie) {
       setFormData({
-        id: miniPie.id,
         type: miniPie.type,
         nameAr: miniPie.nameAr,
         nameEn: miniPie.nameEn,
         size: miniPie.size,
         priceWithVat: miniPie.priceWithVat,
         imageUrl: miniPie.imageUrl || "",
+        modifiers: miniPie.modifiers || [],
       });
       setPreviewUrl(miniPie.imageUrl || "");
       setSelectedFile(null);
@@ -100,7 +99,7 @@ export function EditMiniPieForm({
       }
 
       // Create update data
-      const updateData: EditMiniPieFormData = {
+      const updateData: UpdateMiniPie = {
         ...formData,
         imageUrl,
       };
@@ -121,10 +120,10 @@ export function EditMiniPieForm({
   };
 
   const handleInputChange = (
-    field: keyof EditMiniPieFormData,
+    field: keyof UpdateMiniPie,
     value: string | undefined
   ) => {
-    setFormData((prev: EditMiniPieFormData) => ({
+    setFormData((prev: UpdateMiniPie) => ({
       ...prev,
       [field]: value,
     }));
@@ -165,6 +164,12 @@ export function EditMiniPieForm({
     ) as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
+
+  const handleModifiersChange = useCallback((modifiers: Modifier[]) => {
+    queueMicrotask(() =>
+      setFormData((f: UpdateMiniPie) => ({ ...f, modifiers }))
+    );
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -321,7 +326,10 @@ export function EditMiniPieForm({
             {/* Modifiers */}
             <div className="space-y-2">
               <Label>Modifiers</Label>
-              <ModifierManager itemId={miniPie.id} itemType="mini_pie" />
+              <ModifierManager
+                modifiers={formData.modifiers || []}
+                onModifiersChange={handleModifiersChange}
+              />
             </div>
           </div>
 

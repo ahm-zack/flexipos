@@ -70,6 +70,7 @@ export function useCreateSandwich() {
         size: data.size,
         imageUrl,
         priceWithVat: data.priceWithVat.toString(),
+        modifiers: data.modifiers || [],
       };
 
       const response = await fetch("/api/sandwiches", {
@@ -119,10 +120,11 @@ export function useUpdateSandwich() {
         size: data.size,
         imageUrl,
         priceWithVat: data.priceWithVat.toString(),
+        modifiers: data.modifiers || [],
       };
 
       const response = await fetch(`/api/sandwiches/${data.id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updateData),
       });

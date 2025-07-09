@@ -2,8 +2,6 @@ import { db } from '@/lib/db';
 import { orders, canceledOrders, modifiedOrders, users } from '@/lib/db/schema';
 import { eq, desc, and, like, sql } from 'drizzle-orm';
 import { generateOrderNumber } from '@/lib/orders/server-utils';
-import { saveOrderModifiers, getOrderModifiers } from '@/lib/modifiers-service';
-import type { OrderItemModifier } from '@/lib/db/schema';
 import type { OrderItem, OrderFilters } from '@/lib/orders';
 import type { CartItem } from '@/lib/orders/schemas';
 
@@ -261,34 +259,10 @@ export const orderService = {
       const result = orderWithUser[0];
       const baseOrder = transformDatabaseOrderToApi(result.order);
       
-      // Fetch modifiers for each order item
-      const itemsWithModifiers = await Promise.all(
-        baseOrder.items.map(async (item) => {
-          // Extract the original menu item ID from the composite cart item ID
-          // Cart item ID format: {menuItemId}-{timestamp}
-          const originalMenuItemId = item.id.split('-').slice(0, -1).join('-');
-          const modifiersResult = await getOrderModifiers(result.order.id, originalMenuItemId);
-          if (modifiersResult.success && modifiersResult.data) {
-            return {
-              ...item,
-              details: {
-                ...item.details,
-                savedModifiers: modifiersResult.data.map((modifier: OrderItemModifier) => ({
-                  id: modifier.modifierId,
-                  name: modifier.modifierName,
-                  type: modifier.modifierType,
-                  price: parseFloat(modifier.priceAtTime),
-                })),
-              },
-            };
-          }
-          return item;
-        })
-      );
+      // No need to fetch modifiers separately, they are included in the order items
 
       const orderResponse: ApiOrderResponse = {
         ...baseOrder,
-        items: itemsWithModifiers,
         cashierName: result.cashierName || undefined,
       };
 
@@ -327,47 +301,6 @@ export const orderService = {
       }).returning();
 
       const createdOrder = newOrder[0];
-
-      // Save modifiers for items that have them
-      for (const cartItem of orderData.items) {
-        if (cartItem.modifiers && cartItem.modifiers.length > 0) {
-          // Get the item type for modifiers
-          let itemType: 'pizza' | 'pie' | 'sandwich' | 'mini_pie';
-          const category = cartItem.category.toLowerCase();
-          
-          if (category.includes('pizza')) {
-            itemType = 'pizza';
-          } else if (category.includes('pie')) {
-            itemType = 'pie';
-          } else if (category.includes('sandwich')) {
-            itemType = 'sandwich';
-          } else if (category.includes('mini')) {
-            itemType = 'mini_pie';
-          } else {
-            itemType = 'pizza';
-          }
-
-          // Extract modifier IDs
-          const modifierIds = cartItem.modifiers.map(m => m.id);
-
-          // Extract the original menu item ID from the composite cart item ID
-          // Cart item ID format: {menuItemId}-{timestamp}
-          const originalMenuItemId = cartItem.id.split('-').slice(0, -1).join('-');
-
-          // Save modifiers for this cart item
-          const result = await saveOrderModifiers(
-            createdOrder.id,
-            originalMenuItemId,
-            itemType,
-            modifierIds
-          );
-
-          if (!result.success) {
-            console.error('Failed to save modifiers for item:', cartItem.id, result.error);
-            // Continue with order creation even if modifier saving fails
-          }
-        }
-      }
 
       return { success: true, data: transformDatabaseOrderToApi(createdOrder) };
     } catch (error) {

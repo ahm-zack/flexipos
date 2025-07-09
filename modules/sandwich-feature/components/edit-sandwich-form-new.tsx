@@ -47,6 +47,7 @@ export function EditSandwichForm({
     nameEn: "",
     imageUrl: "",
     priceWithVat: "",
+    modifiers: [],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -66,6 +67,7 @@ export function EditSandwichForm({
         nameEn: sandwich.nameEn,
         imageUrl: sandwich.imageUrl || "",
         priceWithVat: sandwich.priceWithVat,
+        modifiers: [],
       });
 
       // Set preview to existing image if available

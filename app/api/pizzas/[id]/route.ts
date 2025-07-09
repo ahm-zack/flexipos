@@ -42,6 +42,10 @@ function transformUpdatePizzaToPartialNewPizza(updateData: UpdatePizza): Partial
       : updateData.priceWithVat.toString();
   }
   
+  if (updateData.modifiers !== undefined) {
+    result.modifiers = updateData.modifiers;
+  }
+  
   return result;
 }
 

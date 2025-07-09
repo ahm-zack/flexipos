@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { miniPieService } from "@/lib/mini-pie-service";
-import { createMiniPieFormSchema } from "@/lib/schemas";
+import { CreateMiniPieSchema } from "@/lib/schemas";
 
 export async function GET() {
   try {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate the request body
-    const validationResult = createMiniPieFormSchema.safeParse(body);
+    const validationResult = CreateMiniPieSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
         { success: false, error: "Invalid data", details: validationResult.error.issues },
@@ -38,8 +38,9 @@ export async function POST(request: NextRequest) {
       nameAr: validationResult.data.nameAr,
       nameEn: validationResult.data.nameEn,
       size: validationResult.data.size,
-      priceWithVat: validationResult.data.priceWithVat,
+      priceWithVat: String(validationResult.data.priceWithVat),
       imageUrl: validationResult.data.imageUrl || "",
+      modifiers: validationResult.data.modifiers || [],
     };
 
     const result = await miniPieService.createMiniPie(miniPieData);

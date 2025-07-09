@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
     const sandwichData = {
       ...validationResult.data,
       priceWithVat: validationResult.data.priceWithVat.toString(),
+      modifiers: validationResult.data.modifiers || [],
     };
     const result = await sandwichService.createSandwich(sandwichData);
     

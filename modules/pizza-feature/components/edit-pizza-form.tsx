@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ import { useUpdatePizza } from "../hooks/use-pizzas";
 import { uploadMenuImage } from "@/lib/image-upload";
 import { ModifierManager } from "@/components/modifier-manager";
 import type { Pizza } from "@/lib/db/schema";
-import type { UpdatePizza } from "@/lib/schemas";
+import type { UpdatePizza, Modifier } from "@/lib/schemas";
 
 interface EditPizzaFormProps {
   pizza: Pizza | null;
@@ -48,6 +48,7 @@ export function EditPizzaForm({
     imageUrl: "",
     extras: undefined,
     priceWithVat: "",
+    modifiers: [],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -67,6 +68,7 @@ export function EditPizzaForm({
         imageUrl: pizza.imageUrl || "",
         extras: pizza.extras || undefined,
         priceWithVat: pizza.priceWithVat,
+        modifiers: pizza.modifiers || [],
       });
 
       // Set preview to existing image if available
@@ -182,6 +184,10 @@ export function EditPizzaForm({
     ) as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
+
+  const handleModifiersChange = useCallback((modifiers: Modifier[]) => {
+    queueMicrotask(() => setFormData((f) => ({ ...f, modifiers })));
+  }, []);
 
   if (!pizza) return null;
 
@@ -338,12 +344,13 @@ export function EditPizzaForm({
             </div>
 
             {/* Modifiers */}
-            {pizza && (
-              <div className="space-y-2">
-                <Label>Modifiers</Label>
-                <ModifierManager itemId={pizza.id} itemType="pizza" />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Modifiers</Label>
+              <ModifierManager
+                modifiers={formData.modifiers || []}
+                onModifiersChange={handleModifiersChange}
+              />
+            </div>
           </div>
 
           <DialogFooter>

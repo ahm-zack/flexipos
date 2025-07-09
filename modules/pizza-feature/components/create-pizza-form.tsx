@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Image from "next/image";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,8 @@ import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 import { useCreatePizza } from "../hooks/use-pizzas";
 import { uploadMenuImage } from "@/lib/image-upload";
-import type { CreatePizza } from "@/lib/schemas";
+import type { CreatePizza, Modifier } from "@/lib/schemas";
+import { ModifierManager } from "@/components/modifier-manager";
 
 interface CreatePizzaFormProps {
   open: boolean;
@@ -41,6 +42,7 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
     imageUrl: "",
     extras: undefined,
     priceWithVat: "",
+    modifiers: [],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -85,9 +87,13 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
       }
 
       // Create pizza with image URL
+      // Only include optional fields if they are not undefined
+      const { extras, crust, ...requiredFields } = formData;
       const pizzaData = {
-        ...formData,
-        imageUrl: imageUrl || formData.imageUrl, // Use uploaded URL or keep existing
+        ...requiredFields,
+        imageUrl: imageUrl || formData.imageUrl,
+        ...(crust !== undefined ? { crust } : {}),
+        ...(extras !== undefined ? { extras } : {}),
       };
 
       await createPizzaMutation.mutateAsync(pizzaData);
@@ -108,6 +114,7 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
         imageUrl: "",
         extras: undefined,
         priceWithVat: "",
+        modifiers: [],
       });
       setSelectedFile(null);
       setPreviewUrl("");
@@ -165,6 +172,10 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
     const fileInput = document.getElementById("imageFile") as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
+
+  const handleModifiersChange = useCallback((modifiers: Modifier[]) => {
+    queueMicrotask(() => setFormData((f) => ({ ...f, modifiers })));
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -287,6 +298,14 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
                 Base price for this pizza. Modifier prices will be added
                 separately when customers select them.
               </p>
+            </div>
+
+            {/* Modifiers Field */}
+            <div className="space-y-2">
+              <ModifierManager
+                modifiers={formData.modifiers}
+                onModifiersChange={handleModifiersChange}
+              />
             </div>
           </div>
 

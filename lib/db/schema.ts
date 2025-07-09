@@ -81,13 +81,22 @@ export const pizzas = pgTable('pizzas', {
   imageUrl: text('image_url').notNull(),
   extras: pizzaExtrasEnum('extras'),
   priceWithVat: decimal('price_with_vat', { precision: 10, scale: 2 }).notNull(),
+  modifiers: jsonb('modifiers').default([]).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+// Modifier type for use in item tables
+export type Modifier = {
+  id: string;
+  type: 'extra' | 'without';
+  name: string;
+  price: number;
+};
+
 // Export pizza types
-export type Pizza = typeof pizzas.$inferSelect;
-export type NewPizza = typeof pizzas.$inferInsert;
+export type Pizza = Omit<typeof pizzas.$inferSelect, 'modifiers'> & { modifiers: Modifier[] };
+export type NewPizza = Omit<typeof pizzas.$inferInsert, 'modifiers'> & { modifiers: Modifier[] };
 export type PizzaType = typeof pizzaTypeEnum.enumValues[number];
 export type PizzaCrust = typeof pizzaCrustEnum.enumValues[number];
 export type PizzaExtras = typeof pizzaExtrasEnum.enumValues[number];
@@ -101,13 +110,13 @@ export const pies = pgTable('pies', {
   size: pieSizeEnum('size').notNull(),
   imageUrl: text('image_url').notNull(),
   priceWithVat: decimal('price_with_vat', { precision: 10, scale: 2 }).notNull(),
+  modifiers: jsonb('modifiers').default([]).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
-// Export pie types
-export type Pie = typeof pies.$inferSelect;
-export type NewPie = typeof pies.$inferInsert;
+export type Pie = Omit<typeof pies.$inferSelect, 'modifiers'> & { modifiers: Modifier[] };
+export type NewPie = Omit<typeof pies.$inferInsert, 'modifiers'> & { modifiers: Modifier[] };
 export type PieType = typeof pieTypeEnum.enumValues[number];
 export type PieSize = typeof pieSizeEnum.enumValues[number];
 
@@ -120,13 +129,13 @@ export const sandwiches = pgTable('sandwiches', {
   size: sandwichSizeEnum('size').notNull(),
   imageUrl: text('image_url').notNull(),
   priceWithVat: decimal('price_with_vat', { precision: 10, scale: 2 }).notNull(),
+  modifiers: jsonb('modifiers').default([]).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
-// Export sandwich types
-export type Sandwich = typeof sandwiches.$inferSelect;
-export type NewSandwich = typeof sandwiches.$inferInsert;
+export type Sandwich = Omit<typeof sandwiches.$inferSelect, 'modifiers'> & { modifiers: Modifier[] };
+export type NewSandwich = Omit<typeof sandwiches.$inferInsert, 'modifiers'> & { modifiers: Modifier[] };
 export type SandwichType = typeof sandwichTypeEnum.enumValues[number];
 export type SandwichSize = typeof sandwichSizeEnum.enumValues[number];
 
@@ -139,13 +148,13 @@ export const miniPies = pgTable('mini_pies', {
   size: miniPieSizeEnum('size').notNull(),
   imageUrl: text('image_url').notNull(),
   priceWithVat: decimal('price_with_vat', { precision: 10, scale: 2 }).notNull(),
+  modifiers: jsonb('modifiers').default([]).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
-// Export mini pie types
-export type MiniPie = typeof miniPies.$inferSelect;
-export type NewMiniPie = typeof miniPies.$inferInsert;
+export type MiniPie = Omit<typeof miniPies.$inferSelect, 'modifiers'> & { modifiers: Modifier[] };
+export type NewMiniPie = Omit<typeof miniPies.$inferInsert, 'modifiers'> & { modifiers: Modifier[] };
 export type MiniPieType = typeof miniPieTypeEnum.enumValues[number];
 export type MiniPieSize = typeof miniPieSizeEnum.enumValues[number];
 

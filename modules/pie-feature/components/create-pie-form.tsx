@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Image from "next/image";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,8 @@ import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 import { useCreatePie } from "../hooks/use-pies";
 import { uploadMenuImage } from "@/lib/image-upload";
-import type { CreatePie } from "@/lib/schemas";
+import type { CreatePie, Modifier } from "@/lib/schemas";
+import { ModifierManager } from "@/components/modifier-manager";
 
 interface CreatePieFormProps {
   open: boolean;
@@ -40,6 +41,7 @@ export function CreatePieForm({ open, onOpenChange }: CreatePieFormProps) {
     size: "medium",
     imageUrl: "",
     priceWithVat: "",
+    modifiers: [],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -56,6 +58,7 @@ export function CreatePieForm({ open, onOpenChange }: CreatePieFormProps) {
       size: "medium",
       imageUrl: "",
       priceWithVat: "",
+      modifiers: [],
     });
     setSelectedFile(null);
     setPreviewUrl("");
@@ -167,6 +170,10 @@ export function CreatePieForm({ open, onOpenChange }: CreatePieFormProps) {
     const fileInput = document.getElementById("imageFile") as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
+
+  const handleModifiersChange = useCallback((modifiers: Modifier[]) => {
+    queueMicrotask(() => setFormData((f) => ({ ...f, modifiers })));
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -326,6 +333,14 @@ export function CreatePieForm({ open, onOpenChange }: CreatePieFormProps) {
                 Base price for this pie. Modifier prices will be added
                 separately when customers select them.
               </p>
+            </div>
+
+            {/* Modifiers Field */}
+            <div className="space-y-2">
+              <ModifierManager
+                modifiers={formData.modifiers}
+                onModifiersChange={handleModifiersChange}
+              />
             </div>
           </div>
 

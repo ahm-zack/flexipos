@@ -25,6 +25,7 @@ export function PieCashierCard({ pie }: PieCashierCardProps) {
     description: `${pie.size} ${pie.type} Pie`,
     image: pie.imageUrl,
     itemType: "pie" as const,
+    modifiers: pie.modifiers || [],
   };
 
   return (
@@ -64,14 +65,23 @@ export function PieCashierCard({ pie }: PieCashierCardProps) {
               {pie.nameAr}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="secondary"
-              className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 border-purple-200 dark:border-purple-800"
-            >
-              {pie.size}
-            </Badge>
-          </div>
+          {/* Show modifiers if present */}
+          {pie.modifiers && pie.modifiers.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {pie.modifiers.map((mod) => (
+                <Badge
+                  key={mod.id}
+                  variant={mod.type === "extra" ? "default" : "secondary"}
+                  className="text-xs"
+                >
+                  {mod.type === "extra" ? "+" : "No "} {mod.name}
+                  {mod.type === "extra" && mod.price > 0
+                    ? ` (+${mod.price})`
+                    : ""}
+                </Badge>
+              ))}
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <PriceDisplay
               price={parseFloat(pie.priceWithVat)}
