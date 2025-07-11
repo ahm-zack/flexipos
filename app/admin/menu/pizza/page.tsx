@@ -5,6 +5,7 @@ import {
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
+import { TestPizza } from "./usePizzas";
 
 export default async function PizzaPage() {
   const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ export default async function PizzaPage() {
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <PizzaCashierView />
+      <TestPizza />
     </HydrationBoundary>
   );
 }
