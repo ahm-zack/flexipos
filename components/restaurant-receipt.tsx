@@ -66,22 +66,30 @@ export function RestaurantReceipt({
     generateQR();
   }, [order, config.name, config.vatNumber, vatAmount]);
 
-  // Helper to send receipt to local print service
-  async function sendToPrinter(receiptText: string) {
-    try {
-      await fetch("http://localhost:3001/print", {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: receiptText,
-      });
-    } catch (error) {
-      console.error("Failed to send to printer:", error);
-    }
-  }
-
+  // Old browser print method
   const handleDirectPrint = () => {
     if (receiptRef.current) {
-      sendToPrinter(receiptRef.current.innerText);
+      const printContents = receiptRef.current.innerHTML;
+      const printWindow = window.open("", "_blank", "width=400,height=600");
+      if (printWindow) {
+        printWindow.document.open();
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Receipt</title>
+              <style>
+                body { font-family: Courier New, monospace; font-size: 12px; }
+                .receipt { width: 80mm; margin: 0 auto; background: white; color: black; }
+              </style>
+            </head>
+            <body>
+              <div class="receipt">${printContents}</div>
+              <script>window.onload = function() { window.print(); window.close(); }<\/script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
     }
   };
 
