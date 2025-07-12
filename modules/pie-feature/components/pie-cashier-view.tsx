@@ -11,7 +11,7 @@ import { usePies } from "../hooks/use-pies";
 export function PieCashierView() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: pies, isLoading, error } = usePies();
+  const { data: pies, isLoading, error } = usePies("cashier");
 
   // Filter pies based on search term
   const filteredPies =

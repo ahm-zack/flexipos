@@ -62,178 +62,178 @@ export async function generateReceiptPDF(
     // DO NOT remove class names - preserve original design
     // DO NOT override font families - keep original Arabic/design fonts
     
-    // Strip all classes from child elements and apply simple styles
-    const allElements = clonedElement.querySelectorAll('*');
-    allElements.forEach((el) => {
-      const htmlEl = el as HTMLElement;
-      // Remove all classes (safely)
-      try {
-        htmlEl.className = '';
-      } catch {
-        // Some elements (like SVG) have read-only className
-      }
+
+   
+    // allElements.forEach((el) => {
+    //   const htmlEl = el as HTMLElement;
+    //   // Remove all classes (safely)
+    //   try {
+    //     htmlEl.className = '';
+    //   } catch {
+    //     // Some elements (like SVG) have read-only className
+    //   }
       
-      // Apply thermal receipt sizing - optimized for 80mm width
-      htmlEl.style.color = '#000000';
-      htmlEl.style.backgroundColor = 'transparent';
-      htmlEl.style.fontFamily = '"Courier New", "Lucida Console", monospace'; // Better for thermal printing
-      htmlEl.style.border = 'none';
-      htmlEl.style.outline = 'none';
-      htmlEl.style.boxShadow = 'none';
-      htmlEl.style.fontSize = '11px'; // Smaller for thermal receipt
-      htmlEl.style.lineHeight = '1.2';
-      htmlEl.style.fontWeight = '400';
-      htmlEl.style.margin = '0';
-      htmlEl.style.padding = '0';
-      htmlEl.style.wordWrap = 'break-word'; // Ensure text wraps within width
-      htmlEl.style.overflowWrap = 'break-word';
-      htmlEl.style.maxWidth = '100%';
+    //   // Apply thermal receipt sizing - optimized for 80mm width
+    //   htmlEl.style.color = '#000000';
+    //   htmlEl.style.backgroundColor = 'transparent';
+    //   htmlEl.style.fontFamily = '"Courier New", "Lucida Console", monospace'; // Better for thermal printing
+    //   htmlEl.style.border = 'none';
+    //   htmlEl.style.outline = 'none';
+    //   htmlEl.style.boxShadow = 'none';
+    //   htmlEl.style.fontSize = '11px'; // Smaller for thermal receipt
+    //   htmlEl.style.lineHeight = '1.2';
+    //   htmlEl.style.fontWeight = '400';
+    //   htmlEl.style.margin = '0';
+    //   htmlEl.style.padding = '0';
+    //   htmlEl.style.wordWrap = 'break-word'; // Ensure text wraps within width
+    //   htmlEl.style.overflowWrap = 'break-word';
+    //   htmlEl.style.maxWidth = '100%';
       
-      // Get text content for intelligent styling
-      const textContent = htmlEl.textContent?.trim() || '';
+    //   // Get text content for intelligent styling
+    //   const textContent = htmlEl.textContent?.trim() || '';
       
-      // Handle different element types with thermal receipt sizing
-      if (htmlEl.tagName === 'DIV') {
-        htmlEl.style.display = 'block';
-        htmlEl.style.marginBottom = '4px'; // Compact spacing
-        htmlEl.style.width = '100%';
+    //   // Handle different element types with thermal receipt sizing
+    //   if (htmlEl.tagName === 'DIV') {
+    //     htmlEl.style.display = 'block';
+    //     htmlEl.style.marginBottom = '4px'; // Compact spacing
+    //     htmlEl.style.width = '100%';
         
-        // Header/Restaurant Name - Thermal receipt header
-        if (textContent.includes('★') || textContent.includes('LAZAZA') || textContent.includes('مؤسسة')) {
-          htmlEl.style.fontSize = '14px'; // Slightly larger for header
-          htmlEl.style.fontWeight = '700';
-          htmlEl.style.textAlign = 'center';
-          htmlEl.style.marginBottom = '2px';
-          htmlEl.style.letterSpacing = '0.5px';
-        }
+    //     // Header/Restaurant Name - Thermal receipt header
+    //     if (textContent.includes('★') || textContent.includes('LAZAZA') || textContent.includes('مؤسسة')) {
+    //       htmlEl.style.fontSize = '14px'; // Slightly larger for header
+    //       htmlEl.style.fontWeight = '700';
+    //       htmlEl.style.textAlign = 'center';
+    //       htmlEl.style.marginBottom = '2px';
+    //     //   htmlEl.style.letterSpacing = '0.5px';
+    //     }
         
-        // Contact Information - Compact thermal style
-        else if (textContent.includes('Road') || textContent.includes('Tel:') || textContent.includes('VAT:') || textContent.includes('CR:')) {
-          htmlEl.style.fontSize = '10px'; // Smaller for contact info
-          htmlEl.style.textAlign = 'center';
-          htmlEl.style.marginBottom = '2px';
-          htmlEl.style.color = '#333333';
-        }
+    //     // Contact Information - Compact thermal style
+    //     else if (textContent.includes('Road') || textContent.includes('Tel:') || textContent.includes('VAT:') || textContent.includes('CR:')) {
+    //       htmlEl.style.fontSize = '10px'; // Smaller for contact info
+    //       htmlEl.style.textAlign = 'center';
+    //       htmlEl.style.marginBottom = '2px';
+    //       htmlEl.style.color = '#333333';
+    //     }
         
-        // Section Headers - Thermal receipt style
-        else if (textContent.includes('Order #') || textContent.includes('Date:') || textContent.includes('Time:') || textContent.includes('Cashier:')) {
-          htmlEl.style.fontSize = '11px';
-          htmlEl.style.fontWeight = '600';
-          htmlEl.style.marginTop = '8px';
-          htmlEl.style.marginBottom = '4px';
-          htmlEl.style.paddingTop = '4px';
-          htmlEl.style.borderTop = '1px dashed #000000'; // Dashed line for thermal
-        }
+    //     // Section Headers - Thermal receipt style
+    //     else if (textContent.includes('Order #') || textContent.includes('Date:') || textContent.includes('Time:') || textContent.includes('Cashier:')) {
+    //       htmlEl.style.fontSize = '11px';
+    //       htmlEl.style.fontWeight = '600';
+    //       htmlEl.style.marginTop = '8px';
+    //       htmlEl.style.marginBottom = '4px';
+    //       htmlEl.style.paddingTop = '4px';
+    //       htmlEl.style.borderTop = '1px solid #000000'; // Dashed line for thermal
+    //     }
         
-        // Order Items - Compact thermal format
-        else if (textContent.includes('x ') || /^\d+\s*x/.test(textContent)) {
-          htmlEl.style.fontSize = '11px';
-          htmlEl.style.marginBottom = '2px';
-          htmlEl.style.paddingLeft = '4px';
-          htmlEl.style.display = 'flex';
-          htmlEl.style.justifyContent = 'space-between';
-          htmlEl.style.width = '100%';
-        }
+    //     // Order Items - Compact thermal format
+    //     else if (textContent.includes('x ') || /^\d+\s*x/.test(textContent)) {
+    //       htmlEl.style.fontSize = '11px';
+    //       htmlEl.style.marginBottom = '2px';
+    //       htmlEl.style.paddingLeft = '4px';
+    //       htmlEl.style.display = 'flex';
+    //       htmlEl.style.justifyContent = 'space-between';
+    //       htmlEl.style.width = '100%';
+    //     }
         
-        // Totals Section - Thermal receipt totals
-        else if (textContent.includes('Subtotal') || textContent.includes('VAT') || textContent.includes('Total') || textContent.includes('المجموع')) {
-          htmlEl.style.fontSize = '11px';
-          htmlEl.style.fontWeight = '600';
-          htmlEl.style.marginTop = '6px';
-          htmlEl.style.marginBottom = '2px';
-          htmlEl.style.paddingTop = '4px';
-          htmlEl.style.paddingBottom = '2px';
-          htmlEl.style.display = 'flex';
-          htmlEl.style.justifyContent = 'space-between';
-          htmlEl.style.width = '100%';
+    //     // Totals Section - Thermal receipt totals
+    //     else if (textContent.includes('Subtotal') || textContent.includes('VAT') || textContent.includes('Total') || textContent.includes('المجموع')) {
+    //       htmlEl.style.fontSize = '11px';
+    //       htmlEl.style.fontWeight = '600';
+    //       htmlEl.style.marginTop = '6px';
+    //       htmlEl.style.marginBottom = '2px';
+    //       htmlEl.style.paddingTop = '4px';
+    //       htmlEl.style.paddingBottom = '2px';
+    //       htmlEl.style.display = 'flex';
+    //       htmlEl.style.justifyContent = 'space-between';
+    //       htmlEl.style.width = '100%';
           
-          // Final Total - Extra emphasis for thermal
-          if (textContent.includes('Total') && textContent.includes('SAR')) {
-            htmlEl.style.fontSize = '12px';
-            htmlEl.style.fontWeight = '700';
-            htmlEl.style.borderTop = '1px solid #000000';
-            htmlEl.style.borderBottom = '1px solid #000000';
-            htmlEl.style.paddingTop = '6px';
-            htmlEl.style.paddingBottom = '4px';
-            htmlEl.style.marginTop = '8px';
-          }
-        }
+    //       // Final Total - Extra emphasis for thermal
+    //       if (textContent.includes('Total') && textContent.includes('SAR')) {
+    //         htmlEl.style.fontSize = '12px';
+    //         htmlEl.style.fontWeight = '700';
+    //         htmlEl.style.borderTop = '1px solid #000000';
+    //         htmlEl.style.borderBottom = '1px solid #000000';
+    //         htmlEl.style.paddingTop = '6px';
+    //         htmlEl.style.paddingBottom = '4px';
+    //         htmlEl.style.marginTop = '8px';
+    //       }
+    //     }
         
-        // Footer Information - Thermal style
-        else if (textContent.includes('Thank you') || textContent.includes('شكراً') || textContent.includes('Visit us again')) {
-          htmlEl.style.fontSize = '10px';
-          htmlEl.style.textAlign = 'center';
-          htmlEl.style.marginTop = '8px';
-          htmlEl.style.marginBottom = '4px';
-          htmlEl.style.fontStyle = 'italic';
-          htmlEl.style.color = '#555555';
-        }
+    //     // Footer Information - Thermal style
+    //     else if (textContent.includes('Thank you') || textContent.includes('شكراً') || textContent.includes('Visit us again')) {
+    //       htmlEl.style.fontSize = '10px';
+    //       htmlEl.style.textAlign = 'center';
+    //       htmlEl.style.marginTop = '8px';
+    //       htmlEl.style.marginBottom = '4px';
+    //       htmlEl.style.fontStyle = 'italic';
+    //       htmlEl.style.color = '#555555';
+    //     }
         
-      } else if (htmlEl.tagName === 'SPAN') {
-        htmlEl.style.display = 'inline';
-        htmlEl.style.fontSize = '11px'; // Consistent thermal size
+    //   } else if (htmlEl.tagName === 'SPAN') {
+    //     htmlEl.style.display = 'inline';
+    //     htmlEl.style.fontSize = '11px'; // Consistent thermal size
         
-        // Price formatting for thermal receipt
-        if (textContent.includes('SAR') || textContent.includes('ر.س') || /\d+\.\d{2}/.test(textContent)) {
-          htmlEl.style.fontWeight = '600';
-          htmlEl.style.fontSize = '11px';
-        }
+    //     // Price formatting for thermal receipt
+    //     if (textContent.includes('SAR') || textContent.includes('ر.س') || /\d+\.\d{2}/.test(textContent)) {
+    //       htmlEl.style.fontWeight = '600';
+    //       htmlEl.style.fontSize = '11px';
+    //     }
         
-      } else if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(htmlEl.tagName)) {
-        htmlEl.style.fontSize = '14px'; // Thermal header size
-        htmlEl.style.fontWeight = '700';
-        htmlEl.style.textAlign = 'center';
-        htmlEl.style.margin = '8px 0 4px 0';
-        htmlEl.style.letterSpacing = '0.5px';
+    //   } else if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(htmlEl.tagName)) {
+    //     htmlEl.style.fontSize = '14px'; // Thermal header size
+    //     htmlEl.style.fontWeight = '700';
+    //     htmlEl.style.textAlign = 'center';
+    //     htmlEl.style.margin = '8px 0 4px 0';
+    //     htmlEl.style.letterSpacing = '0.5px';
         
-      } else if (htmlEl.tagName === 'IMG') {
-        htmlEl.style.display = 'block';
-        htmlEl.style.maxWidth = '60px'; // Smaller for thermal receipt
-        htmlEl.style.height = 'auto';
-        htmlEl.style.margin = '8px auto';
-        htmlEl.style.border = 'none';
+    //   } else if (htmlEl.tagName === 'IMG') {
+    //     htmlEl.style.display = 'block';
+    //     htmlEl.style.maxWidth = '60px'; // Smaller for thermal receipt
+    //     htmlEl.style.height = 'auto';
+    //     htmlEl.style.margin = '8px auto';
+    //     htmlEl.style.border = 'none';
         
-      } else if (htmlEl.tagName === 'P') {
-        htmlEl.style.margin = '4px 0';
-        htmlEl.style.fontSize = '11px';
-        htmlEl.style.lineHeight = '1.2';
+    //   } else if (htmlEl.tagName === 'P') {
+    //     htmlEl.style.margin = '4px 0';
+    //     htmlEl.style.fontSize = '11px';
+    //     htmlEl.style.lineHeight = '1.2';
         
-      } else if (htmlEl.tagName === 'TABLE') {
-        htmlEl.style.width = '100%';
-        htmlEl.style.borderCollapse = 'collapse';
-        htmlEl.style.margin = '6px 0';
-        htmlEl.style.fontSize = '10px'; // Smaller table text
+    //   } else if (htmlEl.tagName === 'TABLE') {
+    //     htmlEl.style.width = '100%';
+    //     htmlEl.style.borderCollapse = 'collapse';
+    //     htmlEl.style.margin = '6px 0';
+    //     htmlEl.style.fontSize = '10px'; // Smaller table text
         
-      } else if (htmlEl.tagName === 'TD' || htmlEl.tagName === 'TH') {
-        htmlEl.style.padding = '2px 1px'; // Compact table cells
-        htmlEl.style.borderBottom = '1px solid #f0f0f0';
-        htmlEl.style.fontSize = '10px';
-        htmlEl.style.verticalAlign = 'top';
-        htmlEl.style.wordWrap = 'break-word';
-      }
+    //   } else if (htmlEl.tagName === 'TD' || htmlEl.tagName === 'TH') {
+    //     htmlEl.style.padding = '2px 1px'; // Compact table cells
+    //     htmlEl.style.borderBottom = '1px solid #f0f0f0';
+    //     htmlEl.style.fontSize = '10px';
+    //     htmlEl.style.verticalAlign = 'top';
+    //     htmlEl.style.wordWrap = 'break-word';
+    //   }
       
-      // Auto-detect and apply text alignment
-      if (textContent && (
-        htmlEl.getAttribute('class')?.includes('center') ||
-        htmlEl.getAttribute('class')?.includes('text-center') ||
-        textContent.includes('★') ||
-        textContent.includes('LAZAZA') ||
-        textContent.includes('مؤسسة') ||
-        textContent.includes('Receipt') ||
-        textContent.includes('Invoice') ||
-        textContent.includes('Thank you') ||
-        textContent.includes('شكراً')
-      )) {
-        htmlEl.style.textAlign = 'center';
-      }
+    //   // Auto-detect and apply text alignment
+    //   if (textContent && (
+    //     htmlEl.getAttribute('class')?.includes('center') ||
+    //     htmlEl.getAttribute('class')?.includes('text-center') ||
+    //     textContent.includes('★') ||
+    //     textContent.includes('LAZAZA') ||
+    //     textContent.includes('مؤسسة') ||
+    //     textContent.includes('Receipt') ||
+    //     textContent.includes('Invoice') ||
+    //     textContent.includes('Thank you') ||
+    //     textContent.includes('شكراً')
+    //   )) {
+    //     htmlEl.style.textAlign = 'center';
+    //   }
       
-      // Create flexible layout for items with prices
-      if (textContent.includes('SAR') && textContent.includes('x ')) {
-        htmlEl.style.display = 'flex';
-        htmlEl.style.justifyContent = 'space-between';
-        htmlEl.style.alignItems = 'flex-start';
-      }
-    });
+    //   // Create flexible layout for items with prices
+    //   if (textContent.includes('SAR') && textContent.includes('x ')) {
+    //     htmlEl.style.display = 'flex';
+    //     htmlEl.style.justifyContent = 'space-between';
+    //     htmlEl.style.alignItems = 'flex-start';
+    //   }
+    // });
 
     // Add to document to get proper dimensions
     document.body.appendChild(clonedElement);
@@ -251,7 +251,7 @@ export async function generateReceiptPDF(
       background: "#ffffff",
       width: 302, // Exact 80mm width in pixels
       height: Math.max(clonedElement.offsetHeight, 400),
-      scale: 1, // Use 1:1 scale for precise thermal sizing
+      scale: 2, // Use 1:1 scale for precise thermal sizing
       useCORS: true,
       allowTaint: true,
       letterRendering: true,

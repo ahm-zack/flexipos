@@ -4,16 +4,19 @@ import { cn } from "@/lib/utils";
 interface SaudiRiyalSymbolProps {
   className?: string;
   size?: number;
+  style?: React.CSSProperties;
 }
 
 export function SaudiRiyalSymbol({
   className,
   size = 16,
+  style,
 }: SaudiRiyalSymbolProps) {
   return (
     <svg
       width={size}
       height={size}
+      style={style}
       viewBox="0 0 1124.14 1256.39"
       className={cn("inline-block fill-current", className)}
       aria-hidden="true"

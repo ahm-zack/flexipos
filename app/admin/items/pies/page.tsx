@@ -1,5 +1,6 @@
-import { pieService } from "@/lib/pie-service";
+import { pieClientService } from "@/lib/supabase/client-db";
 import { PieManagementView } from "@/modules/pie-feature";
+import { pieKeys } from "@/modules/pie-feature/queries/pie-keys";
 import {
   dehydrate,
   HydrationBoundary,
@@ -8,15 +9,10 @@ import {
 
 export default async function PiesManagementPage() {
   const queryClient = new QueryClient();
+
   await queryClient.prefetchQuery({
-    queryKey: ["pies", "list"],
-    queryFn: async () => {
-      const result = await pieService.getPies();
-      if (!result.success) {
-        throw new Error(result.error || "Failed to fetch pies");
-      }
-      return result.data;
-    },
+    queryKey: pieKeys.lists(),
+    queryFn: () => pieClientService.getPies(),
   });
 
   return (

@@ -1,4 +1,3 @@
-import { Metadata } from "next";
 import { pizzaClientService } from "@/lib/supabase/client-db";
 import { PizzaManagementView, pizzaKeys } from "@/modules/pizza-feature";
 import {
@@ -6,11 +5,6 @@ import {
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
-
-export const metadata: Metadata = {
-  title: "Pizza Management - Admin",
-  description: "Manage your pizza menu items",
-};
 
 export default async function PizzasManagementPage() {
   const queryClient = new QueryClient({

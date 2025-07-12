@@ -344,21 +344,49 @@ export function RestaurantReceipt({
 
 // Sub-components for better organization
 const RestaurantHeader = ({ config }: { config: RestaurantConfig }) => (
-  <div className="text-center mb-3">
-    <div className="text-lg mb-1 font-bold">
+  <div
+    // className="text-center mb-3"
+    style={{ textAlign: "center", marginBottom: "0.75rem" }}
+  >
+    <div
+      style={{ fontSize: "1.125rem", fontWeight: 600, marginBottom: "0.25rem" }}
+    >
       ★ {config.name.toUpperCase()} ★
     </div>
-    <div className="text-base font-bold mb-2">{config.nameAr}</div>
-    <div className="text-xs font-bold mb-1">{config.address}</div>
-    <div className="text-xs font-bold mb-1">{config.addressAr}</div>
-    <div className="text-xs font-bold mb-2">CR: {config.crNumber}</div>
+    <div style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+      {config.nameAr}
+    </div>
+    <div
+      style={{ fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.25rem" }}
+    >
+      {config.address}
+    </div>
+    <div
+      style={{ fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.25rem" }}
+    >
+      {config.addressAr}
+    </div>
+    <div
+      style={{ fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.5rem" }}
+    >
+      CR: {config.crNumber}
+    </div>
   </div>
 );
 
 const InvoiceHeader = () => (
-  <div className="text-center border-t-2 border-b-2 border-double py-2 mb-2">
-    <div className="font-bold">SIMPLIFIED TAX INVOICE</div>
-    <div className="font-bold">فاتورة ضريبية مبسطة</div>
+  <div
+    style={{
+      textAlign: "center",
+      borderTop: "0.125rem double black",
+      borderBottom: "0.125rem double black",
+      paddingTop: "0.5rem",
+      paddingBottom: "0.5rem",
+      marginBottom: "0.5rem",
+    }}
+  >
+    <div style={{ fontWeight: 700 }}>SIMPLIFIED TAX INVOICE</div>
+    <div style={{ fontWeight: 700 }}>فاتورة ضريبية مبسطة</div>
   </div>
 );
 
@@ -377,72 +405,156 @@ const OrderInfo = ({
 
   return (
     <>
-      <div className="text-center mb-3">
-        <div className="text-lg font-bold border-2 border-black p-2 inline-block">
+      <div style={{ textAlign: "center", marginBottom: "1.2rem" }}>
+        <div
+          style={{
+            fontSize: "1.125rem",
+            fontWeight: 700,
+            border: "0.125rem solid #000",
+            padding: "0.5rem",
+            display: "inline-block",
+          }}
+        >
           ORDER #{order.orderNumber}
         </div>
       </div>
 
-      <div className="mb-2 text-xs">
-        <div className="flex justify-between mb-1">
+      <div style={{ marginBottom: "0.5rem", fontSize: "0.75rem" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: "0.25rem",
+          }}
+        >
           <span>Date:</span>
           <span>{formatDate(orderDate)}</span>
         </div>
-        <div className="flex justify-between mb-1">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: "0.25rem",
+          }}
+        >
           <span>Time:</span>
           <span>{formatTime(orderDate)}</span>
         </div>
         {cashierName && (
-          <div className="flex justify-between mb-1">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: "0.25rem",
+            }}
+          >
             <span>Cashier:</span>
             <span>{cashierName}</span>
           </div>
         )}
-        <div className="flex justify-between mb-1">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: "0.25rem",
+          }}
+        >
           <span>Payment:</span>
-          <span className="capitalize font-bold">{order.paymentMethod}</span>
+          <span style={{ textTransform: "capitalize", fontWeight: 700 }}>
+            {order.paymentMethod}
+          </span>
         </div>
       </div>
 
-      <div className="border-t py-1 mb-2"></div>
+      <div
+        style={{
+          borderTop: "1px solid #000",
+          paddingTop: "0.25rem",
+          paddingBottom: "0.25rem",
+          marginBottom: "0.5rem",
+        }}
+      ></div>
     </>
   );
 };
 
 const OrderItems = ({ items }: { items: Order["items"] }) => (
-  <div className="mb-2">
+  <div style={{ marginBottom: "0.5rem" }}>
     {items.map((item, index) => (
-      <div key={index} className="mb-2">
-        <div className="font-bold">{item.name}</div>
-        <div className="text-xs font-bold mb-1">{item.nameAr}</div>
+      <div key={index} style={{ marginBottom: "0.5rem" }}>
+        <div style={{ fontWeight: 700 }}>{item.name}</div>
+        <div
+          style={{
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            marginBottom: "0.25rem",
+          }}
+        >
+          {item.nameAr}
+        </div>
 
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2">
-            <span className="font-bold">{item.quantity}x</span>
-            <span className="font-bold">@{item.unitPrice.toFixed(2)}</span>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+          }}
+        >
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <span style={{ fontWeight: 700 }}>{item.quantity}x</span>
+            <span style={{ fontWeight: 700 }}>
+              @{item.unitPrice.toFixed(2)}
+            </span>
           </div>
-          <div className="font-bold">
-            <SaudiRiyalSymbol size={10} className="inline mr-1" />
-            {item.totalPrice.toFixed(2)}
+          <div
+            style={{
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              paddingLeft: "10px",
+            }}
+          >
+            <SaudiRiyalSymbol
+              size={10}
+              style={{
+                display: "inline",
+                marginRight: "0.25rem",
+                verticalAlign: "baseline",
+              }}
+            />
+            <span>{item.totalPrice.toFixed(2)}</span>
           </div>
         </div>
 
         {/* Modifiers */}
         {item.details?.modifiers && item.details.modifiers.length > 0 && (
-          <div className="ml-4 mt-1">
+          <div style={{ marginLeft: "1rem", marginTop: "0.25rem" }}>
             {item.details.modifiers.map(
               (modifier: Modifier, modIndex: number) => (
                 <div
                   key={modIndex}
-                  className="flex justify-between text-xs text-gray-600"
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "0.75rem",
+                    color: "#4B5563",
+                  }}
                 >
-                  <span className="italic">
+                  <span style={{ fontStyle: "italic" }}>
                     {modifier.type === "extra" ? "+ " : "- "}
                     {modifier.name}
                   </span>
                   {modifier.type === "extra" && modifier.price > 0 && (
                     <span>
-                      +<SaudiRiyalSymbol size={8} className="inline" />
+                      +
+                      <SaudiRiyalSymbol
+                        size={8}
+                        style={{
+                          display: "inline",
+                          marginRight: "0.125rem",
+                          verticalAlign: "baseline",
+                        }}
+                      />
                       {modifier.price.toFixed(2)}
                     </span>
                   )}
@@ -463,27 +575,77 @@ const OrderTotals = ({
   totals: TotalCalculations;
   totalAmount: number;
 }) => (
-  <div className="border-t py-2">
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs font-bold">
+  <div
+    style={{
+      borderTop: "1px solid #000",
+      paddingTop: "0.5rem",
+      paddingBottom: "0.5rem",
+    }}
+  >
+    <div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          fontSize: "0.75rem",
+          fontWeight: 700,
+          marginBottom: "0.25rem",
+        }}
+      >
         <span>Net Amount:</span>
         <span>
-          <SaudiRiyalSymbol size={10} className="inline mr-1" />
+          <SaudiRiyalSymbol
+            size={10}
+            style={{
+              display: "inline",
+              marginRight: "0.25rem",
+              verticalAlign: "baseline",
+            }}
+          />
           {totals.netAmount.toFixed(2)}
         </span>
       </div>
-      <div className="flex justify-between text-xs font-bold">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          fontSize: "0.75rem",
+          fontWeight: 700,
+          marginBottom: "0.25rem",
+        }}
+      >
         <span>VAT (15%):</span>
         <span>
-          <SaudiRiyalSymbol size={10} className="inline mr-1" />
+          <SaudiRiyalSymbol
+            size={10}
+            style={{
+              display: "inline",
+              marginRight: "0.25rem",
+              verticalAlign: "baseline",
+            }}
+          />
           {totals.vatAmount.toFixed(2)}
         </span>
       </div>
-      <div className="border-t pt-1">
-        <div className="flex justify-between text-base font-bold">
+      <div style={{ borderTop: "1px solid #000", paddingTop: "0.25rem" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: "1rem",
+            fontWeight: 700,
+          }}
+        >
           <span>TOTAL:</span>
           <span>
-            <SaudiRiyalSymbol size={12} className="inline mr-1" />
+            <SaudiRiyalSymbol
+              size={12}
+              style={{
+                display: "inline",
+                marginRight: "0.25rem",
+                verticalAlign: "baseline",
+              }}
+            />
             {totalAmount.toFixed(2)}
           </span>
         </div>
@@ -493,25 +655,46 @@ const OrderTotals = ({
 );
 
 const QRCodeSection = ({ qrCodeDataURL }: { qrCodeDataURL: string }) => (
-  <div className="text-center mt-3 mb-2">
-    <div className="text-xs mb-1 font-bold">ZATCA QR CODE</div>
-    <div className="flex justify-center">
+  <div
+    style={{
+      textAlign: "center",
+      marginTop: "0.75rem",
+      marginBottom: "0.5rem",
+    }}
+  >
+    <div
+      style={{ fontSize: "0.75rem", marginBottom: "0.25rem", fontWeight: 700 }}
+    >
+      ZATCA QR CODE
+    </div>
+    <div style={{ display: "flex", justifyContent: "center" }}>
       <Image
         src={qrCodeDataURL}
         alt="ZATCA QR Code"
         width={80}
         height={80}
-        className="mx-auto"
+        style={{ marginLeft: "auto", marginRight: "auto" }}
       />
     </div>
   </div>
 );
 
 const ReceiptFooter = ({ config }: { config: RestaurantConfig }) => (
-  <div className="text-center text-xs mt-3">
-    <div className="mb-1 font-bold">{config.thankYouMessage.en}</div>
-    <div className="font-bold">{config.thankYouMessage.ar}</div>
-    <div className="mt-2 text-xs border-t pt-1">
+  <div
+    style={{ textAlign: "center", fontSize: "0.75rem", marginTop: "0.75rem" }}
+  >
+    <div style={{ marginBottom: "0.25rem", fontWeight: 700 }}>
+      {config.thankYouMessage.en}
+    </div>
+    <div style={{ fontWeight: 700 }}>{config.thankYouMessage.ar}</div>
+    <div
+      style={{
+        marginTop: "0.5rem",
+        fontSize: "0.75rem",
+        borderTop: "1px solid #000",
+        paddingTop: "0.25rem",
+      }}
+    >
       Generated: {new Date().toLocaleString("en-GB")}
     </div>
   </div>
