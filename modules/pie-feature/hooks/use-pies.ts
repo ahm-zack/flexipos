@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { Pie } from '@/lib/db/schema';
 import type { CreatePie, UpdatePie } from '@/lib/schemas';
-import { pieClientService } from '@/lib/supabase/client-db';
+import { pieClientService } from '@/lib/supabase-queries/pie-client-service';
 import { pieKeys } from '../queries/pie-keys';
 
 // Cache strategies for different contexts

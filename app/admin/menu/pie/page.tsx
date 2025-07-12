@@ -1,4 +1,4 @@
-import { pieClientService } from "@/lib/supabase/client-db";
+import { pieClientService } from "@/lib/supabase-queries/pie-client-service";
 import { PieCashierView } from "@/modules/pie-feature";
 import { pieKeys } from "@/modules/pie-feature/queries/pie-keys";
 import {

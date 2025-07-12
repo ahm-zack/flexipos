@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { PizzaCashierView, pizzaKeys } from "@/modules/pizza-feature";
-import { pizzaClientService } from "@/lib/supabase/client-db";
+import { pizzaClientService } from "@/lib/supabase-queries/pizza-client-service";
 import {
   dehydrate,
   HydrationBoundary,

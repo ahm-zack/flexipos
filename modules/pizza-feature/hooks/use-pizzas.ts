@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { Pizza, Modifier } from '@/lib/db/schema';
 import type { CreatePizza, UpdatePizza } from '@/lib/schemas';
-import { pizzaClientService } from '@/lib/supabase/client-db';
+import { pizzaClientService } from '@/lib/supabase-queries/pizza-client-service';
 import { pizzaKeys } from '../queries/pizza-keys';
 
 // Cache strategies for different contexts

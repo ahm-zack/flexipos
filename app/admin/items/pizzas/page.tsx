@@ -1,4 +1,4 @@
-import { pizzaClientService } from "@/lib/supabase/client-db";
+import { pizzaClientService } from "@/lib/supabase-queries/pizza-client-service";
 import { PizzaManagementView, pizzaKeys } from "@/modules/pizza-feature";
 import {
   dehydrate,

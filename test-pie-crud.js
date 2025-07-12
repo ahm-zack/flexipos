@@ -1,5 +1,5 @@
 // Quick test script to verify pie CRUD operations
-import { pieClientService } from "./lib/supabase/client-db.js";
+import { pieClientService } from "./lib/supabase-queries/pizza-client-service.js";
 
 async function testPieCRUD() {
   try {
