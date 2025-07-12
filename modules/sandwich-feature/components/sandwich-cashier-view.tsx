@@ -12,7 +12,7 @@ import type { Sandwich } from "@/lib/db/schema";
 export function SandwichCashierView() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: sandwiches, isLoading, error } = useSandwiches();
+  const { data: sandwiches, isLoading, error } = useSandwiches("cashier");
 
   // Filter sandwiches based on search term
   const filteredSandwiches =

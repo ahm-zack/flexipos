@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
@@ -122,7 +122,10 @@ export function EditSandwichForm({
         image: selectedFile || undefined,
       };
 
-      await updateSandwichMutation.mutateAsync(sandwichData);
+      await updateSandwichMutation.mutateAsync({
+        id: sandwich.id,
+        data: sandwichData,
+      });
 
       toast.success("Sandwich updated successfully!");
       setSelectedFile(null);
@@ -142,6 +145,13 @@ export function EditSandwichForm({
     setFormData((prev) => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+  const handleModifiersChange = (modifiers: Modifier[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      modifiers,
     }));
   };
 
@@ -182,10 +192,6 @@ export function EditSandwichForm({
     ) as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
-
-  const handleModifiersChange = useCallback((modifiers: Modifier[]) => {
-    queueMicrotask(() => setFormData((f) => ({ ...f, modifiers })));
-  }, []);
 
   if (!sandwich) return null;
 

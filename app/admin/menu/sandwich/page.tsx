@@ -1,5 +1,6 @@
-import { sandwichService } from "@/lib/sandwich-service";
 import { SandwichCashierView } from "@/modules/sandwich-feature";
+import { sandwichKeys } from "@/modules/sandwich-feature/queries/sandwich-keys";
+import { sandwichClientService } from "@/lib/supabase-queries/sandwich-client-service";
 import {
   dehydrate,
   HydrationBoundary,
@@ -7,16 +8,23 @@ import {
 } from "@tanstack/react-query";
 
 export default async function SandwichMenuPage() {
-  const queryClient = new QueryClient();
-  await queryClient.prefetchQuery({
-    queryKey: ["sandwiches", "list"],
-    queryFn: async () => {
-      const result = await sandwichService.getSandwiches();
-      if (!result.success) {
-        throw new Error(result.error || "Failed to fetch sandwiches");
-      }
-      return result.data;
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        // Cashier context cache strategy
+        staleTime: 10 * 60 * 1000, // 10 minutes
+        gcTime: 30 * 60 * 1000, // 30 minutes
+        refetchOnWindowFocus: false, // Menu is stable
+        refetchOnMount: false, // Don't refetch if data exists
+      },
     },
+  });
+
+  await queryClient.prefetchQuery({
+    queryKey: sandwichKeys.lists(),
+    queryFn: () => sandwichClientService.getSandwiches(),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 
   return (

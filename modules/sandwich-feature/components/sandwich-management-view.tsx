@@ -30,7 +30,7 @@ export function SandwichManagementView() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [sandwichToEdit, setSandwichToEdit] = useState<Sandwich | null>(null);
 
-  const { data: sandwiches, isLoading, error } = useSandwiches();
+  const { data: sandwiches, isLoading, error } = useSandwiches("admin");
   const deleteSandwichMutation = useDeleteSandwich();
 
   // Filter sandwiches based on search term
@@ -57,7 +57,7 @@ export function SandwichManagementView() {
     if (!sandwichToDelete) return;
 
     try {
-      await deleteSandwichMutation.mutateAsync(sandwichToDelete);
+      await deleteSandwichMutation.mutateAsync(sandwichToDelete.id);
       toast.success(`${sandwichToDelete.type} Sandwich deleted successfully`);
       setDeleteDialogOpen(false);
       setSandwichToDelete(null);

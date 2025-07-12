@@ -15,5 +15,7 @@ export {
   useCreateSandwich,
   useUpdateSandwich,
   useDeleteSandwich,
-  sandwichKeys,
 } from './hooks/use-sandwiches';
+
+// Query Keys
+export { sandwichKeys } from './queries/sandwich-keys';

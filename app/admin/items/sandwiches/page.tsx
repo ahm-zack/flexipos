@@ -1,5 +1,6 @@
-import { sandwichService } from "@/lib/sandwich-service";
 import { SandwichManagementView } from "@/modules/sandwich-feature";
+import { sandwichKeys } from "@/modules/sandwich-feature/queries/sandwich-keys";
+import { sandwichClientService } from "@/lib/supabase-queries/sandwich-client-service";
 import {
   dehydrate,
   HydrationBoundary,
@@ -8,15 +9,10 @@ import {
 
 export default async function SandwichesManagementPage() {
   const queryClient = new QueryClient();
+
   await queryClient.prefetchQuery({
-    queryKey: ["sandwiches", "list"],
-    queryFn: async () => {
-      const result = await sandwichService.getSandwiches();
-      if (!result.success) {
-        throw new Error(result.error || "Failed to fetch sandwiches");
-      }
-      return result.data;
-    },
+    queryKey: sandwichKeys.lists(),
+    queryFn: () => sandwichClientService.getSandwiches(),
   });
 
   return (
