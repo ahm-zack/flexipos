@@ -15,20 +15,21 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { PizzaGrid } from "./pizza-grid";
-import { CreatePizzaForm } from "./create-pizza-form";
 import { EditPizzaForm } from "./edit-pizza-form";
 import { usePizzas, useDeletePizza } from "../hooks/use-pizzas";
 import type { Pizza } from "@/lib/db/schema";
+import { CreatePizzaFormWithOptimisticUpdates } from "./create-pizza-form";
 
 export function PizzaManagementView() {
+  const { data: pizzas, isLoading, error } = usePizzas("admin");
+  const deletePizzaMutation = useDeletePizza();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pizzaToDelete, setPizzaToDelete] = useState<Pizza | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [pizzaToEdit, setPizzaToEdit] = useState<Pizza | null>(null);
-  const { data: pizzas, isLoading, error } = usePizzas();
-  const deletePizzaMutation = useDeletePizza();
 
   // Filter pizzas based on search term
   const filteredPizzas =
@@ -108,13 +109,15 @@ export function PizzaManagementView() {
               />
             </div>
 
-            <Button
-              onClick={handleCreateNew}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add New Pizza
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleCreateNew}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add New Pizza
+              </Button>
+            </div>
           </div>
 
           {/* Results Count */}
@@ -182,7 +185,7 @@ export function PizzaManagementView() {
           </Dialog>
 
           {/* Create Pizza Form */}
-          <CreatePizzaForm
+          <CreatePizzaFormWithOptimisticUpdates
             open={createDialogOpen}
             onOpenChange={setCreateDialogOpen}
           />

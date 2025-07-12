@@ -1,22 +1,30 @@
-import { pizzaService } from "@/lib/pizza-service";
-import { PizzaManagementView } from "@/modules/pizza-feature";
+import { Metadata } from "next";
+import { pizzaClientService } from "@/lib/supabase/client-db";
+import { PizzaManagementView, pizzaKeys } from "@/modules/pizza-feature";
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
 
+export const metadata: Metadata = {
+  title: "Pizza Management - Admin",
+  description: "Manage your pizza menu items",
+};
+
 export default async function PizzasManagementPage() {
-  const queryClient = new QueryClient();
-  await queryClient.prefetchQuery({
-    queryKey: ["pizzas", "list"],
-    queryFn: async () => {
-      const result = await pizzaService.getPizzas();
-      if (!result.success) {
-        throw new Error(result.error || "Failed to fetch pizzas");
-      }
-      return result.data;
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 2 * 60 * 1000, // 2 minutes for admin
+      },
     },
+  });
+
+  // Pre-fetch pizzas on server for SSR hydration
+  await queryClient.prefetchQuery({
+    queryKey: pizzaKeys.lists(),
+    queryFn: () => pizzaClientService.getPizzas(),
   });
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

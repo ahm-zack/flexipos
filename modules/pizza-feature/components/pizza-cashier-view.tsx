@@ -11,7 +11,7 @@ import { usePizzas } from "../hooks/use-pizzas";
 export function PizzaCashierView() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: pizzas, isLoading, error } = usePizzas();
+  const { data: pizzas, isLoading, error } = usePizzas("cashier");
 
   // Filter pizzas based on search term
   const filteredPizzas =

@@ -67,22 +67,18 @@ export function ModifierManager({
       type: newModifier.type,
       price: newModifier.type === "extra" ? parseFloat(newModifier.price) : 0,
     };
-    setLocalModifiers((prev) => {
-      const updated = [...prev, tempModifier];
-      onModifiersChange(updated);
-      return updated;
-    });
+    const updated = [...localModifiers, tempModifier];
+    setLocalModifiers(updated);
+    onModifiersChange(updated);
     setNewModifier({ name: "", type: "extra", price: "" });
     setIsAddingModifier(false);
     toast.success("Modifier added successfully");
   };
 
   const handleDeleteModifier = (modifierId: string) => {
-    setLocalModifiers((prev) => {
-      const updated = prev.filter((m) => m.id !== modifierId);
-      onModifiersChange(updated);
-      return updated;
-    });
+    const updated = localModifiers.filter((m) => m.id !== modifierId);
+    setLocalModifiers(updated);
+    onModifiersChange(updated);
     toast.success("Modifier deleted successfully");
   };
 
@@ -98,13 +94,11 @@ export function ModifierManager({
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
     if (draggedIndex !== null && draggedIndex !== dropIndex) {
-      setLocalModifiers((prev) => {
-        const updated = [...prev];
-        const [removed] = updated.splice(draggedIndex, 1);
-        updated.splice(dropIndex, 0, removed);
-        onModifiersChange(updated);
-        return updated;
-      });
+      const updated = [...localModifiers];
+      const [removed] = updated.splice(draggedIndex, 1);
+      updated.splice(dropIndex, 0, removed);
+      setLocalModifiers(updated);
+      onModifiersChange(updated);
       setDraggedIndex(null);
       return;
     }

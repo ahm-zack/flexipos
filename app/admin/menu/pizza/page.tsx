@@ -1,22 +1,30 @@
-import { PizzaCashierView } from "@/modules/pizza-feature";
-import { pizzaService } from "@/lib/pizza-service";
+import { Metadata } from "next";
+import { PizzaCashierView, pizzaKeys } from "@/modules/pizza-feature";
+import { pizzaClientService } from "@/lib/supabase/client-db";
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
 
-export default async function PizzaPage() {
-  const queryClient = new QueryClient();
-  await queryClient.prefetchQuery({
-    queryKey: ["pizzas", "list"],
-    queryFn: async () => {
-      const result = await pizzaService.getPizzas();
-      if (!result.success) {
-        throw new Error(result.error || "Failed to fetch pizzas");
-      }
-      return result.data;
+export const metadata: Metadata = {
+  title: "Pizza Menu - Cashier",
+  description: "Pizza ordering interface for cashiers",
+};
+
+export default async function PizzaMenuPage() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 10 * 60 * 1000, // 10 minutes for cashier menu
+      },
     },
+  });
+
+  // Pre-fetch pizzas on server for menu
+  await queryClient.prefetchQuery({
+    queryKey: pizzaKeys.lists(),
+    queryFn: () => pizzaClientService.getPizzas(),
   });
 
   return (
