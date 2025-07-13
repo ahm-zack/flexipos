@@ -28,7 +28,7 @@ export function MiniPieManagementView() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [miniPieToEdit, setMiniPieToEdit] = useState<MiniPie | null>(null);
 
-  const { data: miniPies, isLoading, error } = useMiniPies();
+  const { data: miniPies, isLoading, error } = useMiniPies("admin");
   const deleteMiniPieMutation = useDeleteMiniPie();
 
   // Filter mini pies based on search term
@@ -55,7 +55,7 @@ export function MiniPieManagementView() {
     if (!miniPieToDelete) return;
 
     try {
-      await deleteMiniPieMutation.mutateAsync(miniPieToDelete);
+      await deleteMiniPieMutation.mutateAsync(miniPieToDelete.id);
       toast.success(`${miniPieToDelete.type} deleted successfully`);
       setDeleteDialogOpen(false);
       setMiniPieToDelete(null);

@@ -12,7 +12,7 @@ import type { MiniPie } from "@/lib/db/schema";
 export function MiniPieCashierView() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: miniPies, isLoading, error } = useMiniPies();
+  const { data: miniPies, isLoading, error } = useMiniPies("cashier");
 
   // Filter mini pies based on search term
   const filteredMiniPies =

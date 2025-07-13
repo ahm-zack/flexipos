@@ -15,5 +15,7 @@ export {
   useCreateMiniPie,
   useUpdateMiniPie,
   useDeleteMiniPie,
-  miniPieKeys,
 } from './hooks/use-mini-pies';
+
+// Query Keys
+export { miniPieKeys } from './queries/mini-pie-keys';
