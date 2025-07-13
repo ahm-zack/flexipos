@@ -2,10 +2,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function SandwichCardSkeleton() {
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden h-[480px] flex flex-col">
+    <div className="bg-card rounded-2xl shadow-lg overflow-hidden h-[480px] flex flex-col">
       {/* Image skeleton */}
-      <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex-shrink-0">
-        <Skeleton className="w-full h-full" />
+      <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex-shrink-0">
+        <Skeleton className="w-full h-full" rounded="" />
       </div>
 
       {/* Content skeleton */}
@@ -32,7 +32,7 @@ export function SandwichCardSkeleton() {
 
 export function SandwichGridSkeleton({ count = 6 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {Array.from({ length: count }).map((_, index) => (
         <SandwichCardSkeleton key={index} />
       ))}
