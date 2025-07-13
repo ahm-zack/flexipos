@@ -6,13 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SandwichGridSkeleton } from "@/components/ui/sandwich-skeleton";
 import { SandwichGrid } from "./sandwich-grid";
-import { useSearchStore } from "../hooks/use-sandwiches";
+import { useSandwiches } from "../hooks/use-sandwiches";
 import type { Sandwich } from "@/lib/db/schema";
 
 export function SandwichCashierView() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: sandwiches, isLoading, error } = useSearchStore("cashier");
+  const { data: sandwiches, isLoading, error } = useSandwiches("cashier");
 
   // Filter sandwiches based on search term
   const filteredSandwiches =

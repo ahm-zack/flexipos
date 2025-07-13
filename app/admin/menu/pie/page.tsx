@@ -1,23 +1,49 @@
-import { pieClientService } from "@/lib/supabase-queries/pie-client-service";
-import { PieCashierView } from "@/modules/pie-feature";
-import { pieKeys } from "@/modules/pie-feature/queries/pie-keys";
-import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient,
-} from "@tanstack/react-query";
+"use client";
+import { PieGridSkeleton } from "@/components/ui/pie-skeleton";
+import { PieGrid, usePies } from "@/modules/pie-feature";
+import { useSearchStore } from "../../../../hooks/useSearchStore";
+import { Button } from "@/components/ui/button";
+import MenuProductLayout from "../MenuProductLayout";
 
-export default async function PiePage() {
-  const queryClient = new QueryClient();
+export default function PieMenuPage() {
+  const { data: pies, isLoading, error } = usePies("cashier");
 
-  await queryClient.prefetchQuery({
-    queryKey: pieKeys.lists(),
-    queryFn: () => pieClientService.getPies(),
-  });
+  const { filterPies } = useSearchStore();
+  const filteredPies = filterPies(pies || []);
+
+  if (error) {
+    return (
+      <MenuProductLayout>
+        <div className="text-center py-12">
+          <div className="text-4xl sm:text-6xl mb-4">❌</div>
+          <h3 className="text-lg font-semibold text-red-600 mb-2">
+            Error loading pies
+          </h3>
+          <p className="text-sm sm:text-base text-muted-foreground mb-4">
+            {error.message}
+          </p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
+      </MenuProductLayout>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <MenuProductLayout>
+        <PieGridSkeleton count={6} />
+      </MenuProductLayout>
+    );
+  }
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <PieCashierView />
-    </HydrationBoundary>
+    <MenuProductLayout>
+      <PieGrid
+        pies={filteredPies}
+        showActions={false} // No edit/delete actions in cashier view
+        showCartActions={true} // Show cart actions in cashier view
+        isLoading={isLoading}
+      />
+    </MenuProductLayout>
   );
 }

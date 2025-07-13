@@ -10,7 +10,7 @@ export { SandwichCashierView } from './components/sandwich-cashier-view';
 
 // Hooks
 export {
-  useSearchStore as useSandwiches,
+  useSandwiches,
   useSandwich,
   useCreateSandwich,
   useUpdateSandwich,

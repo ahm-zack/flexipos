@@ -1,35 +1,49 @@
-import { MiniPieCashierView } from "@/modules/mini-pie-feature";
-import { miniPieKeys } from "@/modules/mini-pie-feature/queries/mini-pie-keys";
-import { miniPieClientService } from "@/lib/supabase-queries/mini-pie-client-service";
-import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient,
-} from "@tanstack/react-query";
+"use client";
+import { MiniPieGridSkeleton } from "@/components/ui/mini-pie-skeleton";
+import { MiniPieGrid, useMiniPies } from "@/modules/mini-pie-feature";
+import { useSearchStore } from "../../../../hooks/useSearchStore";
+import { Button } from "@/components/ui/button";
+import MenuProductLayout from "../MenuProductLayout";
 
-export default async function MiniPieMenuPage() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        // Match the cashier cache strategy + longer persistence
-        staleTime: 10 * 60 * 1000, // 10 minutes
-        gcTime: 30 * 60 * 1000, // 30 minutes
-        refetchOnWindowFocus: false, // Menu is more stable
-        refetchOnMount: false, // Don't refetch if data exists
-      },
-    },
-  });
+export default function MiniPieMenuPage() {
+  const { data: miniPies, isLoading, error } = useMiniPies("cashier");
 
-  await queryClient.prefetchQuery({
-    queryKey: miniPieKeys.lists(),
-    queryFn: () => miniPieClientService.getMiniPies(),
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
-  });
+  const { filterMiniPies } = useSearchStore();
+  const filteredMiniPies = filterMiniPies(miniPies || []);
+
+  if (error) {
+    return (
+      <MenuProductLayout>
+        <div className="text-center py-12">
+          <div className="text-4xl sm:text-6xl mb-4">❌</div>
+          <h3 className="text-lg font-semibold text-red-600 mb-2">
+            Error loading mini pies
+          </h3>
+          <p className="text-sm sm:text-base text-muted-foreground mb-4">
+            {error.message}
+          </p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
+      </MenuProductLayout>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <MenuProductLayout>
+        <MiniPieGridSkeleton count={6} />
+      </MenuProductLayout>
+    );
+  }
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <MiniPieCashierView />
-    </HydrationBoundary>
+    <MenuProductLayout>
+      <MiniPieGrid
+        miniPies={filteredMiniPies}
+        showActions={false} // No edit/delete actions in cashier view
+        showCartActions={true} // Show cart actions in cashier view
+        isLoading={isLoading}
+      />
+    </MenuProductLayout>
   );
 }

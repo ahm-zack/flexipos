@@ -10,19 +10,22 @@ import { pizzaKeys } from '../queries/pizza-keys';
 // Cache strategies for different contexts
 const CACHE_STRATEGIES = {
   ADMIN: {
-    staleTime: 2 * 60 * 1000, // 2 minutes (frequent changes)
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: true, // Admin needs fresh data
+    staleTime: 10 * 60 * 1000, // 10 minutes - longer for persistence
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep data longer
+    refetchOnWindowFocus: false, // Don't refetch when returning to page
+    refetchOnMount: false, // Don't refetch if data exists and not stale
   },
   CASHIER: {
     staleTime: 10 * 60 * 1000, // 10 minutes (less frequent changes)
     gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false, // Menu is more stable
+    refetchOnMount: false, // Don't refetch if data exists
   },
   CUSTOMER: {
     staleTime: 15 * 60 * 1000, // 15 minutes (very stable)
     gcTime: 60 * 60 * 1000, // 1 hour
     refetchOnWindowFocus: false, // Customer doesn't need real-time
+    refetchOnMount: false, // Don't refetch if data exists
   },
 } as const;
 
@@ -41,8 +44,8 @@ const createPizza = async (pizzaData: CreatePizza): Promise<Pizza> => {
   try {
     const processedData = {
       ...pizzaData,
-      priceWithVat: typeof pizzaData.priceWithVat === 'string' 
-        ? pizzaData.priceWithVat 
+      priceWithVat: typeof pizzaData.priceWithVat === 'string'
+        ? pizzaData.priceWithVat
         : pizzaData.priceWithVat.toString(),
     };
     const pizza = await pizzaClientService.createPizza(processedData);
@@ -65,7 +68,7 @@ const updatePizza = async ({ id, data }: { id: string; data: UpdatePizza }): Pro
       priceWithVat?: string;
       modifiers?: Modifier[];
     }> = {};
-    
+
     if (data.type !== undefined) processedData.type = data.type;
     if (data.nameAr !== undefined) processedData.nameAr = data.nameAr;
     if (data.nameEn !== undefined) processedData.nameEn = data.nameEn;
@@ -73,13 +76,13 @@ const updatePizza = async ({ id, data }: { id: string; data: UpdatePizza }): Pro
     if (data.imageUrl !== undefined) processedData.imageUrl = data.imageUrl;
     if (data.extras !== undefined) processedData.extras = data.extras;
     if (data.modifiers !== undefined) processedData.modifiers = data.modifiers;
-    
+
     if (data.priceWithVat !== undefined) {
-      processedData.priceWithVat = typeof data.priceWithVat === 'string' 
-        ? data.priceWithVat 
+      processedData.priceWithVat = typeof data.priceWithVat === 'string'
+        ? data.priceWithVat
         : data.priceWithVat.toString();
     }
-    
+
     const pizza = await pizzaClientService.updatePizza(id, processedData);
     return pizza;
   } catch (error) {
@@ -100,7 +103,7 @@ const deletePizza = async (id: string): Promise<void> => {
 // Context-aware pizza query hook
 export const usePizzas = (context: 'admin' | 'cashier' | 'customer' = 'admin') => {
   const config = CACHE_STRATEGIES[context.toUpperCase() as keyof typeof CACHE_STRATEGIES];
-  
+
   return useQuery({
     queryKey: pizzaKeys.lists(),
     queryFn: fetchPizzas,
@@ -111,7 +114,7 @@ export const usePizzas = (context: 'admin' | 'cashier' | 'customer' = 'admin') =
 
 export const useCreatePizza = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: createPizza,
     onSuccess: (newPizza) => {
@@ -120,10 +123,10 @@ export const useCreatePizza = () => {
         if (!old) return [newPizza];
         return [newPizza, ...old];
       });
-      
+
       // Also invalidate to ensure server consistency
       queryClient.invalidateQueries({ queryKey: pizzaKeys.lists() });
-      
+
       toast.success(`"${newPizza.nameEn}" created successfully! 🍕`);
     },
     onError: (error) => {
@@ -134,18 +137,18 @@ export const useCreatePizza = () => {
 
 export const useUpdatePizza = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: updatePizza,
     onSuccess: (updatedPizza) => {
       // Manual cache update for immediate feedback
       queryClient.setQueryData<Pizza[]>(pizzaKeys.lists(), (old) => {
         if (!old) return [updatedPizza];
-        return old.map(pizza => 
+        return old.map(pizza =>
           pizza.id === updatedPizza.id ? updatedPizza : pizza
         );
       });
-      
+
       queryClient.invalidateQueries({ queryKey: pizzaKeys.lists() });
       toast.success(`"${updatedPizza.nameEn}" updated successfully! 🍕`);
     },
@@ -157,7 +160,7 @@ export const useUpdatePizza = () => {
 
 export const useDeletePizza = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: deletePizza,
     onSuccess: (_, deletedId) => {
@@ -166,7 +169,7 @@ export const useDeletePizza = () => {
         if (!old) return [];
         return old.filter(pizza => pizza.id !== deletedId);
       });
-      
+
       queryClient.invalidateQueries({ queryKey: pizzaKeys.lists() });
       toast.success('Pizza deleted successfully! 🗑️');
     },
@@ -179,7 +182,7 @@ export const useDeletePizza = () => {
 // Manual refresh capability
 export const useRefreshPizzas = () => {
   const queryClient = useQueryClient();
-  
+
   return () => {
     queryClient.invalidateQueries({ queryKey: pizzaKeys.lists() });
     toast.info('Refreshing pizza data...');
@@ -189,14 +192,14 @@ export const useRefreshPizzas = () => {
 // Smart prefetching for better UX
 export const usePizzaPrefetch = () => {
   const queryClient = useQueryClient();
-  
+
   const prefetchPizza = (id: string) => {
     queryClient.prefetchQuery({
       queryKey: pizzaKeys.detail(id),
-      queryFn: () => pizzaClientService.getPizzaById(id), 
+      queryFn: () => pizzaClientService.getPizzaById(id),
       staleTime: 5 * 60 * 1000,
     });
   };
-  
+
   return { prefetchPizza };
 };

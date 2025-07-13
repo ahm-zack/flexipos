@@ -3,44 +3,47 @@ import { SandwichGridSkeleton } from "@/components/ui/sandwich-skeleton";
 import { SandwichGrid, useSandwiches } from "@/modules/sandwich-feature";
 import { useSearchStore } from "../../../../hooks/useSearchStore";
 import { Button } from "@/components/ui/button";
+import MenuProductLayout from "../MenuProductLayout";
 
 export default function SandwichMenuPage() {
-  const { data: sandwiches, isLoading, error } = useSandwiches();
+  const { data: sandwiches, isLoading, error } = useSandwiches("cashier");
 
-  const filterSandwiches = useSearchStore();
-  const filteredSandwiches = filterSandwiches.filterSandwiches(
-    sandwiches || []
-  );
+  const { filterSandwiches } = useSearchStore();
+  const filteredSandwiches = filterSandwiches(sandwiches || []);
 
   if (error) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="max-w-full mx-auto">
-          <div className="text-center py-12">
-            <div className="text-4xl sm:text-6xl mb-4">❌</div>
-            <h3 className="text-lg font-semibold text-red-600 mb-2">
-              Error loading sandwiches
-            </h3>
-            <p className="text-sm sm:text-base text-muted-foreground mb-4">
-              {error.message}
-            </p>
-            <Button onClick={() => window.location.reload()}>Try Again</Button>
-          </div>
+      <MenuProductLayout>
+        <div className="text-center py-12">
+          <div className="text-4xl sm:text-6xl mb-4">❌</div>
+          <h3 className="text-lg font-semibold text-red-600 mb-2">
+            Error loading sandwiches
+          </h3>
+          <p className="text-sm sm:text-base text-muted-foreground mb-4">
+            {error.message}
+          </p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
         </div>
-      </div>
+      </MenuProductLayout>
     );
   }
 
   if (isLoading) {
-    return <SandwichGridSkeleton count={6} />;
+    return (
+      <MenuProductLayout>
+        <SandwichGridSkeleton count={6} />
+      </MenuProductLayout>
+    );
   }
 
   return (
-    <SandwichGrid
-      sandwiches={filteredSandwiches}
-      showActions={false} // No edit/delete actions in cashier view
-      showCartActions={true} // Show cart actions in cashier view
-      isLoading={isLoading}
-    />
+    <MenuProductLayout>
+      <SandwichGrid
+        sandwiches={filteredSandwiches}
+        showActions={false} // No edit/delete actions in cashier view
+        showCartActions={true} // Show cart actions in cashier view
+        isLoading={isLoading}
+      />
+    </MenuProductLayout>
   );
 }

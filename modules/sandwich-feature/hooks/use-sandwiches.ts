@@ -78,7 +78,7 @@ const deleteSandwich = async (id: string): Promise<void> => {
 };
 
 // Context-aware sandwich fetching hook
-export function useSearchStore(context: 'admin' | 'cashier' | 'customer' = 'admin') {
+export function useSandwiches(context: 'admin' | 'cashier' | 'customer' = 'admin') {
   const strategy = CACHE_STRATEGIES[context.toUpperCase() as keyof typeof CACHE_STRATEGIES];
 
   return useQuery({
