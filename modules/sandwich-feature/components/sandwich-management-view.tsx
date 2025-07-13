@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { SandwichGrid } from "./sandwich-grid";
 import { CreateSandwichForm } from "./create-sandwich-form";
 import { EditSandwichForm } from "./edit-sandwich-form";
-import { useSandwiches, useDeleteSandwich } from "../hooks/use-sandwiches";
+import { useSearchStore, useDeleteSandwich } from "../hooks/use-sandwiches";
 import type { Sandwich } from "@/lib/db/schema";
 
 export function SandwichManagementView() {
@@ -30,7 +30,7 @@ export function SandwichManagementView() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [sandwichToEdit, setSandwichToEdit] = useState<Sandwich | null>(null);
 
-  const { data: sandwiches, isLoading, error } = useSandwiches("admin");
+  const { data: sandwiches, isLoading, error } = useSearchStore("admin");
   const deleteSandwichMutation = useDeleteSandwich();
 
   // Filter sandwiches based on search term

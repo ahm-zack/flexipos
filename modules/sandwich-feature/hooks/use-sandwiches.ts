@@ -78,9 +78,9 @@ const deleteSandwich = async (id: string): Promise<void> => {
 };
 
 // Context-aware sandwich fetching hook
-export function useSandwiches(context: 'admin' | 'cashier' | 'customer' = 'admin') {
+export function useSearchStore(context: 'admin' | 'cashier' | 'customer' = 'admin') {
   const strategy = CACHE_STRATEGIES[context.toUpperCase() as keyof typeof CACHE_STRATEGIES];
-  
+
   return useQuery({
     queryKey: sandwichKeys.lists(),
     queryFn: fetchSandwiches,
@@ -101,7 +101,7 @@ export function useSandwiches(context: 'admin' | 'cashier' | 'customer' = 'admin
 // Manual refresh hook
 export function useRefreshSandwiches() {
   const queryClient = useQueryClient();
-  
+
   return () => {
     queryClient.invalidateQueries({ queryKey: sandwichKeys.lists() });
   };
@@ -126,7 +126,7 @@ export function useSandwich(id: string) {
 // Create sandwich mutation
 export function useCreateSandwich() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: createSandwich,
     onSuccess: () => {
@@ -142,7 +142,7 @@ export function useCreateSandwich() {
 // Update sandwich mutation  
 export function useUpdateSandwich() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: updateSandwich,
     onSuccess: (_, { id }) => {
@@ -159,7 +159,7 @@ export function useUpdateSandwich() {
 // Delete sandwich mutation
 export function useDeleteSandwich() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: deleteSandwich,
     onSuccess: () => {

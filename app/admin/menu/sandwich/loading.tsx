@@ -1,3 +1,6 @@
+"use client";
+import { SandwichGridSkeleton } from "@/components/ui/sandwich-skeleton";
+
 export default function Loading() {
-  return <pre>loading...</pre>;
+  return <SandwichGridSkeleton count={6} />;
 }
