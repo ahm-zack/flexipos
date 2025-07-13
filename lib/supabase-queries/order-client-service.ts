@@ -1,0 +1,400 @@
+import { createClient } from '@/utils/supabase/client';
+import type {
+    Order,
+    CanceledOrder,
+    ModifiedOrder,
+    OrderItem,
+} from '@/lib/orders/db-schema';
+import type { OrderFilters } from '@/lib/order-service';
+import type { Json } from '@/database.types';
+import type { CartItem } from '@/lib/orders/schemas';
+
+export const supabase = createClient();
+
+// Type transformations
+const transformCartItemsToOrderItems = (cartItems: CartItem[]): OrderItem[] => {
+    return cartItems.map(cartItem => {
+        // Map category to type, handle variations
+        let type: 'pizza' | 'pie' | 'sandwich' | 'mini_pie' = 'pizza'; // default
+        const category = cartItem.category.toLowerCase();
+
+        if (category.includes('pizza')) type = 'pizza';
+        else if (category.includes('pie') && category.includes('mini')) type = 'mini_pie';
+        else if (category.includes('pie')) type = 'pie';
+        else if (category.includes('sandwich')) type = 'sandwich';
+
+        const basePrice = cartItem.price || 0;
+        const modifiersTotal = cartItem.modifiersTotal || 0;
+        const unitPrice = basePrice + modifiersTotal;
+        const quantity = cartItem.quantity || 1;
+
+        return {
+            id: cartItem.id,
+            type,
+            name: cartItem.name,
+            nameAr: cartItem.name, // Use same name for now, or get from item data
+            quantity,
+            unitPrice,
+            totalPrice: unitPrice * quantity,
+            details: {
+                description: cartItem.description,
+                image: cartItem.image,
+                modifiers: cartItem.modifiers,
+                category: cartItem.category,
+            },
+        };
+    });
+};
+
+const transformSupabaseToOrder = (row: Record<string, unknown>): Order => ({
+    id: row.id as string,
+    orderNumber: row.order_number as string,
+    customerName: row.customer_name as string | null,
+    items: (row.items as OrderItem[]) || [],
+    totalAmount: typeof row.total_amount === 'string' ? row.total_amount : (row.total_amount as number).toString(),
+    paymentMethod: row.payment_method as 'cash' | 'card' | 'mixed',
+    status: row.status === 'pending' ? 'completed' : row.status as 'completed' | 'canceled' | 'modified', // Handle pending status
+    createdAt: new Date(row.created_at as string),
+    updatedAt: new Date(row.updated_at as string),
+    createdBy: row.created_by as string,
+});
+
+const transformSupabaseToCanceledOrder = (row: Record<string, unknown>): CanceledOrder => ({
+    id: row.id as string,
+    originalOrderId: row.original_order_id as string,
+    canceledAt: new Date(row.canceled_at as string),
+    canceledBy: row.canceled_by as string,
+    reason: row.reason as string | null,
+    orderData: row.order_data as Order,
+});
+
+const transformSupabaseToModifiedOrder = (row: Record<string, unknown>): ModifiedOrder => ({
+    id: row.id as string,
+    originalOrderId: row.original_order_id as string,
+    modifiedAt: new Date(row.modified_at as string),
+    modifiedBy: row.modified_by as string,
+    modificationType: row.modification_type as 'item_added' | 'item_removed' | 'quantity_changed' | 'item_replaced' | 'multiple_changes',
+    originalData: row.original_data as Order,
+    newData: row.new_data as Order,
+});
+
+// Generate order number helper
+const generateOrderNumber = async (): Promise<string> => {
+    // Get the latest order number to determine the next sequence
+    const { data, error } = await supabase
+        .from('orders')
+        .select('order_number')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+    if (error) {
+        // If there's an error or no orders exist, start with ORD-0001
+        return 'ORD-0001';
+    }
+
+    if (!data || data.length === 0) {
+        // No orders exist yet, start with ORD-0001
+        return 'ORD-0001';
+    }
+
+    const lastOrderNumber = data[0].order_number;
+
+    // Extract the number from the last order number (e.g., "ORD-0001" -> 1)
+    const match = lastOrderNumber.match(/ORD-(\d+)/);
+    if (!match) {
+        // If format doesn't match, start fresh
+        return 'ORD-0001';
+    }
+
+    const lastNumber = parseInt(match[1], 10);
+    const nextNumber = lastNumber + 1;
+
+    // Format with leading zeros (4 digits)
+    return `ORD-${nextNumber.toString().padStart(4, '0')}`;
+};
+
+export interface OrdersListResult {
+    orders: Array<Order & { cashierName?: string }>;
+    total: number;
+    page: number;
+    limit: number;
+}
+
+export interface OrderHistoryResult {
+    order: Order & { cashierName?: string };
+    cancellations: CanceledOrder[];
+    modifications: ModifiedOrder[];
+}
+
+export interface CreateOrderData {
+    customerName?: string;
+    items: CartItem[]; // Accept CartItem[] for creating orders
+    totalAmount: number;
+    paymentMethod: 'cash' | 'card' | 'mixed';
+    createdBy: string;
+}
+
+export interface ModifyOrderData {
+    modifiedBy: string;
+    modificationType: 'item_added' | 'item_removed' | 'quantity_changed' | 'item_replaced' | 'multiple_changes';
+    customerName?: string;
+    items?: OrderItem[];
+    totalAmount?: number;
+    paymentMethod?: 'cash' | 'card' | 'mixed';
+    reason?: string;
+}
+
+export const orderClientService = {
+    // Get orders with filters and pagination
+    async getOrders(filters: OrderFilters = {}, page = 1, limit = 10): Promise<OrdersListResult> {
+        let query = supabase
+            .from('orders')
+            .select(`
+        *,
+        cashier:users!orders_created_by_fkey(name)
+      `, { count: 'exact' })
+            .order('created_at', { ascending: false });
+
+        // Apply filters
+        if (filters.status) query = query.eq('status', filters.status);
+        if (filters.paymentMethod) query = query.eq('payment_method', filters.paymentMethod);
+        if (filters.customerName) query = query.ilike('customer_name', `%${filters.customerName}%`);
+        if (filters.orderNumber) query = query.ilike('order_number', `%${filters.orderNumber}%`);
+        if (filters.createdBy) query = query.eq('created_by', filters.createdBy);
+        if (filters.dateFrom) query = query.gte('created_at', filters.dateFrom);
+        if (filters.dateTo) query = query.lte('created_at', filters.dateTo);
+
+        // Apply pagination
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
+
+        const { data, error, count } = await query;
+        if (error) throw new Error(`Failed to fetch orders: ${error.message}`);
+
+        // Transform data
+        const orders = (data || []).map(row => ({
+            ...transformSupabaseToOrder(row),
+            cashierName: row.cashier?.name,
+        }));
+
+        return {
+            orders,
+            total: count || 0,
+            page,
+            limit,
+        };
+    },
+
+    // Get single order by ID
+    async getOrderById(id: string): Promise<Order & { cashierName?: string }> {
+        const { data, error } = await supabase
+            .from('orders')
+            .select(`
+        *,
+        cashier:users!orders_created_by_fkey(name)
+      `)
+            .eq('id', id)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') throw new Error('Order not found');
+            throw new Error(`Failed to fetch order: ${error.message}`);
+        }
+
+        return {
+            ...transformSupabaseToOrder(data),
+            cashierName: data.cashier?.name,
+        };
+    },
+
+    // Create new order
+    async createOrder(orderData: CreateOrderData): Promise<Order> {
+        // Generate order number
+        const orderNumber = await generateOrderNumber();
+
+        // Convert cart items to order items format
+        // This ensures items have the correct structure (unitPrice, totalPrice, etc.)
+        // that the UI components (especially restaurant-receipt) expect
+        const orderItems = transformCartItemsToOrderItems(orderData.items);
+
+        const { data, error } = await supabase
+            .from('orders')
+            .insert({
+                order_number: orderNumber,
+                customer_name: orderData.customerName || null,
+                items: orderItems as unknown as Json,
+                total_amount: orderData.totalAmount,
+                payment_method: orderData.paymentMethod,
+                created_by: orderData.createdBy,
+            })
+            .select()
+            .single();
+
+        if (error) throw new Error(`Failed to create order: ${error.message}`);
+        return transformSupabaseToOrder(data);
+    },
+
+    // Update order
+    async updateOrder(id: string, updateData: Partial<Order>): Promise<Order> {
+        const updateFields: Record<string, unknown> = {};
+
+        if (updateData.customerName !== undefined) updateFields.customer_name = updateData.customerName;
+        if (updateData.items !== undefined) updateFields.items = updateData.items as unknown as Json;
+        if (updateData.totalAmount !== undefined) updateFields.total_amount = typeof updateData.totalAmount === 'string' ? parseFloat(updateData.totalAmount) : updateData.totalAmount;
+        if (updateData.status !== undefined) updateFields.status = updateData.status;
+        if (updateData.paymentMethod !== undefined) updateFields.payment_method = updateData.paymentMethod;
+
+        updateFields.updated_at = new Date().toISOString();
+
+        const { data, error } = await supabase
+            .from('orders')
+            .update(updateFields)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw new Error(`Failed to update order: ${error.message}`);
+        return transformSupabaseToOrder(data);
+    },
+
+    // Delete order (soft delete by updating status)
+    async deleteOrder(id: string): Promise<void> {
+        const { error } = await supabase
+            .from('orders')
+            .update({
+                status: 'canceled',
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', id);
+
+        if (error) throw new Error(`Failed to delete order: ${error.message}`);
+    },
+
+    // Cancel order
+    async cancelOrder(id: string, canceledBy: string, reason?: string): Promise<CanceledOrder> {
+        // First get the original order
+        const originalOrder = await this.getOrderById(id);
+
+        // Convert order to JSON format for storage
+        const orderDataForStorage = JSON.parse(JSON.stringify(originalOrder));
+
+        // Insert into canceled_orders table
+        const { data, error } = await supabase
+            .from('canceled_orders')
+            .insert({
+                original_order_id: id,
+                canceled_by: canceledBy,
+                reason,
+                order_data: orderDataForStorage,
+            })
+            .select()
+            .single();
+
+        if (error) throw new Error(`Failed to cancel order: ${error.message}`);
+
+        // Update original order status
+        await this.updateOrder(id, { status: 'canceled' });
+
+        return transformSupabaseToCanceledOrder(data);
+    },
+
+    // Modify order
+    async modifyOrder(id: string, modificationData: ModifyOrderData): Promise<ModifiedOrder> {
+        // First get the original order
+        const originalOrder = await this.getOrderById(id);
+
+        // Create new order data with modifications
+        const newOrderData = {
+            ...originalOrder,
+            customerName: modificationData.customerName ?? originalOrder.customerName,
+            items: modificationData.items ?? originalOrder.items,
+            totalAmount: modificationData.totalAmount ?? originalOrder.totalAmount,
+            paymentMethod: modificationData.paymentMethod ?? originalOrder.paymentMethod,
+        };
+
+        // Convert orders to JSON format for storage
+        const originalDataForStorage = JSON.parse(JSON.stringify(originalOrder));
+        const newDataForStorage = JSON.parse(JSON.stringify(newOrderData));
+
+        // Insert into modified_orders table
+        const { data, error } = await supabase
+            .from('modified_orders')
+            .insert({
+                original_order_id: id,
+                modified_by: modificationData.modifiedBy,
+                modification_type: modificationData.modificationType,
+                original_data: originalDataForStorage,
+                new_data: newDataForStorage,
+            })
+            .select()
+            .single();
+
+        if (error) throw new Error(`Failed to modify order: ${error.message}`);
+
+        // Update the original order with new data
+        await this.updateOrder(id, {
+            customerName: newOrderData.customerName,
+            items: newOrderData.items,
+            totalAmount: typeof newOrderData.totalAmount === 'string' ? newOrderData.totalAmount : newOrderData.totalAmount.toString(),
+            paymentMethod: newOrderData.paymentMethod,
+            status: 'modified',
+        });
+
+        return transformSupabaseToModifiedOrder(data);
+    },
+
+    // Get order history (order + cancellations + modifications)
+    async getOrderHistory(id: string): Promise<OrderHistoryResult> {
+        // Get the main order
+        const order = await this.getOrderById(id);
+
+        // Get cancellations for this order
+        const { data: cancellationData, error: cancellationError } = await supabase
+            .from('canceled_orders')
+            .select('*')
+            .eq('original_order_id', id)
+            .order('canceled_at', { ascending: false });
+
+        if (cancellationError) throw new Error(`Failed to fetch order cancellations: ${cancellationError.message}`);
+
+        // Get modifications for this order
+        const { data: modificationData, error: modificationError } = await supabase
+            .from('modified_orders')
+            .select('*')
+            .eq('original_order_id', id)
+            .order('modified_at', { ascending: false });
+
+        if (modificationError) throw new Error(`Failed to fetch order modifications: ${modificationError.message}`);
+
+        return {
+            order,
+            cancellations: (cancellationData || []).map(transformSupabaseToCanceledOrder),
+            modifications: (modificationData || []).map(transformSupabaseToModifiedOrder),
+        };
+    },
+
+    // Get all canceled orders
+    async getCanceledOrders(): Promise<CanceledOrder[]> {
+        const { data, error } = await supabase
+            .from('canceled_orders')
+            .select('*')
+            .order('canceled_at', { ascending: false });
+
+        if (error) throw new Error(`Failed to fetch canceled orders: ${error.message}`);
+
+        return (data || []).map(transformSupabaseToCanceledOrder);
+    },
+
+    // Get all modified orders
+    async getModifiedOrders(): Promise<ModifiedOrder[]> {
+        const { data, error } = await supabase
+            .from('modified_orders')
+            .select('*')
+            .order('modified_at', { ascending: false });
+
+        if (error) throw new Error(`Failed to fetch modified orders: ${error.message}`);
+
+        return (data || []).map(transformSupabaseToModifiedOrder);
+    },
+};

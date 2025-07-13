@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { orderKeys } from "@/modules/orders-feature/hooks/use-orders";
 import { Order, OrderItem } from "@/lib/orders";
+import { orderClientService } from "@/lib/supabase-queries/order-client-service";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 interface EditOrderDialogProps {
   order: Order | null;
@@ -37,6 +39,7 @@ export function EditOrderDialog({
   const [items, setItems] = useState<EditableOrderItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
+  const { user } = useCurrentUser();
 
   // Reset items when order changes
   useEffect(() => {
@@ -74,48 +77,29 @@ export function EditOrderDialog({
   };
 
   const handleSave = async () => {
-    if (!order) return;
+    if (!order || !user) return;
 
     setIsSubmitting(true);
 
     try {
       // If no items remain, cancel the order
       if (items.length === 0) {
-        const cancelResponse = await fetch(`/api/orders/${order.id}/cancel`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            reason: "All items removed during edit",
-            paymentMethod: order.paymentMethod,
-          }),
-        });
-
-        if (!cancelResponse.ok) {
-          throw new Error("Failed to cancel order");
-        }
-
+        await orderClientService.cancelOrder(
+          order.id,
+          user.id,
+          "All items removed during edit"
+        );
         toast.success("Order canceled - all items were removed");
       } else {
         // Modify the order with remaining items
-        const modifyResponse = await fetch(`/api/orders/${order.id}/modify`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            items,
-            totalAmount: calculateTotal(),
-            reason: "Order modified via edit dialog",
-            paymentMethod: order.paymentMethod,
-          }),
+        await orderClientService.modifyOrder(order.id, {
+          modifiedBy: user.id,
+          modificationType: "multiple_changes",
+          items: items,
+          totalAmount: calculateTotal(),
+          paymentMethod: order.paymentMethod,
+          reason: "Order modified via edit dialog",
         });
-
-        if (!modifyResponse.ok) {
-          throw new Error("Failed to modify order");
-        }
-
         toast.success("Order modified successfully");
       }
 

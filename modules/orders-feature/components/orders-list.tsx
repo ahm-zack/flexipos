@@ -27,6 +27,33 @@ import React, { useState, useMemo } from "react";
 import { useOrders } from "../hooks/use-orders";
 import { Dialog } from "@/components/ui/dialog";
 import { RestaurantReceipt } from "@/components/restaurant-receipt";
+import type { ApiOrderResponse } from "@/lib/order-service";
+
+// Helper function to convert new Order type to ApiOrderResponse format
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const convertOrderToApiOrderResponse = (order: any): ApiOrderResponse => {
+  return {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    customerName: order.customerName || null,
+    items: order.items,
+    totalAmount:
+      typeof order.totalAmount === "string"
+        ? parseFloat(order.totalAmount)
+        : order.totalAmount,
+    paymentMethod: order.paymentMethod,
+    status: order.status,
+    createdAt:
+      order.createdAt instanceof Date
+        ? order.createdAt.toISOString()
+        : order.createdAt,
+    updatedAt:
+      order.updatedAt instanceof Date
+        ? order.updatedAt.toISOString()
+        : order.updatedAt,
+    createdBy: order.createdBy,
+  };
+};
 
 // Type for saved modifiers in order items
 interface SavedModifier {
@@ -264,7 +291,9 @@ export function OrdersList() {
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleEditOrder(order);
+                              handleEditOrder(
+                                convertOrderToApiOrderResponse(order)
+                              );
                             }}
                             className="cursor-pointer"
                           >
@@ -294,7 +323,7 @@ export function OrdersList() {
                     <span className="text-lg font-bold flex items-center gap-1 transition-transform duration-200 group-hover:scale-105">
                       <SaudiRiyalSymbol size={16} />
                       <span className="text-green-600">
-                        {order.totalAmount.toFixed(2)}
+                        {parseFloat(order.totalAmount as string).toFixed(2)}
                       </span>
                     </span>
                   </div>
@@ -359,7 +388,7 @@ export function OrdersList() {
                     </div>
                   </div>
 
-                  {order.items && order.items.length > 0 && (
+                  {Array.isArray(order.items) && order.items.length > 0 && (
                     <div className="pt-2 border-t">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-muted-foreground">
@@ -373,64 +402,67 @@ export function OrdersList() {
                         {(expandedOrders.has(order.id)
                           ? order.items
                           : order.items.slice(0, 2)
-                        ).map((item, index) => (
-                          <div
-                            key={index}
-                            className="space-y-1 animate-in fade-in-0 duration-200"
-                          >
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-foreground truncate flex-1">
-                                {item.name}
-                              </span>
-                              <span className="text-muted-foreground ml-2">
-                                {item.quantity}x
-                              </span>
-                            </div>
-                            {/* Display modifiers if they exist */}
-                            {item.details?.modifiers &&
-                              item.details.modifiers.length > 0 && (
-                                <div className="space-y-0.5">
-                                  {item.details.modifiers.map(
-                                    (
-                                      modifier: SavedModifier,
-                                      modIndex: number
-                                    ) => (
-                                      <div
-                                        key={modIndex}
-                                        className="flex items-center justify-between text-xs"
-                                      >
-                                        <span className="text-muted-foreground italic">
-                                          {modifier.type === "extra"
-                                            ? "+ "
-                                            : "- "}
-                                          {modifier.name}
-                                        </span>
-                                        {modifier.type === "extra" &&
-                                          modifier.price > 0 && (
-                                            <span className="text-muted-foreground text-xs flex items-center gap-0.5">
-                                              +<SaudiRiyalSymbol size={10} />
-                                              {modifier.price.toFixed(2)}
-                                            </span>
-                                          )}
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              )}
-                          </div>
-                        ))}
-                        {order.items.length > 2 && (
-                          <div className="text-xs pt-1">
-                            <button
-                              onClick={() => toggleOrderExpansion(order.id)}
-                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded transition-colors duration-150"
+                        )
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          .map((item: any, index: number) => (
+                            <div
+                              key={index}
+                              className="space-y-1 animate-in fade-in-0 duration-200"
                             >
-                              {expandedOrders.has(order.id)
-                                ? "Show less"
-                                : `+${order.items.length - 2} more`}
-                            </button>
-                          </div>
-                        )}
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-foreground truncate flex-1">
+                                  {item.name}
+                                </span>
+                                <span className="text-muted-foreground ml-2">
+                                  {item.quantity}x
+                                </span>
+                              </div>
+                              {/* Display modifiers if they exist */}
+                              {item.details?.modifiers &&
+                                item.details.modifiers.length > 0 && (
+                                  <div className="space-y-0.5">
+                                    {item.details.modifiers.map(
+                                      (
+                                        modifier: SavedModifier,
+                                        modIndex: number
+                                      ) => (
+                                        <div
+                                          key={modIndex}
+                                          className="flex items-center justify-between text-xs"
+                                        >
+                                          <span className="text-muted-foreground italic">
+                                            {modifier.type === "extra"
+                                              ? "+ "
+                                              : "- "}
+                                            {modifier.name}
+                                          </span>
+                                          {modifier.type === "extra" &&
+                                            modifier.price > 0 && (
+                                              <span className="text-muted-foreground text-xs flex items-center gap-0.5">
+                                                +<SaudiRiyalSymbol size={10} />
+                                                {modifier.price.toFixed(2)}
+                                              </span>
+                                            )}
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                )}
+                            </div>
+                          ))}
+                        {Array.isArray(order.items) &&
+                          order.items.length > 2 && (
+                            <div className="text-xs pt-1">
+                              <button
+                                onClick={() => toggleOrderExpansion(order.id)}
+                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded transition-colors duration-150"
+                              >
+                                {expandedOrders.has(order.id)
+                                  ? "Show less"
+                                  : `+${order.items.length - 2} more`}
+                              </button>
+                            </div>
+                          )}
                       </div>
                     </div>
                   )}
@@ -487,7 +519,9 @@ export function OrdersList() {
       <Dialog open={!!printingOrderId} onOpenChange={handleClosePrint}>
         {printingOrderId && printOrderData && (
           <RestaurantReceipt
-            order={convertToOrder(printOrderData)}
+            order={convertToOrder(
+              convertOrderToApiOrderResponse(printOrderData)
+            )}
             onClose={handleClosePrint}
           />
         )}

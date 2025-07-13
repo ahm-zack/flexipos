@@ -1,19 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { 
-  ApiOrder, 
-  ApiOrderResponse, 
-  OrdersListResult,
-  ApiCanceledOrder,
-  ApiModifiedOrder,
-  OrderFilters 
-} from '@/lib/order-service';
+import { orderClientService, type OrdersListResult, type OrderHistoryResult } from '@/lib/supabase-queries/order-client-service';
+import type {
+  Order,
+  CanceledOrder,
+  ModifiedOrder
+} from '@/lib/orders/db-schema';
+import type { OrderFilters } from '@/lib/order-service';
 import type { CreateOrder, OrderItem } from '@/lib/orders';
 
 // Query keys
 export const orderKeys = {
   all: ['orders'] as const,
   lists: () => [...orderKeys.all, 'list'] as const,
-  list: (filters: OrderFilters, page?: number, limit?: number) => 
+  list: (filters: OrderFilters, page?: number, limit?: number) =>
     [...orderKeys.lists(), { filters, page, limit }] as const,
   detail: (id: string) => [...orderKeys.all, 'detail', id] as const,
   history: (id: string) => [...orderKeys.all, 'history', id] as const,
@@ -21,114 +20,46 @@ export const orderKeys = {
   modified: () => [...orderKeys.all, 'modified'] as const,
 };
 
-// API functions
+// Client service functions
 const fetchOrders = async (
-  filters: OrderFilters = {}, 
-  page: number = 1, 
+  filters: OrderFilters = {},
+  page: number = 1,
   limit: number = 10
 ): Promise<OrdersListResult> => {
-  const searchParams = new URLSearchParams();
-  
-  if (page) searchParams.append('page', page.toString());
-  if (limit) searchParams.append('limit', limit.toString());
-  if (filters.status) searchParams.append('status', filters.status);
-  if (filters.createdBy) searchParams.append('createdBy', filters.createdBy);
-  if (filters.customerName) searchParams.append('customerName', filters.customerName);
-  if (filters.orderNumber) searchParams.append('orderNumber', filters.orderNumber);
-  if (filters.dateFrom) searchParams.append('dateFrom', filters.dateFrom);
-  if (filters.dateTo) searchParams.append('dateTo', filters.dateTo);
-  if (filters.paymentMethod) searchParams.append('paymentMethod', filters.paymentMethod);
-
-  const response = await fetch(`/api/orders?${searchParams.toString()}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch orders');
-  }
-  const data = await response.json();
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to fetch orders');
-  }
-  return data.data;
+  return await orderClientService.getOrders(filters, page, limit);
 };
 
-const fetchOrderById = async (id: string): Promise<ApiOrderResponse> => {
-  const response = await fetch(`/api/orders/${id}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch order');
-  }
-  const data = await response.json();
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to fetch order');
-  }
-  return data.data;
+const fetchOrderById = async (id: string): Promise<Order & { cashierName?: string }> => {
+  return await orderClientService.getOrderById(id);
 };
 
-const createOrder = async (orderData: CreateOrder): Promise<ApiOrder> => {
-  const response = await fetch('/api/orders', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(orderData),
-  });
-  
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.error || `Failed to create order (${response.status})`);
-  }
-  
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to create order');
-  }
-  
-  return data.data;
+const createOrder = async (orderData: CreateOrder): Promise<Order> => {
+  return await orderClientService.createOrder(orderData);
 };
 
-const updateOrder = async ({ 
-  id, 
-  data 
-}: { 
-  id: string; 
+const updateOrder = async ({
+  id,
+  data
+}: {
+  id: string;
   data: {
     customerName?: string;
     items?: OrderItem[];
     totalAmount?: number;
     status?: 'completed' | 'canceled' | 'modified';
   }
-}): Promise<ApiOrder> => {
-  const response = await fetch(`/api/orders/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to update order');
-  }
-  
-  const result = await response.json();
-  if (!result.success) {
-    throw new Error(result.error || 'Failed to update order');
-  }
-  
-  return result.data;
+}): Promise<Order> => {
+  const updateData: Partial<Order> = {};
+  if (data.customerName !== undefined) updateData.customerName = data.customerName;
+  if (data.items !== undefined) updateData.items = data.items;
+  if (data.totalAmount !== undefined) updateData.totalAmount = data.totalAmount.toString();
+  if (data.status !== undefined) updateData.status = data.status;
+
+  return await orderClientService.updateOrder(id, updateData);
 };
 
 const deleteOrder = async (id: string): Promise<void> => {
-  const response = await fetch(`/api/orders/${id}`, {
-    method: 'DELETE',
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to delete order');
-  }
-  
-  const data = await response.json();
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to delete order');
-  }
+  return await orderClientService.deleteOrder(id);
 };
 
 const cancelOrder = async ({
@@ -139,25 +70,8 @@ const cancelOrder = async ({
   id: string;
   canceledBy: string;
   reason?: string;
-}): Promise<ApiCanceledOrder> => {
-  const response = await fetch(`/api/orders/${id}/cancel`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ canceledBy, reason }),
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to cancel order');
-  }
-  
-  const data = await response.json();
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to cancel order');
-  }
-  
-  return data.data;
+}): Promise<CanceledOrder> => {
+  return await orderClientService.cancelOrder(id, canceledBy, reason);
 };
 
 const modifyOrder = async ({
@@ -174,77 +88,32 @@ const modifyOrder = async ({
   customerName?: string;
   items?: OrderItem[];
   totalAmount?: number;
-}): Promise<ApiModifiedOrder> => {
-  const response = await fetch(`/api/orders/${id}/modify`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      modifiedBy,
-      modificationType,
-      customerName,
-      items,
-      totalAmount,
-    }),
+}): Promise<ModifiedOrder> => {
+  return await orderClientService.modifyOrder(id, {
+    modifiedBy,
+    modificationType,
+    customerName,
+    items,
+    totalAmount,
   });
-  
-  if (!response.ok) {
-    throw new Error('Failed to modify order');
-  }
-  
-  const data = await response.json();
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to modify order');
-  }
-  
-  return data.data;
 };
 
-const fetchOrderHistory = async (id: string): Promise<{
-  order: ApiOrderResponse;
-  cancellations: ApiCanceledOrder[];
-  modifications: ApiModifiedOrder[];
-}> => {
-  const response = await fetch(`/api/orders/${id}/history`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch order history');
-  }
-  const data = await response.json();
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to fetch order history');
-  }
-  return data.data;
+const fetchOrderHistory = async (id: string): Promise<OrderHistoryResult> => {
+  return await orderClientService.getOrderHistory(id);
 };
 
-const fetchCanceledOrders = async (): Promise<ApiCanceledOrder[]> => {
-  const response = await fetch('/api/orders/canceled');
-  if (!response.ok) {
-    throw new Error('Failed to fetch canceled orders');
-  }
-  const data = await response.json();
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to fetch canceled orders');
-  }
-  return data.data;
+const fetchCanceledOrders = async (): Promise<CanceledOrder[]> => {
+  return await orderClientService.getCanceledOrders();
 };
 
-const fetchModifiedOrders = async (): Promise<ApiModifiedOrder[]> => {
-  const response = await fetch('/api/orders/modified');
-  if (!response.ok) {
-    throw new Error('Failed to fetch modified orders');
-  }
-  const data = await response.json();
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to fetch modified orders');
-  }
-  return data.data;
+const fetchModifiedOrders = async (): Promise<ModifiedOrder[]> => {
+  return await orderClientService.getModifiedOrders();
 };
 
 // Hooks
 export const useOrders = (
-  filters: OrderFilters & { activeFiltersKey?: string } = {}, 
-  page: number = 1, 
+  filters: OrderFilters & { activeFiltersKey?: string } = {},
+  page: number = 1,
   limit: number = 10
 ) => {
   // Add a serializable key for activeFilters if present
@@ -295,7 +164,7 @@ export const useModifiedOrders = () => {
 
 export const useCreateOrder = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: createOrder,
     onSuccess: () => {
@@ -306,7 +175,7 @@ export const useCreateOrder = () => {
 
 export const useUpdateOrder = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: updateOrder,
     onSuccess: (data, variables) => {
@@ -319,7 +188,7 @@ export const useUpdateOrder = () => {
 
 export const useDeleteOrder = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: deleteOrder,
     onSuccess: () => {
@@ -330,7 +199,7 @@ export const useDeleteOrder = () => {
 
 export const useCancelOrder = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: cancelOrder,
     onSuccess: (data, variables) => {
@@ -344,7 +213,7 @@ export const useCancelOrder = () => {
 
 export const useModifyOrder = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: modifyOrder,
     onSuccess: (data, variables) => {

@@ -1,4 +1,4 @@
-import { orderService } from "@/lib/order-service";
+import { orderClientService } from "@/lib/supabase-queries/order-client-service";
 import { OrdersList } from "@/modules/orders-feature/components/orders-list";
 import { OrdersProvider } from "@/modules/orders-feature/contexts/orders-context";
 import { orderKeys } from "@/modules/orders-feature/hooks/use-orders";
@@ -15,11 +15,7 @@ export default async function OrdersPage() {
   await queryClient.prefetchQuery({
     queryKey: orderKeys.list({}, 1, 10), // Default filters, page 1, limit 10
     queryFn: async () => {
-      const result = await orderService.getOrders({}, 1, 10);
-      if (!result.success) {
-        throw new Error(result.error || "Failed to fetch orders");
-      }
-      return result.data;
+      return await orderClientService.getOrders({}, 1, 10);
     },
   });
 

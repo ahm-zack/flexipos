@@ -88,7 +88,30 @@ export function CartPanel({ className }: CartPanelProps) {
         // Show receipt and print after 2 seconds
         clearCart();
         closeCart();
-        setCreatedOrder(data);
+        // Convert the order data to ApiOrder format for the store
+        const apiOrder: ApiOrder = {
+          id: data.id,
+          orderNumber: data.orderNumber,
+          customerName: data.customerName,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          items: data.items as any[],
+          totalAmount:
+            typeof data.totalAmount === "string"
+              ? parseFloat(data.totalAmount)
+              : data.totalAmount,
+          paymentMethod: data.paymentMethod,
+          status: data.status,
+          createdAt:
+            data.createdAt instanceof Date
+              ? data.createdAt.toISOString()
+              : data.createdAt,
+          updatedAt:
+            data.updatedAt instanceof Date
+              ? data.updatedAt.toISOString()
+              : data.updatedAt,
+          createdBy: data.createdBy,
+        };
+        setCreatedOrder(apiOrder);
         console.log("Order created:", data);
       },
       onError: (error) => {
