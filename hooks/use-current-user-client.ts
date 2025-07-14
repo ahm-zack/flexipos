@@ -15,17 +15,13 @@ export function useCurrentUserClient() {
     const [user, setUser] = useState<FullUserData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     useEffect(() => {
         const supabase = createClient();
 
         const fetchUser = async () => {
             try {
-                // Only show loading on the very first load
-                if (isInitialLoad) {
-                    setLoading(true);
-                }
+                setLoading(true);
                 setError(null);
 
                 // First check if user is authenticated (this is usually cached)
@@ -64,7 +60,6 @@ export function useCurrentUserClient() {
                 setUser(null);
             } finally {
                 setLoading(false);
-                setIsInitialLoad(false);
             }
         };
 
@@ -84,7 +79,7 @@ export function useCurrentUserClient() {
         return () => {
             subscription.unsubscribe();
         };
-    }, []); // isInitialLoad is only used inside the effect, safe to omit
+    }, []);
 
-    return { user, loading, error, isInitialLoad };
+    return { user, loading, error };
 }
