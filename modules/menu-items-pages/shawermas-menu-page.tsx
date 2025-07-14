@@ -1,6 +1,8 @@
+"use client";
+
 import { ComingSoon } from "@/components/coming-soon";
 
-export default function AppetizersPage() {
+export function ShawermasMenuPage() {
   return (
     <div className="p-8">
       <ComingSoon />

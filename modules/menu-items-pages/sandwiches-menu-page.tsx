@@ -1,21 +1,21 @@
 "use client";
-import { MiniPieGridSkeleton } from "@/components/ui/mini-pie-skeleton";
-import { MiniPieGrid, useMiniPies } from "@/modules/mini-pie-feature";
-import { useSearchStore } from "../../../../hooks/useSearchStore";
+import { SandwichGridSkeleton } from "@/components/ui/sandwich-skeleton";
+import { SandwichGrid, useSandwiches } from "@/modules/sandwich-feature";
+import { useSearchStore } from "@/hooks/useSearchStore";
 import { Button } from "@/components/ui/button";
 
-export default function MiniPieMenuPage() {
-  const { data: miniPies, isLoading, error } = useMiniPies("cashier");
+export function SandwichesMenuPage() {
+  const { data: sandwiches, isLoading, error } = useSandwiches("cashier");
 
-  const { filterMiniPies } = useSearchStore();
-  const filteredMiniPies = filterMiniPies(miniPies || []);
+  const { filterSandwiches } = useSearchStore();
+  const filteredSandwiches = filterSandwiches(sandwiches || []);
 
   if (error) {
     return (
       <div className="text-center py-12">
         <div className="text-4xl sm:text-6xl mb-4">❌</div>
         <h3 className="text-lg font-semibold text-red-600 mb-2">
-          Error loading mini pies
+          Error loading sandwiches
         </h3>
         <p className="text-sm sm:text-base text-muted-foreground mb-4">
           {error.message}
@@ -26,12 +26,12 @@ export default function MiniPieMenuPage() {
   }
 
   if (isLoading) {
-    return <MiniPieGridSkeleton count={6} />;
+    return <SandwichGridSkeleton count={6} />;
   }
 
   return (
-    <MiniPieGrid
-      miniPies={filteredMiniPies}
+    <SandwichGrid
+      sandwiches={filteredSandwiches}
       showActions={false} // No edit/delete actions in cashier view
       showCartActions={true} // Show cart actions in cashier view
       isLoading={isLoading}

@@ -1,6 +1,8 @@
+"use client";
+
 import { ComingSoon } from "@/components/coming-soon";
 
-export default function SideOrderPage() {
+export function BurgersMenuPage() {
   return (
     <div className="p-8">
       <ComingSoon />

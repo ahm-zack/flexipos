@@ -8,32 +8,57 @@ import {
   useAdjacentMenuPrefetch,
 } from "@/hooks/use-menu-prefetch";
 import React, { useEffect } from "react";
+import { useMenu } from "@/modules/menu/hooks/useMenu";
 
 const MENU_CONFIG: Record<
   string,
   { header: string; desc: string; placeholder: string; icon?: React.ReactNode }
 > = {
+  "/admin/menu/appetizers": {
+    header: "🥨 Appetizers Menu",
+    desc: "Start your meal with our appetizers",
+    placeholder: "Search appetizers...",
+  },
+  "/admin/menu/beverages": {
+    header: "🥤 Beverages Menu",
+    desc: "Refresh yourself with our drinks",
+    placeholder: "Search beverages...",
+  },
+  "/admin/menu/burger": {
+    header: "🍔 Burgers Menu",
+    desc: "Juicy burgers made to perfection",
+    placeholder: "Search burgers...",
+  },
   "/admin/menu/sandwich": {
-    header: "🥪 Sandwich Menu",
+    header: "🥪 Sandwiches Menu",
     desc: "Discover our delicious sandwich selection",
     placeholder: "Search sandwiches...",
   },
+  "/admin/menu/shawerma": {
+    header: "🌯 Shawermas Menu",
+    desc: "Authentic shawerma varieties",
+    placeholder: "Search shawermas...",
+  },
   "/admin/menu/pizza": {
-    header: "🍕 Pizza Menu",
+    header: "🍕 Pizzas Menu",
     desc: "Explore our pizza varieties",
     placeholder: "Search pizzas...",
   },
   "/admin/menu/pie": {
-    header: "🥧 Pie Menu",
+    header: "🥧 Pies Menu",
     desc: "Try our fresh pies",
     placeholder: "Search pies...",
   },
   "/admin/menu/mini-pie": {
-    header: "🥟 Mini Pie Menu",
+    header: "🥟 Mini Pies Menu",
     desc: "Mini pies for every taste",
     placeholder: "Search mini pies...",
   },
-  // Add more menu configs as needed
+  "/admin/menu/side-order": {
+    header: "🍟 Side Orders Menu",
+    desc: "Complete your meal with our sides",
+    placeholder: "Search side orders...",
+  },
 };
 
 export default function MenuProductLayout({
@@ -59,6 +84,8 @@ export default function MenuProductLayout({
   useEffect(() => {
     prefetchAllMenus();
   }, [prefetchAllMenus]);
+
+  useMenu();
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
