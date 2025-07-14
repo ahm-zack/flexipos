@@ -5,7 +5,7 @@ import { Providers } from "@/modules/providers";
 import { Toaster } from "@/components/ui/sonner";
 
 // Force dynamic rendering since we use cookies for auth
-export const dynamic = "force-dynamic";
+// export const dynamic = "force-dynamic";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

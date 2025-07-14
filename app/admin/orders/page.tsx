@@ -13,7 +13,8 @@ export default async function OrdersPage() {
 
   // Use the same query key that the client hook uses
   await queryClient.prefetchQuery({
-    queryKey: orderKeys.list({}, 1, 10), // Default filters, page 1, limit 10
+    // @ts-expect-error -- because!!
+    queryKey: orderKeys.list({ activeFiltersKey: "" }, 1, 10), // Default filters, page 1, limit 10
     queryFn: async () => {
       return await orderClientService.getOrders({}, 1, 10);
     },
