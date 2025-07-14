@@ -12,7 +12,7 @@ export default function ErrorPage() {
     <div className="flex min-h-svh w-full items-center justify-center p-6">
       <div className="w-full max-w-md text-center">
         <h1 className="text-2xl font-bold text-red-600 mb-4">Login Error</h1>
-        <p className="text-gray-600 mb-6">An Error happened please re-try</p>
+        <p className="text-gray-600 mb-6">An Error happened please try again</p>
         <Button asChild>
           <Link href="/login">Try Again</Link>
         </Button>
