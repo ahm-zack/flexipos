@@ -1,9 +1,9 @@
-import { DashboardLayout } from "@/components/dashboard-layout";
+import { DashboardLayoutClient } from "@/components/dashboard-layout-client";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return <DashboardLayoutClient>{children}</DashboardLayoutClient>;
 }
