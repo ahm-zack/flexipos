@@ -11,15 +11,15 @@ import {
 import { ConditionalCartContainer } from "@/components/conditional-cart-container";
 import React from "react";
 import { CreatedOrderReciptModal } from "@/modules/providers/CreatedOrderReciptsModal";
-import { useCurrentUserClient } from "@/hooks/use-current-user-client";
+import { useCurrentUserOptimized } from "@/hooks/use-current-user-optimized";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export function DashboardLayoutClient({ children }: DashboardLayoutProps) {
-  // Use client-side API-based hook for static export compatibility
-  const { user: fullUserData, loading: isLoading } = useCurrentUserClient();
+  // Use optimized hook with caching and immediate rendering
+  const { user: fullUserData, loading } = useCurrentUserOptimized();
 
   return (
     <SidebarProvider>
@@ -29,6 +29,12 @@ export function DashboardLayoutClient({ children }: DashboardLayoutProps) {
             ? {
                 name: fullUserData.name,
                 email: fullUserData.email,
+                avatar: undefined,
+              }
+            : loading
+            ? {
+                name: "Loading...",
+                email: "...",
                 avatar: undefined,
               }
             : null
@@ -45,15 +51,7 @@ export function DashboardLayoutClient({ children }: DashboardLayoutProps) {
             <DynamicBreadcrumb />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            </div>
-          ) : (
-            children
-          )}
-        </div>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
 
         {/* Conditional Cart - Hidden on management pages */}
         <ConditionalCartContainer />
