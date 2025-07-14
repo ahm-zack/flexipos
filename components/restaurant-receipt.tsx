@@ -314,12 +314,12 @@ export function RestaurantReceipt({
               size="sm"
             >
               <Download className="w-4 h-4" />
-              {isGeneratingPDF ? "Generating..." : "PDF"}
+              {isGeneratingPDF ? "Generating..." : "Print Invoice"}
             </Button>
 
             <Button
               onClick={handlePrint}
-              variant="outline"
+              variant="secondary"
               className="flex items-center gap-2"
               size="sm"
             >
@@ -329,7 +329,12 @@ export function RestaurantReceipt({
           </div>
 
           {onClose && (
-            <Button onClick={onClose} variant="outline" size="sm">
+            <Button
+              onClick={onClose}
+              variant="destructive"
+              size="sm"
+              className="rounded-full"
+            >
               <X className="w-4 h-4" />
             </Button>
           )}
@@ -377,16 +382,24 @@ const RestaurantHeader = ({ config }: { config: RestaurantConfig }) => (
 const InvoiceHeader = () => (
   <div
     style={{
-      textAlign: "center",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
       borderTop: "0.125rem double black",
       borderBottom: "0.125rem double black",
       paddingTop: "0.5rem",
       paddingBottom: "0.5rem",
       marginBottom: "0.5rem",
+      position: "relative",
     }}
   >
-    <div style={{ fontWeight: 700 }}>SIMPLIFIED TAX INVOICE</div>
-    <div style={{ fontWeight: 700 }}>فاتورة ضريبية مبسطة</div>
+    <div style={{ fontWeight: 700, textAlign: "center", width: "100%" }}>
+      SIMPLIFIED TAX INVOICE
+    </div>
+    <div style={{ fontWeight: 700, textAlign: "center", width: "100%" }}>
+      فاتورة ضريبية مبسطة
+    </div>
   </div>
 );
 
@@ -405,14 +418,26 @@ const OrderInfo = ({
 
   return (
     <>
-      <div style={{ textAlign: "center", marginBottom: "1.2rem" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          marginBottom: "1.2rem",
+        }}
+      >
         <div
           style={{
             fontSize: "1.125rem",
             fontWeight: 700,
             border: "0.125rem solid #000",
-            padding: "0.5rem",
-            display: "inline-block",
+            padding: "0.5rem 2rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minWidth: "180px",
+            minHeight: "40px",
+            textAlign: "center",
           }}
         >
           ORDER #{order.orderNumber}
@@ -578,8 +603,9 @@ const OrderTotals = ({
   <div
     style={{
       borderTop: "1px solid #000",
-      paddingTop: "0.5rem",
-      paddingBottom: "0.5rem",
+      paddingTop: "0.75rem",
+      paddingBottom: "0.75rem",
+      marginBottom: "0.5rem",
     }}
   >
     <div>
@@ -589,21 +615,11 @@ const OrderTotals = ({
           justifyContent: "space-between",
           fontSize: "0.75rem",
           fontWeight: 700,
-          marginBottom: "0.25rem",
+          marginBottom: "0.5rem",
         }}
       >
         <span>Net Amount:</span>
-        <span>
-          {/* <SaudiRiyalSymbol
-            size={10}
-            style={{
-              display: "inline",
-              marginRight: "0.25rem",
-              verticalAlign: "baseline",
-            }}
-          /> */}
-          {totals.netAmount.toFixed(2)}
-        </span>
+        <span>{totals.netAmount.toFixed(2)}</span>
       </div>
       <div
         style={{
@@ -611,29 +627,26 @@ const OrderTotals = ({
           justifyContent: "space-between",
           fontSize: "0.75rem",
           fontWeight: 700,
-          marginBottom: "0.25rem",
+          marginBottom: "0.5rem",
         }}
       >
         <span>VAT (15%):</span>
-        <span>
-          {/* <SaudiRiyalSymbol
-            size={10}
-            style={{
-              display: "inline",
-              marginRight: "0.25rem",
-              verticalAlign: "baseline",
-            }}
-          /> */}
-          {totals.vatAmount.toFixed(2)}
-        </span>
+        <span>{totals.vatAmount.toFixed(2)}</span>
       </div>
-      <div style={{ borderTop: "1px solid #000", paddingTop: "0.25rem" }}>
+      <div
+        style={{
+          borderTop: "1px solid #000",
+          paddingTop: "0.5rem",
+          marginTop: "0.5rem",
+        }}
+      >
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             fontSize: "1rem",
             fontWeight: 700,
+            alignItems: "center",
           }}
         >
           <span>TOTAL:</span>
