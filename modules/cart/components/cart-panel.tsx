@@ -24,7 +24,6 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { useState } from "react";
 import { RestaurantReceipt } from "@/components/restaurant-receipt";
 import { Dialog } from "@radix-ui/react-dialog";
-import { useCreatedOrderStore } from "../hooks/useCreatedOrderStore";
 
 interface CartPanelProps {
   className?: string;
@@ -60,7 +59,7 @@ export function CartPanel({ className }: CartPanelProps) {
 
   const createOrder = useCreateOrder();
   const { user: currentUser, loading: userLoading } = useCurrentUser();
-  const setCreatedOrder = useCreatedOrderStore((s) => s.setCreatedOrder);
+  // const setCreatedOrder = useCreatedOrderStore((s) => s.setCreatedOrder);
 
   // Handle order creation
   const handleProceedToCheckout = () => {
@@ -82,13 +81,11 @@ export function CartPanel({ className }: CartPanelProps) {
     console.log("Order data:", orderData);
 
     createOrder.mutate(orderData, {
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
         toast.success(`Order #${data.orderNumber} created successfully!`);
-        // queryClient.invalidateQueries({ queryKey: orderKeys.all });
-        // Show receipt and print after 2 seconds
         clearCart();
         closeCart();
-        // Convert the order data to ApiOrder format for the store
+        // Convert the order data to ApiOrder format for the PDF
         const apiOrder: ApiOrder = {
           id: data.id,
           orderNumber: data.orderNumber,
@@ -111,8 +108,16 @@ export function CartPanel({ className }: CartPanelProps) {
               : data.updatedAt,
           createdBy: data.createdBy,
         };
-        setCreatedOrder(apiOrder);
-        console.log("Order created:", data);
+        // Import and trigger PDF download
+        const { downloadReceiptPDF } = await import(
+          "@/components/restaurant-receipt"
+        );
+        await downloadReceiptPDF({
+          ...apiOrder,
+          customerName:
+            apiOrder.customerName === null ? undefined : apiOrder.customerName,
+        });
+        console.log("Order created and PDF downloaded:", data);
       },
       onError: (error) => {
         toast.error(`Failed to create order: ${error.message}`);

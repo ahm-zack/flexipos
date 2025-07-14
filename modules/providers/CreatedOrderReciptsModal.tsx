@@ -5,7 +5,7 @@ import { useCreatedOrderStore } from "../cart/hooks/useCreatedOrderStore";
 
 export function CreatedOrderReciptModal() {
   const { createdOrder, setCreatedOrder } = useCreatedOrderStore();
-  console.log("CreatedOrderReciptModal", createdOrder);
+
   if (!createdOrder) return null;
   return (
     <ReceiptModal

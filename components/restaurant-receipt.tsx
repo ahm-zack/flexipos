@@ -514,14 +514,14 @@ const OrderItems = ({ items }: { items: Order["items"] }) => (
               paddingLeft: "10px",
             }}
           >
-            <SaudiRiyalSymbol
+            {/* <SaudiRiyalSymbol
               size={10}
               style={{
                 display: "inline",
                 marginRight: "0.25rem",
                 verticalAlign: "baseline",
               }}
-            />
+            /> */}
             <span>{item.totalPrice.toFixed(2)}</span>
           </div>
         </div>
@@ -547,14 +547,14 @@ const OrderItems = ({ items }: { items: Order["items"] }) => (
                   {modifier.type === "extra" && modifier.price > 0 && (
                     <span>
                       +
-                      <SaudiRiyalSymbol
+                      {/* <SaudiRiyalSymbol
                         size={8}
                         style={{
                           display: "inline",
                           marginRight: "0.125rem",
                           verticalAlign: "baseline",
                         }}
-                      />
+                      /> */}
                       {modifier.price.toFixed(2)}
                     </span>
                   )}
@@ -594,14 +594,14 @@ const OrderTotals = ({
       >
         <span>Net Amount:</span>
         <span>
-          <SaudiRiyalSymbol
+          {/* <SaudiRiyalSymbol
             size={10}
             style={{
               display: "inline",
               marginRight: "0.25rem",
               verticalAlign: "baseline",
             }}
-          />
+          /> */}
           {totals.netAmount.toFixed(2)}
         </span>
       </div>
@@ -616,14 +616,14 @@ const OrderTotals = ({
       >
         <span>VAT (15%):</span>
         <span>
-          <SaudiRiyalSymbol
+          {/* <SaudiRiyalSymbol
             size={10}
             style={{
               display: "inline",
               marginRight: "0.25rem",
               verticalAlign: "baseline",
             }}
-          />
+          /> */}
           {totals.vatAmount.toFixed(2)}
         </span>
       </div>
@@ -730,21 +730,33 @@ export async function downloadReceiptPDF(
           showModal: false,
         })
       );
-
-      // Wait for render
-      setTimeout(resolve, 500);
+      // Wait longer for render (1000ms)
+      setTimeout(resolve, 1000);
     });
+
+    // Debug: log tempContainer HTML
+    console.log(
+      "[downloadReceiptPDF] tempContainer HTML:",
+      tempContainer.innerHTML
+    );
 
     // Generate PDF from the rendered content
     const receiptElement = tempContainer.querySelector(
       ".receipt-content"
     ) as HTMLElement;
     if (receiptElement) {
+      console.log(
+        "[downloadReceiptPDF] Found .receipt-content, generating PDF..."
+      );
       await generateReceiptPDF(receiptElement, {
         filename: `receipt-${order.orderNumber}.pdf`,
         silent: true,
         widthMM: 80,
       });
+    } else {
+      console.error(
+        "[downloadReceiptPDF] .receipt-content not found in tempContainer!"
+      );
     }
   } finally {
     // Cleanup
