@@ -9,6 +9,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export function NavMain({
   items,
@@ -46,11 +47,11 @@ export function NavMain({
                 pathname === subItem.url && "bg-accent text-accent-foreground"
               )}
             >
-              <a href={subItem.url}>
+              <Link href={subItem.url}>
                 <span className="transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-data-[collapsible=icon]:opacity-0">
                   {subItem.title}
                 </span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

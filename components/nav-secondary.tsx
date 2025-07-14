@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export function NavSecondary({
   items,
@@ -37,12 +38,12 @@ export function NavSecondary({
                   pathname === item.url && "bg-accent text-accent-foreground"
                 )}
               >
-                <a href={item.url}>
+                <Link href={item.url}>
                   <item.icon className="size-5 transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]" />
                   <span className="transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-data-[collapsible=icon]:opacity-0">
                     {item.title}
                   </span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
