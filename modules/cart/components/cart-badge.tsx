@@ -19,7 +19,7 @@ export function CartBadge({ className }: CartBadgeProps) {
       size="lg"
       onClick={toggleCart}
       className={cn(
-        "relative h-14 w-14 rounded-full border-2 shadow-lg hover:shadow-xl transition-all duration-200",
+        "relative h-12 w-12 rounded-full border-2 shadow-lg hover:shadow-xl transition-all duration-200",
         "bg-background/95 backdrop-blur-sm border-primary/20 hover:border-primary/40",
         "active:scale-95",
         className

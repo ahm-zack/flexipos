@@ -15,47 +15,47 @@ const MENU_CONFIG: Record<
   { header: string; desc: string; placeholder: string; icon?: React.ReactNode }
 > = {
   "/admin/menu/appetizers": {
-    header: "🥨 Appetizers Menu",
+    header: "Appetizers",
     desc: "Start your meal with our appetizers",
     placeholder: "Search appetizers...",
   },
   "/admin/menu/beverages": {
-    header: "🥤 Beverages Menu",
+    header: "Beverages",
     desc: "Refresh yourself with our drinks",
     placeholder: "Search beverages...",
   },
   "/admin/menu/burger": {
-    header: "🍔 Burgers Menu",
+    header: "Burgers",
     desc: "Juicy burgers made to perfection",
     placeholder: "Search burgers...",
   },
   "/admin/menu/sandwich": {
-    header: "🥪 Sandwiches Menu",
+    header: "Sandwiches",
     desc: "Discover our delicious sandwich selection",
     placeholder: "Search sandwiches...",
   },
   "/admin/menu/shawerma": {
-    header: "🌯 Shawermas Menu",
+    header: "Shawermas",
     desc: "Authentic shawerma varieties",
     placeholder: "Search shawermas...",
   },
   "/admin/menu/pizza": {
-    header: "🍕 Pizzas Menu",
+    header: "pizzas",
     desc: "Explore our pizza varieties",
     placeholder: "Search pizzas...",
   },
   "/admin/menu/pie": {
-    header: "🥧 Pies Menu",
+    header: "Pies",
     desc: "Try our fresh pies",
     placeholder: "Search pies...",
   },
   "/admin/menu/mini-pie": {
-    header: "🥟 Mini Pies Menu",
+    header: "Mini Pies",
     desc: "Mini pies for every taste",
     placeholder: "Search mini pies...",
   },
   "/admin/menu/side-order": {
-    header: "🍟 Side Orders Menu",
+    header: "Side Orders",
     desc: "Complete your meal with our sides",
     placeholder: "Search side orders...",
   },
@@ -91,17 +91,14 @@ export default function MenuProductLayout({
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-full mx-auto">
         {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 text-center">
+        <div className="mb-6 sm:mb-8 flex gap-4 items-center">
+          {/* <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-center">
             {config.header}
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground text-center mb-4 sm:mb-6">
-            {config.desc}
-          </p>
+          </h1> */}
 
           {/* Search Bar */}
-          <div className="flex justify-center">
-            <div className="relative w-full max-w-md">
+          <div className="flex justify-center w-full max-w-md">
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={config.placeholder}
