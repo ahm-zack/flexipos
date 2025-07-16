@@ -133,49 +133,45 @@ export function OrdersList() {
       <div className="space-y-4 mb-6">
         {/* Header Skeleton - matches OrdersHeader structure */}
         <div className="space-y-4">
-          {/* Title and Stats Row Skeleton */}
+          {/* Title Row Skeleton */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="h-9 bg-muted rounded w-32 animate-pulse"></div>
-            <div className="flex items-center gap-4">
-              <div className="px-3 py-1 bg-muted rounded-full animate-pulse">
-                <div className="h-5 bg-muted rounded w-20"></div>
-              </div>
-              <div className="px-3 py-1 bg-muted rounded-full animate-pulse">
-                <div className="h-5 bg-muted rounded w-16"></div>
-              </div>
-            </div>
+            <div className="h-10 w-48 bg-muted rounded animate-pulse" />
           </div>
 
           {/* Search and Filters Row Skeleton */}
           <div className="flex flex-col gap-4">
-            {/* Search Bar and Filter Buttons Row */}
+            {/* Search Bar and Filter Buttons Row - Combined on lg+ screens */}
             <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
               {/* Search Bar Skeleton */}
               <div className="relative w-full max-w-md">
-                <div className="h-10 bg-muted rounded border animate-pulse"></div>
+                <div className="h-10 bg-muted rounded pl-10 animate-pulse" />
+                {/* Clear button skeleton */}
+                <div className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 bg-muted rounded animate-pulse" />
               </div>
 
               {/* Filter Buttons Skeleton */}
               <div className="flex flex-col sm:flex-row gap-2 lg:flex-row lg:gap-2">
-                <div className="h-9 bg-muted rounded w-24 animate-pulse"></div>
-                <div className="h-9 bg-muted rounded w-20 animate-pulse"></div>
+                <div className="h-9 w-36 bg-muted rounded animate-pulse" />
+                <div className="h-9 w-36 bg-muted rounded animate-pulse" />
               </div>
             </div>
 
-            {/* Date and Time Filters Row Skeleton */}
-            <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
-              <div className="flex flex-col sm:flex-row gap-2 lg:flex-row lg:gap-2">
-                <div className="h-9 bg-muted rounded w-28 animate-pulse"></div>
-                <div className="h-9 bg-muted rounded w-24 animate-pulse"></div>
-                <div className="h-9 bg-muted rounded w-28 animate-pulse"></div>
-                <div className="h-9 bg-muted rounded w-24 animate-pulse"></div>
+            {/* Date Range Filters Skeleton */}
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 w-full">
+              {/* From Date/Time Skeleton */}
+              <div className="flex gap-2 flex-1">
+                <div className="h-9 w-32 bg-muted rounded animate-pulse" />
+                <div className="h-9 w-28 bg-muted rounded animate-pulse" />
               </div>
-            </div>
-
-            {/* Active Filters Row Skeleton */}
-            <div className="flex flex-wrap gap-2">
-              <div className="h-7 bg-muted rounded w-20 animate-pulse"></div>
-              <div className="h-7 bg-muted rounded w-16 animate-pulse"></div>
+              {/* 'to' label skeleton */}
+              <span className="h-6 w-8 bg-transparent" />
+              {/* To Date/Time Skeleton */}
+              <div className="flex gap-2 flex-1">
+                <div className="h-9 w-32 bg-muted rounded animate-pulse" />
+                <div className="h-9 w-28 bg-muted rounded animate-pulse" />
+              </div>
+              {/* Clear Date Filters Button Skeleton */}
+              <div className="h-8 w-8 bg-muted rounded animate-pulse" />
             </div>
           </div>
         </div>
@@ -185,29 +181,32 @@ export function OrdersList() {
           {[...Array(8)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="h-6 bg-muted rounded w-28"></div>
-                  <div className="h-5 bg-muted rounded w-20"></div>
+                <div className="flex items-start justify-between">
+                  <div className="flex flex-col items-start gap-2">
+                    <div className="h-6 w-24 bg-muted rounded" />
+                    <div className="h-5 w-20 bg-muted rounded" />
+                  </div>
+                  <div className="h-8 w-8 bg-muted rounded" />
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="h-4 bg-muted rounded w-16"></div>
-                  <div className="h-6 bg-muted rounded w-20"></div>
+                  <div className="h-4 w-16 bg-muted rounded" />
+                  <div className="h-6 w-20 bg-muted rounded" />
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="h-4 bg-muted rounded w-12"></div>
-                  <div className="h-4 bg-muted rounded w-24"></div>
+                  <div className="h-4 w-12 bg-muted rounded" />
+                  <div className="h-4 w-24 bg-muted rounded" />
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="h-4 bg-muted rounded w-12"></div>
-                  <div className="h-4 bg-muted rounded w-16"></div>
+                  <div className="h-4 w-12 bg-muted rounded" />
+                  <div className="h-4 w-16 bg-muted rounded" />
                 </div>
-                <div className="pt-2 border-t">
-                  <div className="h-4 bg-muted rounded w-20 mb-2"></div>
+                <div className="pt-2">
+                  <div className="h-4 w-20 bg-muted rounded mb-2" />
                   <div className="space-y-1">
-                    <div className="h-3 bg-muted rounded"></div>
-                    <div className="h-3 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded" />
+                    <div className="h-3 w-3/4 bg-muted rounded" />
                   </div>
                 </div>
               </CardContent>
@@ -251,10 +250,10 @@ export function OrdersList() {
               <Card
                 key={order.id}
                 className={cn(
-                  "group hover:shadow-lg hover:shadow-black/5 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out bg-card border border-border cursor-pointer relative",
+                  "group hover:shadow-lg hover:shadow-black/5 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out bg-card cursor-pointer relative",
                   // Visually distinguish cancelled orders
                   order.status === "canceled" &&
-                    "opacity-75 border-red-200 dark:border-red-800"
+                    "opacity-75 border border-red-200 dark:border-red-800"
                 )}
               >
                 <CardHeader className="pb-4">

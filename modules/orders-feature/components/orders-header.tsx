@@ -114,7 +114,7 @@ export function OrdersHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="w-full sm:w-auto flex items-center justify-center gap-2 min-w-fit"
                 >
@@ -165,7 +165,7 @@ export function OrdersHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="w-full sm:w-auto flex items-center justify-center gap-2 min-w-fit"
                 >
@@ -222,7 +222,7 @@ export function OrdersHeader() {
             <Popover open={fromDateOpen} onOpenChange={setFromDateOpen}>
               <PopoverTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="flex-1 sm:w-32 justify-between font-normal"
                 >
@@ -254,7 +254,7 @@ export function OrdersHeader() {
             <Popover open={fromTimeOpen} onOpenChange={setFromTimeOpen}>
               <PopoverTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="flex-1 sm:w-28 justify-between font-normal"
                 >
@@ -276,7 +276,7 @@ export function OrdersHeader() {
                         Hour
                       </label>
                       <select
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                        className="w-full px-3 py-2 rounded-md bg-background"
                         value={
                           filters.dateFrom
                             ? filters.dateFrom.getHours() % 12 || 12
@@ -315,7 +315,7 @@ export function OrdersHeader() {
                         Minute
                       </label>
                       <select
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                        className="w-full px-3 py-2 rounded-md bg-background"
                         value={
                           filters.dateFrom ? filters.dateFrom.getMinutes() : 0
                         }
@@ -340,7 +340,7 @@ export function OrdersHeader() {
                         AM/PM
                       </label>
                       <select
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                        className="w-full px-3 py-2 rounded-md bg-background"
                         value={
                           filters.dateFrom
                             ? filters.dateFrom.getHours() >= 12
@@ -406,7 +406,7 @@ export function OrdersHeader() {
             <Popover open={toDateOpen} onOpenChange={setToDateOpen}>
               <PopoverTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="flex-1 sm:w-32 justify-between font-normal"
                 >
@@ -438,7 +438,7 @@ export function OrdersHeader() {
             <Popover open={toTimeOpen} onOpenChange={setToTimeOpen}>
               <PopoverTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="flex-1 sm:w-28 justify-between font-normal"
                 >
@@ -460,7 +460,7 @@ export function OrdersHeader() {
                         Hour
                       </label>
                       <select
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                        className="w-full px-3 py-2 rounded-md bg-background"
                         value={
                           filters.dateTo
                             ? filters.dateTo.getHours() % 12 || 12
@@ -499,7 +499,7 @@ export function OrdersHeader() {
                         Minute
                       </label>
                       <select
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                        className="w-full px-3 py-2 rounded-md bg-background"
                         value={filters.dateTo ? filters.dateTo.getMinutes() : 0}
                         onChange={(e) => {
                           const minutes = parseInt(e.target.value);
@@ -522,7 +522,7 @@ export function OrdersHeader() {
                         AM/PM
                       </label>
                       <select
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                        className="w-full px-3 py-2 rounded-md bg-background"
                         value={
                           filters.dateTo
                             ? filters.dateTo.getHours() >= 12
