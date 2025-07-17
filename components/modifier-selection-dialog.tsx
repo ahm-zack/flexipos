@@ -33,7 +33,16 @@ interface ModifierSelectionDialogProps {
     category: string;
     description?: string;
     image?: string;
-    itemType: "pizza" | "pie" | "sandwich" | "mini_pie";
+    itemType:
+      | "pizza"
+      | "pie"
+      | "sandwich"
+      | "mini_pie"
+      | "appetizer"
+      | "baverages"
+      | "shawerma"
+      | "burger"
+      | "side-order";
     modifiers: Modifier[];
   };
 }

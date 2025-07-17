@@ -15,7 +15,7 @@ export const pizzaExtrasEnum = pgEnum('pizza_extras', ['cheese', 'vegetables', '
 // Define pie type enum
 export const pieTypeEnum = pgEnum('pie_type', [
   'Akkawi Cheese',
-  'Halloumi Cheese', 
+  'Halloumi Cheese',
   'Cream Cheese',
   'Zaatar',
   'Labneh & Vegetables',
@@ -32,7 +32,7 @@ export const pieSizeEnum = pgEnum('pie_size', ['small', 'medium', 'large']);
 // Define sandwich type enum
 export const sandwichTypeEnum = pgEnum('sandwich_type', [
   'Beef Sandwich with Cheese',
-  'Chicken Sandwich with Cheese', 
+  'Chicken Sandwich with Cheese',
   'Muhammara Sandwich with Cheese'
 ]);
 
@@ -45,13 +45,90 @@ export const miniPieTypeEnum = pgEnum('mini_pie_type', [
   'Mini Cheese Pie',
   'Mini Spinach Pie',
   'Mini Meat Pie (Ba\'lakiya style)',
-  'Mini Halloumi Cheese Pie', 
+  'Mini Halloumi Cheese Pie',
   'Mini Hot Dog Pie',
   'Mini Pizza Pie'
 ]);
 
 // Define mini pie size enum (typically small for party pies)
 export const miniPieSizeEnum = pgEnum('mini_pie_size', ['small', 'medium', 'large']);
+
+
+
+// Burger table schema
+export const burgers = pgTable('burgers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  imageUrl: text('image_url').notNull(),
+  priceWithVat: decimal('price_with_vat', { precision: 10, scale: 2 }).notNull(),
+  modifiers: jsonb('modifiers').default([]).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Beverage table schema
+export const beverages = pgTable('beverages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  imageUrl: text('image_url').notNull(),
+  priceWithVat: decimal('price_with_vat', { precision: 10, scale: 2 }).notNull(),
+  modifiers: jsonb('modifiers').default([]).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Side Order table schema
+export const sideOrders = pgTable('side_orders', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  imageUrl: text('image_url').notNull(),
+  priceWithVat: decimal('price_with_vat', { precision: 10, scale: 2 }).notNull(),
+  modifiers: jsonb('modifiers').default([]).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Appetizer table schema
+export const appetizers = pgTable('appetizers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  imageUrl: text('image_url').notNull(),
+  priceWithVat: decimal('price_with_vat', { precision: 10, scale: 2 }).notNull(),
+  modifiers: jsonb('modifiers').default([]).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Shawarma table schema
+export const shawarmas = pgTable('shawarmas', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  imageUrl: text('image_url').notNull(),
+  priceWithVat: decimal('price_with_vat', { precision: 10, scale: 2 }).notNull(),
+  modifiers: jsonb('modifiers').default([]).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type Burger = Omit<typeof burgers.$inferSelect, 'modifiers'> & { modifiers: Modifier[] };
+export type NewBurger = Omit<typeof burgers.$inferInsert, 'modifiers'> & { modifiers: Modifier[] };
+
+export type Beverage = Omit<typeof beverages.$inferSelect, 'modifiers'> & { modifiers: Modifier[] };
+export type NewBeverage = Omit<typeof beverages.$inferInsert, 'modifiers'> & { modifiers: Modifier[] };
+
+export type SideOrder = Omit<typeof sideOrders.$inferSelect, 'modifiers'> & { modifiers: Modifier[] };
+export type NewSideOrder = Omit<typeof sideOrders.$inferInsert, 'modifiers'> & { modifiers: Modifier[] };
+
+export type Appetizer = Omit<typeof appetizers.$inferSelect, 'modifiers'> & { modifiers: Modifier[] };
+export type NewAppetizer = Omit<typeof appetizers.$inferInsert, 'modifiers'> & { modifiers: Modifier[] };
+
+export type Shawarma = Omit<typeof shawarmas.$inferSelect, 'modifiers'> & { modifiers: Modifier[] };
+export type NewShawarma = Omit<typeof shawarmas.$inferInsert, 'modifiers'> & { modifiers: Modifier[] };
 
 // Define modifier type enum for extras and withouts
 export const modifierTypeEnum = pgEnum('modifier_type', ['extra', 'without']);
@@ -208,41 +285,41 @@ export const eodReports = pgTable('eod_reports', {
   reportDate: date('report_date').notNull(),
   startDateTime: timestamp('start_date_time', { withTimezone: true }).notNull(),
   endDateTime: timestamp('end_date_time', { withTimezone: true }).notNull(),
-  
+
   // Core metrics
   totalOrders: integer('total_orders').notNull().default(0),
   completedOrders: integer('completed_orders').notNull().default(0),
   cancelledOrders: integer('cancelled_orders').notNull().default(0),
   pendingOrders: integer('pending_orders').notNull().default(0),
-  
+
   // Financial metrics
   totalRevenue: decimal('total_revenue', { precision: 12, scale: 2 }).notNull().default('0.00'),
   totalWithVat: decimal('total_with_vat', { precision: 12, scale: 2 }).notNull().default('0.00'),
   totalWithoutVat: decimal('total_without_vat', { precision: 12, scale: 2 }).notNull().default('0.00'),
   vatAmount: decimal('vat_amount', { precision: 12, scale: 2 }).notNull().default('0.00'),
-  
+
   // Payment method breakdown
   totalCashOrders: decimal('total_cash_orders', { precision: 12, scale: 2 }).notNull().default('0.00'),
   totalCardOrders: decimal('total_card_orders', { precision: 12, scale: 2 }).notNull().default('0.00'),
   cashOrdersCount: integer('cash_orders_count').notNull().default(0),
   cardOrdersCount: integer('card_orders_count').notNull().default(0),
-  
+
   // Performance metrics
   averageOrderValue: decimal('average_order_value', { precision: 10, scale: 2 }).notNull().default('0.00'),
   peakHour: text('peak_hour'),
   orderCompletionRate: decimal('order_completion_rate', { precision: 5, scale: 2 }).notNull().default('0.00'),
   orderCancellationRate: decimal('order_cancellation_rate', { precision: 5, scale: 2 }).notNull().default('0.00'),
-  
+
   // Complex data stored as JSON
   paymentBreakdown: jsonb('payment_breakdown'), // PaymentBreakdown[]
   bestSellingItems: jsonb('best_selling_items'), // BestSellingItem[]
   hourlySales: jsonb('hourly_sales'), // HourlySales[]
-  
+
   // Metadata
   generatedBy: uuid('generated_by').references(() => users.id).notNull(),
   generatedAt: timestamp('generated_at', { withTimezone: true }).defaultNow().notNull(),
   reportType: reportTypeEnum('report_type').notNull().default('daily'),
-  
+
   // Timestamps
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -256,9 +333,9 @@ export type EODOrderStatus = typeof eodOrderStatusEnum.enumValues[number];
 export type ReportType = typeof reportTypeEnum.enumValues[number];
 
 // Import and re-export orders tables
-export { 
-  orders, 
-  canceledOrders, 
+export {
+  orders,
+  canceledOrders,
   modifiedOrders,
   ordersStatusEnum,
   itemTypeEnum,

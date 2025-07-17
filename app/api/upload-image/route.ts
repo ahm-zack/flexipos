@@ -41,11 +41,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine bucket name based on category
-    const bucketName = category === 'pies' ? 'pie-images' : 
-                      category === 'pizzas' ? 'pizza-images' :
-                      category === 'sandwiches' ? 'sandwich-images' :
-                      category === 'mini-pies' ? 'mini-pie-images' :
-                      'menu-items-images';
+    const bucketName = category === 'pies' ? 'pie-images' :
+      category === 'pizzas' ? 'pizza-images' :
+        category === 'sandwiches' ? 'sandwich-images' :
+          category === 'mini-pies' ? 'mini-pie-images' :
+            category === 'appetizers' ? 'appetizers-images' :
+              'menu-items-images';
 
     // Create a unique filename
     const fileExt = file.name.split('.').pop();
@@ -76,9 +77,9 @@ export async function POST(request: NextRequest) {
       .from(bucketName)
       .getPublicUrl(fileName);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       imageUrl: urlData.publicUrl,
-      success: true 
+      success: true
     });
 
   } catch (error) {

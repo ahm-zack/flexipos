@@ -125,7 +125,7 @@ export type UpdatePizza = z.infer<typeof UpdatePizzaSchema>;
 // Pie enums
 export const PieTypeEnum = z.enum([
   'Akkawi Cheese',
-  'Halloumi Cheese', 
+  'Halloumi Cheese',
   'Cream Cheese',
   'Zaatar',
   'Labneh & Vegetables',
@@ -210,7 +210,7 @@ export type UpdatePie = z.infer<typeof UpdatePieSchema>;
 export const createPieFormSchema = z.object({
   type: z.enum([
     'Akkawi Cheese',
-    'Halloumi Cheese', 
+    'Halloumi Cheese',
     'Cream Cheese',
     'Zaatar',
     'Labneh & Vegetables',
@@ -245,7 +245,7 @@ export type EditPieFormData = z.infer<typeof editPieFormSchema>;
 // Sandwich enums
 export const SandwichTypeEnum = z.enum([
   'Beef Sandwich with Cheese',
-  'Chicken Sandwich with Cheese', 
+  'Chicken Sandwich with Cheese',
   'Muhammara Sandwich with Cheese'
 ]);
 export const SandwichSizeEnum = z.enum(['small', 'medium', 'large']);
@@ -323,7 +323,7 @@ export type UpdateSandwich = z.infer<typeof UpdateSandwichSchema>;
 export const createSandwichFormSchema = z.object({
   type: z.enum([
     'Beef Sandwich with Cheese',
-    'Chicken Sandwich with Cheese', 
+    'Chicken Sandwich with Cheese',
     'Muhammara Sandwich with Cheese'
   ], {
     required_error: "Please select a sandwich type",
@@ -355,7 +355,7 @@ export const MiniPieTypeEnum = z.enum([
   'Mini Cheese Pie',
   'Mini Spinach Pie',
   'Mini Meat Pie (Ba\'lakiya style)',
-  'Mini Halloumi Cheese Pie', 
+  'Mini Halloumi Cheese Pie',
   'Mini Hot Dog Pie',
   'Mini Pizza Pie'
 ]);
@@ -385,6 +385,286 @@ export const MiniPieSchema = z.object({
 });
 
 export type MiniPie = z.infer<typeof MiniPieSchema>;
+
+
+// Burger schema (type and size as string)
+export const BurgerSchema = z.object({
+  id: z.string().uuid(),
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  imageUrl: z.string().url('Valid image URL is required'),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  modifiers: z.array(ModifierSchema),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+export type Burger = z.infer<typeof BurgerSchema>;
+
+export const CreateBurgerSchema = z.object({
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  modifiers: z.array(ModifierSchema),
+});
+export type CreateBurger = z.infer<typeof CreateBurgerSchema>;
+
+export const UpdateBurgerSchema = z.object({
+  nameAr: z.string().min(1).optional(),
+  nameEn: z.string().min(1).optional(),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ).optional(),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ).optional(),
+  modifiers: z.array(ModifierSchema).optional(),
+});
+export type UpdateBurger = z.infer<typeof UpdateBurgerSchema>;
+
+
+// Beverage schema (type as string)
+export const BeverageSchema = z.object({
+  id: z.string().uuid(),
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  imageUrl: z.string().url('Valid image URL is required'),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  modifiers: z.array(ModifierSchema),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+export type Beverage = z.infer<typeof BeverageSchema>;
+
+export const CreateBeverageSchema = z.object({
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  modifiers: z.array(ModifierSchema),
+});
+export type CreateBeverage = z.infer<typeof CreateBeverageSchema>;
+
+export const UpdateBeverageSchema = z.object({
+  nameAr: z.string().min(1).optional(),
+  nameEn: z.string().min(1).optional(),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ).optional(),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ).optional(),
+  modifiers: z.array(ModifierSchema).optional(),
+});
+export type UpdateBeverage = z.infer<typeof UpdateBeverageSchema>;
+
+
+// Side Order schema (type as string)
+export const SideOrderSchema = z.object({
+  id: z.string().uuid(),
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  imageUrl: z.string().url('Valid image URL is required'),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  modifiers: z.array(ModifierSchema),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+export type SideOrder = z.infer<typeof SideOrderSchema>;
+
+export const CreateSideOrderSchema = z.object({
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  modifiers: z.array(ModifierSchema),
+});
+export type CreateSideOrder = z.infer<typeof CreateSideOrderSchema>;
+
+export const UpdateSideOrderSchema = z.object({
+  nameAr: z.string().min(1).optional(),
+  nameEn: z.string().min(1).optional(),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ).optional(),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ).optional(),
+  modifiers: z.array(ModifierSchema).optional(),
+});
+export type UpdateSideOrder = z.infer<typeof UpdateSideOrderSchema>;
+
+
+// Appetizer schema (type as string)
+export const AppetizerSchema = z.object({
+  id: z.string().uuid(),
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  imageUrl: z.string().url('Valid image URL is required'),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  modifiers: z.array(ModifierSchema),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+export type Appetizer = z.infer<typeof AppetizerSchema>;
+
+export const CreateAppetizerSchema = z.object({
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  modifiers: z.array(ModifierSchema),
+});
+export type CreateAppetizer = z.infer<typeof CreateAppetizerSchema>;
+
+export const UpdateAppetizerSchema = z.object({
+  nameAr: z.string().min(1).optional(),
+  nameEn: z.string().min(1).optional(),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ).optional(),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ).optional(),
+  modifiers: z.array(ModifierSchema).optional(),
+});
+export type UpdateAppetizer = z.infer<typeof UpdateAppetizerSchema>;
+
+
+// Shawarma schema (type and size as string)
+export const ShawarmaSchema = z.object({
+  id: z.string().uuid(),
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  imageUrl: z.string().url('Valid image URL is required'),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  modifiers: z.array(ModifierSchema),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+export type Shawarma = z.infer<typeof ShawarmaSchema>;
+
+export const CreateShawarmaSchema = z.object({
+  nameAr: z.string().min(1, 'Arabic name is required'),
+  nameEn: z.string().min(1, 'English name is required'),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ),
+  modifiers: z.array(ModifierSchema),
+});
+export type CreateShawarma = z.infer<typeof CreateShawarmaSchema>;
+
+export const UpdateShawarmaSchema = z.object({
+  nameAr: z.string().min(1).optional(),
+  nameEn: z.string().min(1).optional(),
+  imageUrl: z.string().refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Must be a valid URL or empty' }
+  ).optional(),
+  priceWithVat: z.string().or(z.number()).refine(
+    (val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Price must be a positive number' }
+  ).optional(),
+  modifiers: z.array(ModifierSchema).optional(),
+});
+export type UpdateShawarma = z.infer<typeof UpdateShawarmaSchema>;
 
 // Create mini pie schema
 export const CreateMiniPieSchema = z.object({
@@ -476,7 +756,7 @@ export const EODReportDataSchema = z.object({
   startDateTime: z.date(),
   endDateTime: z.date(),
   reportGeneratedAt: z.date(),
-  
+
   // Core metrics (your requirements)
   totalCashOrders: z.number().min(0),
   totalCardOrders: z.number().min(0),
@@ -484,27 +764,27 @@ export const EODReportDataSchema = z.object({
   totalWithoutVat: z.number().min(0),
   totalCancelledOrders: z.number().int().min(0),
   totalOrders: z.number().int().min(0),
-  
+
   // Additional order statistics
   completedOrders: z.number().int().min(0),
   pendingOrders: z.number().int().min(0),
-  
+
   // Financial breakdown
   vatAmount: z.number().min(0),
   averageOrderValue: z.number().min(0),
-  
+
   // Payment method breakdown
   paymentBreakdown: z.array(PaymentBreakdownSchema),
-  
+
   // Performance metrics
   bestSellingItems: z.array(BestSellingItemSchema),
   peakHour: z.string().optional(),
   hourlySales: z.array(HourlySalesSchema),
-  
+
   // Operational metrics
   orderCompletionRate: z.number().min(0).max(100),
   orderCancellationRate: z.number().min(0).max(100),
-  
+
   // Comparison with previous period (optional)
   previousPeriodComparison: z.object({
     revenueChange: z.number().optional(),
@@ -532,36 +812,36 @@ export const SavedEODReportSchema = z.object({
   reportDate: z.date(),
   startDateTime: z.date(),
   endDateTime: z.date(),
-  
+
   // All the metrics
   totalOrders: z.number().int().min(0),
   completedOrders: z.number().int().min(0),
   cancelledOrders: z.number().int().min(0),
   pendingOrders: z.number().int().min(0),
-  
+
   totalRevenue: z.number().min(0),
   totalWithVat: z.number().min(0),
   totalWithoutVat: z.number().min(0),
   vatAmount: z.number().min(0),
-  
+
   totalCashOrders: z.number().min(0),
   totalCardOrders: z.number().min(0),
-  
+
   averageOrderValue: z.number().min(0),
   peakHour: z.string().optional(),
   orderCompletionRate: z.number().min(0).max(100),
   orderCancellationRate: z.number().min(0).max(100),
-  
+
   // JSON fields for complex data
   paymentBreakdown: z.string(), // JSON string
   bestSellingItems: z.string(), // JSON string
   hourlySales: z.string(), // JSON string
-  
+
   // Metadata
   generatedBy: z.string().uuid(),
   generatedAt: z.date(),
   reportType: z.enum(['daily', 'custom', 'weekly', 'monthly']).default('daily'),
-  
+
   // Timestamps
   createdAt: z.date(),
   updatedAt: z.date(),
