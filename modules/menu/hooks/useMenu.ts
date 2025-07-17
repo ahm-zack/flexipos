@@ -1,3 +1,4 @@
+import { useAppetizers } from "@/modules/appetizers-feature/hooks/use-appetizers";
 import { useMiniPies } from "@/modules/mini-pie-feature/hooks/use-mini-pies-new";
 import { usePies } from "@/modules/pie-feature";
 import { usePizzas } from "@/modules/pizza-feature";
@@ -9,5 +10,6 @@ export function useMenu() {
         pizzas: usePizzas('cashier'),
         pies: usePies('cashier'),
         sandwiches: useSandwiches('cashier'),
+        appetizers: useAppetizers('cashier'),
     }
 }
