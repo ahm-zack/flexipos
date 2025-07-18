@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 
 interface MenuSearchStore {
@@ -31,6 +32,8 @@ export const useSearchStore = create<MenuSearchStore>((set, get) => ({
         )
         return filtered || [];
     },
+
+
 
     // Product-specific filter functions for backward compatibility
     filterSandwiches: (items) => {
@@ -76,6 +79,14 @@ export const useSearchStore = create<MenuSearchStore>((set, get) => ({
         )
         return filtered || [];
     },
+    filterBeverages: (items) => {
+        const { searchTerm } = get();
+        const filtered = items?.filter((item) =>
+            item.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.nameAr?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        return filtered || [];
+    },
 
     // Newest 5 items filters
     filterAppetizers: <T extends { nameEn?: string; nameAr?: string }>(items: T[]) => {
@@ -94,14 +105,7 @@ export const useSearchStore = create<MenuSearchStore>((set, get) => ({
         );
         return filtered || [];
     },
-    filterBeverages: <T extends { nameEn?: string; nameAr?: string }>(items: T[]) => {
-        const { searchTerm } = get();
-        const filtered = items?.filter((item) =>
-            item.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.nameAr?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        return filtered || [];
-    },
+
     filterSideOrders: <T extends { nameEn?: string; nameAr?: string }>(items: T[]) => {
         const { searchTerm } = get();
         const filtered = items?.filter((item) =>
