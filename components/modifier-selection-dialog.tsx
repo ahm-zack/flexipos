@@ -308,10 +308,11 @@ export function ModifierSelectionDialog({
 
           {/* No Modifiers */}
           {modifiers.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No customization options available for this item.</p>
-            </div>
+            // <div className="text-center py-8 text-muted-foreground">
+            //   <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            //   <p>No customization options available for this item.</p>
+            // </div>
+            <></>
           )}
 
           {/* Order Summary */}
