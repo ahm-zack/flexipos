@@ -7,7 +7,7 @@ import { PiesMenuPage } from "@/modules/menu-items-pages/pies-menu-page";
 import { PizzasMenuPage } from "@/modules/menu-items-pages/pizzas-menu-page";
 import { SandwichesMenuPage } from "@/modules/menu-items-pages/sandwiches-menu-page";
 import { ShawermasMenuPage } from "@/modules/menu-items-pages/shawermas-menu-page";
-import { SideOrdersMenuPage } from "@/modules/menu-items-pages/side-orders-menu-page";
+import { SidesMenuPage } from "@/modules/menu-items-pages/side-orders-menu-page";
 import { use } from "react";
 
 const pages = {
@@ -18,7 +18,7 @@ const pages = {
   sandwich: SandwichesMenuPage,
   "mini-pie": MiniPiesMenuPage,
   pie: PiesMenuPage,
-  "side-order": SideOrdersMenuPage,
+  "side-order": SidesMenuPage,
   pizza: PizzasMenuPage,
 };
 

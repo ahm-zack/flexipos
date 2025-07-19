@@ -6,6 +6,7 @@ import { usePies } from "@/modules/pie-feature";
 import { usePizzas } from "@/modules/pizza-feature";
 import { useSandwiches } from "@/modules/sandwich-feature";
 import { useShawarmas } from "@/modules/shawerma-feature/hooks/use-shawermas";
+import { useSides } from "@/modules/sides-feature/hooks/use-sides";
 
 export function useMenu() {
     return {
@@ -17,5 +18,6 @@ export function useMenu() {
         beverages: useBeverages('cashier'),
         burgers: useBurgers('cashier'),
         shawarmas: useShawarmas('cashier'),
+        sides: useSides('cashier'),
     }
 }
