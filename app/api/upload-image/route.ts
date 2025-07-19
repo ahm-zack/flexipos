@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
           category === 'mini-pies' ? 'mini-pie-images' :
             category === 'appetizers' ? 'appetizers-images' :
               category === 'beverages' ? 'beverages-images' :
-                'menu-items-images';
+                category === 'burgers' ? 'burgers-images' :
+                  'menu-items-images';
 
     // Create a unique filename
     const fileExt = file.name.split('.').pop();

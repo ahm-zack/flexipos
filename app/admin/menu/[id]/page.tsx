@@ -4,7 +4,7 @@ export async function generateStaticParams() {
   return [
     { id: "appetizers" },
     { id: "beverages" },
-    { id: "burger" },
+    { id: "burgers" },
     { id: "shawerma" },
     { id: "sandwich" },
     { id: "mini-pie" },
