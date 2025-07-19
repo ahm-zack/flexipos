@@ -30,6 +30,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
 
 const data = {
   navMain: [
@@ -131,10 +132,12 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-12 items-center justify-center rounded-lg">
                 <Command className="size-6" />
               </div>
-              <div className="grid flex-1 text-left text-base leading-tight">
-                <span className="truncate font-semibold text-lg">Lazaza</span>
-                <span className="truncate text-sm font-medium">POS</span>
-              </div>
+              <Link href="/">
+                <div className="grid flex-1 text-left text-base leading-tight">
+                  <span className="truncate font-semibold text-lg">Lazaza</span>
+                  <span className="truncate text-sm font-medium">POS</span>
+                </div>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
