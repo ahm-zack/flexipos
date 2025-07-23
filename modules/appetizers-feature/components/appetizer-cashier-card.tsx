@@ -7,7 +7,6 @@ import { getReliableImageUrl } from "@/lib/image-utils";
 import type { Appetizer } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import { ModifierSelectionDialog } from "@/components/modifier-selection-dialog";
-import { Badge } from "@/components/ui/badge";
 
 interface AppetizerCashierCardProps {
   appetizer: Appetizer;
@@ -65,24 +64,7 @@ export function AppetizerCashierCard({ appetizer }: AppetizerCashierCardProps) {
               {appetizer.nameAr}
             </p>
           </div>
-          {/* Show modifiers if present */}
-          {appetizer.modifiers && appetizer.modifiers.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {appetizer.modifiers.map((mod) => (
-                <Badge
-                  key={mod.id}
-                  variant={mod.type === "extra" ? "default" : "secondary"}
-                  className="text-xs"
-                >
-                  {mod.type === "extra" ? "+" : "No "}
-                  {mod.name}
-                  {mod.type === "extra" && mod.price > 0
-                    ? ` (+${mod.price})`
-                    : ""}
-                </Badge>
-              ))}
-            </div>
-          )}
+
           <div className="flex items-center justify-between">
             <PriceDisplay
               price={parseFloat(appetizer.priceWithVat)}

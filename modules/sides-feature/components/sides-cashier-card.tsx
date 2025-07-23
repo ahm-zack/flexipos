@@ -6,7 +6,6 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { getReliableImageUrl } from "@/lib/image-utils";
-import { Badge } from "@/components/ui/badge";
 import { ModifierSelectionDialog } from "@/components/modifier-selection-dialog";
 
 interface SidesCashierCardProps {
@@ -65,24 +64,7 @@ export function SidesCashierCard({ side }: SidesCashierCardProps) {
               {side.nameAr}
             </p>
           </div>
-          {/* Show modifiers if present */}
-          {side.modifiers && side.modifiers.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {side.modifiers.map((mod) => (
-                <Badge
-                  key={mod.id}
-                  variant={mod.type === "extra" ? "default" : "secondary"}
-                  className="text-xs"
-                >
-                  {mod.type === "extra" ? "+" : "No "}
-                  {mod.name}
-                  {mod.type === "extra" && mod.price > 0
-                    ? ` (+${mod.price})`
-                    : ""}
-                </Badge>
-              ))}
-            </div>
-          )}
+
           <div className="flex items-center justify-between">
             <PriceDisplay
               price={parseFloat(side.priceWithVat)}

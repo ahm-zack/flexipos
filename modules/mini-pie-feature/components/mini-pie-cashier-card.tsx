@@ -5,7 +5,6 @@ import Image from "next/image";
 import { PriceDisplay } from "@/components/currency";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import type { MiniPie } from "@/lib/db/schema";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ModifierSelectionDialog } from "@/components/modifier-selection-dialog";
 
@@ -65,31 +64,7 @@ export function MiniPieCashierCard({ miniPie }: MiniPieCashierCardProps) {
               {miniPie.nameAr}
             </p>
           </div>
-          {/* Show modifiers if present */}
-          {miniPie.modifiers && miniPie.modifiers.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {miniPie.modifiers.map((mod) => (
-                <Badge
-                  key={mod.id}
-                  variant={mod.type === "extra" ? "default" : "secondary"}
-                  className="text-xs"
-                >
-                  {mod.type === "extra" ? "+" : "No "} {mod.name}
-                  {mod.type === "extra" && mod.price > 0
-                    ? ` (+${mod.price})`
-                    : ""}
-                </Badge>
-              ))}
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="secondary"
-              className="bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200 border-pink-200 dark:border-pink-800"
-            >
-              {miniPie.size}
-            </Badge>
-          </div>
+
           <div className="flex items-center justify-between">
             <PriceDisplay
               price={parseFloat(miniPie.priceWithVat)}
