@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useTransition } from "react";
 import { Plus, RefreshCw } from "lucide-react";
 import { useUsers } from "../hooks/use-users";
 import { UsersCards } from "./users-table";
@@ -13,6 +14,7 @@ interface UsersPageContentProps {
 
 export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
   const { data: users, isLoading, error, refetch } = useUsers();
+  const [isPending, startTransition] = useTransition();
 
   if (isLoading) {
     return (
@@ -55,10 +57,27 @@ export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Link href="/admin/users/new" className="w-full sm:w-auto">
-            <Button className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Add User
+          <Link
+            href="/admin/users/new"
+            className="w-full sm:w-auto"
+            prefetch={true}
+            onClick={() => {
+              // Use startTransition for modern loading UX
+              startTransition(() => {});
+            }}
+          >
+            <Button className="w-full" disabled={isPending}>
+              {isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="animate-spin rounded-full border-2 border-t-transparent border-white h-4 w-4 mr-2" />
+                  Loading...
+                </span>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add User
+                </>
+              )}
             </Button>
           </Link>
         </div>
