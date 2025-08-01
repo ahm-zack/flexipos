@@ -2,41 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Home,
-  Pizza,
-  Sandwich,
-  Beer,
-  Hamburger,
-  PieChart,
-  Users,
-  FileText,
-  List,
-  Utensils,
-  ScrollText,
-} from "lucide-react";
+// Using emoji icons for a colorful menu
 import { UserInfo } from "./user-info";
 import { useCurrentUserOptimized } from "@/hooks/use-current-user-optimized";
 
 const navItems = [
   {
     title: "Dashboard",
-    icon: Home,
+    icon: "🏠",
     items: [
-      { title: "Home", url: "/", icon: Home },
-      { title: "Pizza", url: "/admin/menu/pizza", icon: Pizza },
-      { title: "Appetizers", url: "/admin/menu/appetizers", icon: Utensils },
-      { title: "Beverages", url: "/admin/menu/beverages", icon: Beer },
-      { title: "Burgers", url: "/admin/menu/burger", icon: Hamburger },
-      { title: "Sandwiches", url: "/admin/menu/sandwich", icon: Sandwich },
-      { title: "Shawermas", url: "/admin/menu/shawerma", icon: List },
-      { title: "Pies", url: "/admin/menu/pie", icon: PieChart },
-      { title: "Mini Pies", url: "/admin/menu/mini-pie", icon: PieChart },
-      { title: "Side Orders", url: "/admin/menu/side-order", icon: ScrollText },
-      { title: "Orders", url: "/admin/orders", icon: FileText },
-      { title: "Menu Items", url: "/admin/items", icon: List },
-      { title: "Users", url: "/admin/users", icon: Users },
-      { title: "Reports", url: "/admin/reports", icon: FileText },
+      { title: "Home", url: "/", icon: "🏠" },
+      { title: "Pizza", url: "/admin/menu/pizza", icon: "🍕" },
+      { title: "Appetizers", url: "/admin/menu/appetizers", icon: "🥗" },
+      { title: "Beverages", url: "/admin/menu/beverages", icon: "🥤" },
+      { title: "Burgers", url: "/admin/menu/burger", icon: "🍔" },
+      { title: "Sandwiches", url: "/admin/menu/sandwich", icon: "🥪" },
+      { title: "Shawermas", url: "/admin/menu/shawerma", icon: "🌯" },
+      { title: "Pies", url: "/admin/menu/pie", icon: "🥧" },
+      { title: "Mini Pies", url: "/admin/menu/mini-pie", icon: "🥟" },
+      { title: "Side Orders", url: "/admin/menu/side-order", icon: "🍟" },
+      { title: "Orders", url: "/admin/orders", icon: "🧾" },
+      { title: "Menu Items", url: "/admin/items", icon: "📋" },
+      { title: "Users", url: "/admin/users", icon: "👥" },
+      { title: "Reports", url: "/admin/reports", icon: "📊" },
     ],
   },
 ];
@@ -93,7 +81,9 @@ export function POSNav() {
                     }`}
                   >
                     {subItem.icon && (
-                      <subItem.icon className="w-5 h-5 text-blue-500 dark:text-blue-300" />
+                      <span className="w-5 h-5 text-xl mr-1" aria-hidden="true">
+                        {subItem.icon}
+                      </span>
                     )}
                     <span>{subItem.title}</span>
                   </Link>
