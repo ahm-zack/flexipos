@@ -81,7 +81,10 @@ export function POSNav() {
                     }`}
                   >
                     {subItem.icon && (
-                      <span className="w-5 h-5 text-xl mr-1" aria-hidden="true">
+                      <span
+                        className="w-5 h-5 text-xl mr-1 flex items-center"
+                        aria-hidden="true"
+                      >
                         {subItem.icon}
                       </span>
                     )}
