@@ -22,6 +22,7 @@ const navItems = [
       { title: "Mini Pies", url: "/admin/menu/mini-pie", icon: "🥟" },
       { title: "Side Orders", url: "/admin/menu/side-order", icon: "🍟" },
       { title: "Orders", url: "/admin/orders", icon: "🧾" },
+      { title: "Customers", url: "/admin/customers", icon: "👥" },
       { title: "Menu Items", url: "/admin/items", icon: "📋" },
       { title: "Users", url: "/admin/users", icon: "👥" },
       { title: "Reports", url: "/admin/reports", icon: "📊" },
@@ -45,6 +46,7 @@ export function POSNav() {
       items: navItems[0].items.filter((item) =>
         [
           "/admin/orders",
+          "/admin/customers",
           "/admin/items",
           "/admin/users",
           "/admin/reports",

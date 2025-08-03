@@ -17,10 +17,10 @@ export type Database = {
     Functions: {
       graphql: {
         Args: {
-          variables?: Json
+          extensions?: Json
           operationName?: string
           query?: string
-          extensions?: Json
+          variables?: Json
         }
         Returns: Json
       }
@@ -171,6 +171,85 @@ export type Database = {
             columns: ["original_order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_orders: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          order_number: string
+          order_total: number
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          order_number: string
+          order_total: number
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          order_number?: string
+          order_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          address: string | null
+          created_at: string
+          created_by: string
+          id: string
+          last_order_at: string | null
+          name: string
+          order_count: number
+          phone: string
+          total_purchases: number
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          last_order_at?: string | null
+          name: string
+          order_count?: number
+          phone: string
+          total_purchases?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          last_order_at?: string | null
+          name?: string
+          order_count?: number
+          phone?: string
+          total_purchases?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]

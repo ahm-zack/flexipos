@@ -2,6 +2,7 @@
 import React, { ReactNode } from "react";
 import { POSNav } from "./pos-nav";
 import { CartPanelStatic } from "./cart-panel-static";
+import { CartPanelWithCustomer } from "./cart-panel-with-customer";
 
 interface POSLayoutProps {
   children: ReactNode;
@@ -20,7 +21,7 @@ export default function POSLayout({ children }: POSLayoutProps) {
 
       {/* Right Sidebar */}
       <div className="w-[25%] bg-sidebar overflow-hidden">
-        <CartPanelStatic />
+        <CartPanelWithCustomer />
       </div>
     </div>
   );

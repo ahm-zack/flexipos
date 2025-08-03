@@ -25,6 +25,7 @@ export default function AdminLayout({
   // Exclude POSLayout (cart) for these admin routes
   const excludedRoutes = [
     "/admin/orders",
+    "/admin/customers",
     "/admin/items",
     "/admin/users",
     "/admin/reports",

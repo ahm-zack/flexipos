@@ -11,6 +11,7 @@ import {
   Sandwich,
   Coffee,
   Users,
+  UserCheck,
   BarChart3,
   ChefHat,
   Package,
@@ -92,6 +93,11 @@ const data = {
       title: "Orders",
       url: "/admin/orders",
       icon: ShoppingBag,
+    },
+    {
+      title: "Customers",
+      url: "/admin/customers",
+      icon: UserCheck,
     },
     {
       title: "Items Management",
