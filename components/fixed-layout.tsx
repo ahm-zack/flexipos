@@ -1,7 +1,6 @@
 "use client";
 import React, { ReactNode } from "react";
 import { POSNav } from "./pos-nav";
-import { CartPanelStatic } from "./cart-panel-static";
 import { CartPanelWithCustomer } from "./cart-panel-with-customer";
 
 interface POSLayoutProps {
