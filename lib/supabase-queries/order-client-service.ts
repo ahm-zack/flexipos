@@ -1,10 +1,9 @@
 import { createClient } from '@/utils/supabase/client';
 import type {
-    Order,
     CanceledOrder,
     ModifiedOrder,
-    OrderItem,
 } from '@/lib/orders/db-schema';
+import type { Order, OrderItem } from '@/lib/orders/schemas';
 import type { OrderFilters } from '@/lib/order-service';
 import type { Json } from '@/database.types';
 import type { CartItem } from '@/lib/orders/schemas';
@@ -49,13 +48,13 @@ const transformCartItemsToOrderItems = (cartItems: CartItem[]): OrderItem[] => {
 const transformSupabaseToOrder = (row: Record<string, unknown>): Order => ({
     id: row.id as string,
     orderNumber: row.order_number as string,
-    customerName: row.customer_name as string | null,
-    items: (row.items as OrderItem[]) || [],
-    totalAmount: typeof row.total_amount === 'string' ? row.total_amount : (row.total_amount as number).toString(),
+    customerName: row.customer_name as string | undefined,
+    items: Array.isArray(row.items) ? row.items as OrderItem[] : [],
+    totalAmount: typeof row.total_amount === 'string' ? parseFloat(row.total_amount) : (row.total_amount as number),
     paymentMethod: row.payment_method as 'cash' | 'card' | 'mixed',
     status: row.status === 'pending' ? 'completed' : row.status as 'completed' | 'canceled' | 'modified', // Handle pending status
-    createdAt: new Date(row.created_at as string),
-    updatedAt: new Date(row.updated_at as string),
+    createdAt: new Date(row.created_at as string).toISOString(),
+    updatedAt: new Date(row.updated_at as string).toISOString(),
     createdBy: row.created_by as string,
 });
 
@@ -241,7 +240,7 @@ export const orderClientService = {
 
         if (updateData.customerName !== undefined) updateFields.customer_name = updateData.customerName;
         if (updateData.items !== undefined) updateFields.items = updateData.items as unknown as Json;
-        if (updateData.totalAmount !== undefined) updateFields.total_amount = typeof updateData.totalAmount === 'string' ? parseFloat(updateData.totalAmount) : updateData.totalAmount;
+        if (updateData.totalAmount !== undefined) updateFields.total_amount = updateData.totalAmount;
         if (updateData.status !== undefined) updateFields.status = updateData.status;
         if (updateData.paymentMethod !== undefined) updateFields.payment_method = updateData.paymentMethod;
 
@@ -336,7 +335,7 @@ export const orderClientService = {
         await this.updateOrder(id, {
             customerName: newOrderData.customerName,
             items: newOrderData.items,
-            totalAmount: typeof newOrderData.totalAmount === 'string' ? newOrderData.totalAmount : newOrderData.totalAmount.toString(),
+            totalAmount: newOrderData.totalAmount,
             paymentMethod: newOrderData.paymentMethod,
             status: 'modified',
         });

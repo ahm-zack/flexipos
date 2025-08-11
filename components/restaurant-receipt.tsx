@@ -508,15 +508,6 @@ const OrderItems = ({ items }: { items: Order["items"] }) => (
     {items.map((item, index) => (
       <div key={index} style={{ marginBottom: "0.5rem" }}>
         <div style={{ fontWeight: 700 }}>{item.name}</div>
-        <div
-          style={{
-            fontSize: "0.75rem",
-            fontWeight: 700,
-            marginBottom: "0.25rem",
-          }}
-        >
-          {item.nameAr}
-        </div>
 
         <div
           style={{

@@ -81,7 +81,6 @@ export function OrdersList() {
     printingOrderId,
     printOrderData,
     handleClosePrint,
-    convertToOrder,
   } = useOrdersContext();
 
   // Local pagination state
@@ -322,7 +321,9 @@ export function OrdersList() {
                     <span className="text-lg font-bold flex items-center gap-1 transition-transform duration-200 group-hover:scale-105">
                       <SaudiRiyalSymbol size={16} />
                       <span className="text-green-600">
-                        {parseFloat(order.totalAmount as string).toFixed(2)}
+                        {typeof order.totalAmount === "number"
+                          ? order.totalAmount.toFixed(2)
+                          : parseFloat(order.totalAmount).toFixed(2)}
                       </span>
                     </span>
                   </div>
@@ -518,9 +519,7 @@ export function OrdersList() {
       <Dialog open={!!printingOrderId} onOpenChange={handleClosePrint}>
         {printingOrderId && printOrderData && (
           <RestaurantReceipt
-            order={convertToOrder(
-              convertOrderToApiOrderResponse(printOrderData)
-            )}
+            order={printOrderData}
             onClose={handleClosePrint}
           />
         )}
