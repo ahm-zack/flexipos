@@ -1,9 +1,5 @@
 import { createClient } from '@/utils/supabase/client';
-import type {
-    CanceledOrder,
-    ModifiedOrder,
-} from '@/lib/orders/db-schema';
-import type { Order, OrderItem } from '@/lib/orders/schemas';
+import type { Order, OrderItem, CanceledOrder, ModifiedOrder } from '@/lib/orders/schemas';
 import type { OrderFilters } from '@/lib/order-service';
 import type { Json } from '@/database.types';
 import type { CartItem } from '@/lib/orders/schemas';
@@ -61,16 +57,16 @@ const transformSupabaseToOrder = (row: Record<string, unknown>): Order => ({
 const transformSupabaseToCanceledOrder = (row: Record<string, unknown>): CanceledOrder => ({
     id: row.id as string,
     originalOrderId: row.original_order_id as string,
-    canceledAt: new Date(row.canceled_at as string),
+    canceledAt: new Date(row.canceled_at as string).toISOString(),
     canceledBy: row.canceled_by as string,
-    reason: row.reason as string | null,
+    reason: row.reason as string | undefined,
     orderData: row.order_data as Order,
 });
 
 const transformSupabaseToModifiedOrder = (row: Record<string, unknown>): ModifiedOrder => ({
     id: row.id as string,
     originalOrderId: row.original_order_id as string,
-    modifiedAt: new Date(row.modified_at as string),
+    modifiedAt: new Date(row.modified_at as string).toISOString(),
     modifiedBy: row.modified_by as string,
     modificationType: row.modification_type as 'item_added' | 'item_removed' | 'quantity_changed' | 'item_replaced' | 'multiple_changes',
     originalData: row.original_data as Order,

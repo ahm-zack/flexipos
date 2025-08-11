@@ -3,10 +3,11 @@ import { orderClientService, type OrdersListResult, type OrderHistoryResult } fr
 import type {
   Order,
   CanceledOrder,
-  ModifiedOrder
-} from '@/lib/orders/db-schema';
+  ModifiedOrder,
+  CreateOrder,
+  OrderItem
+} from '@/lib/orders';
 import type { OrderFilters } from '@/lib/order-service';
-import type { CreateOrder, OrderItem } from '@/lib/orders';
 
 // Query keys
 export const orderKeys = {
@@ -52,7 +53,7 @@ const updateOrder = async ({
   const updateData: Partial<Order> = {};
   if (data.customerName !== undefined) updateData.customerName = data.customerName;
   if (data.items !== undefined) updateData.items = data.items;
-  if (data.totalAmount !== undefined) updateData.totalAmount = data.totalAmount.toString();
+  if (data.totalAmount !== undefined) updateData.totalAmount = data.totalAmount;
   if (data.status !== undefined) updateData.status = data.status;
 
   return await orderClientService.updateOrder(id, updateData);

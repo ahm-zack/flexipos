@@ -161,12 +161,12 @@ export function CartPanelWithCustomer() {
           paymentMethod: data.paymentMethod,
           status: data.status,
           createdAt:
-            data.createdAt instanceof Date
-              ? data.createdAt.toISOString()
+            typeof data.createdAt === "string"
+              ? data.createdAt
               : data.createdAt,
           updatedAt:
-            data.updatedAt instanceof Date
-              ? data.updatedAt.toISOString()
+            typeof data.updatedAt === "string"
+              ? data.updatedAt
               : data.updatedAt,
           createdBy: data.createdBy,
         };

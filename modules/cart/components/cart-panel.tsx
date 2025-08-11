@@ -189,7 +189,7 @@ export function CartPanel({ className }: CartPanelProps) {
         const apiOrder: ApiOrder = {
           id: data.id,
           orderNumber: data.orderNumber,
-          customerName: data.customerName,
+          customerName: data.customerName || null,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           items: data.items as any[],
           totalAmount:
@@ -199,12 +199,12 @@ export function CartPanel({ className }: CartPanelProps) {
           paymentMethod: data.paymentMethod,
           status: data.status,
           createdAt:
-            data.createdAt instanceof Date
-              ? data.createdAt.toISOString()
+            typeof data.createdAt === "string"
+              ? data.createdAt
               : data.createdAt,
           updatedAt:
-            data.updatedAt instanceof Date
-              ? data.updatedAt.toISOString()
+            typeof data.updatedAt === "string"
+              ? data.updatedAt
               : data.updatedAt,
           createdBy: data.createdBy,
         };
