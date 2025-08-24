@@ -2,10 +2,10 @@ import { db } from './db';
 import { orders, canceledOrders, eodReports, type NewEODReport } from './db/schema';
 import { and, between, eq, sql, desc, asc } from 'drizzle-orm';
 import { generateEODReportNumber } from './eod-report/server-utils';
-import { 
-  EODReportDataSchema, 
-  EODReportRequestSchema, 
-  type EODReportData, 
+import {
+  EODReportDataSchema,
+  EODReportRequestSchema,
+  type EODReportData,
   type EODReportRequest,
   type BestSellingItem,
   type PaymentBreakdown,
@@ -79,7 +79,7 @@ const fetchOrdersInRange = async (startDate: Date, endDate: Date): Promise<Order
       )
     )
     .orderBy(asc(orders.createdAt));
-  
+
   // Parse the items JSON field
   return result.map(order => ({
     ...order,
@@ -98,7 +98,7 @@ const fetchCanceledOrdersInRange = async (startDate: Date, endDate: Date): Promi
       between(canceledOrders.canceledAt, startDate, endDate)
     )
     .orderBy(asc(canceledOrders.canceledAt));
-  
+
   // Parse the orderData JSON field
   return result.map(order => ({
     ...order,
@@ -114,7 +114,7 @@ const calculateTotalRevenue = (orders: OrderWithDetails[]): number => {
     const amount = parseFloat(order.totalAmount || '0');
     return sum + amount;
   }, 0);
-  
+
   return Math.round(total * 100) / 100;
 };
 
@@ -124,7 +124,7 @@ const calculateTotalRevenue = (orders: OrderWithDetails[]): number => {
 const calculateCashAndCardTotals = (orders: OrderWithDetails[]) => {
   let cashTotal = 0;
   let cardTotal = 0;
-  
+
   orders.forEach(order => {
     const amount = parseFloat(order.totalAmount || '0');
     if (order.paymentMethod === 'cash') {
@@ -137,7 +137,7 @@ const calculateCashAndCardTotals = (orders: OrderWithDetails[]) => {
       cardTotal += amount;
     }
   });
-  
+
   return {
     cashTotal: Math.round(cashTotal * 100) / 100,
     cardTotal: Math.round(cardTotal * 100) / 100
@@ -157,7 +157,7 @@ const calculatePaymentBreakdown = (orders: OrderWithDetails[]): PaymentBreakdown
   orders.forEach(order => {
     const amount = parseFloat(order.totalAmount || '0');
     const paymentMethod = order.paymentMethod as PaymentMethod;
-    
+
     if (breakdown[paymentMethod]) {
       breakdown[paymentMethod].amount += amount;
       breakdown[paymentMethod].count += 1;
@@ -165,7 +165,7 @@ const calculatePaymentBreakdown = (orders: OrderWithDetails[]): PaymentBreakdown
   });
 
   const totalRevenue = calculateTotalRevenue(orders);
-  
+
   return Object.entries(breakdown).map(([method, data]) => ({
     method: method as PaymentMethod,
     orderCount: data.count,
@@ -178,11 +178,11 @@ const calculatePaymentBreakdown = (orders: OrderWithDetails[]): PaymentBreakdown
  * Calculates best selling items
  */
 const calculateBestSellingItems = (orders: OrderWithDetails[]): BestSellingItem[] => {
-  const itemStats: Record<string, { 
-    name: string; 
-    totalQuantity: number; 
-    totalRevenue: number; 
-    type: string; 
+  const itemStats: Record<string, {
+    name: string;
+    totalQuantity: number;
+    totalRevenue: number;
+    type: string;
   }> = {};
 
   orders.forEach(order => {
@@ -190,7 +190,7 @@ const calculateBestSellingItems = (orders: OrderWithDetails[]): BestSellingItem[
       order.items.forEach(item => {
         const key = `${item.id}_${item.type}`;
         const name = item.name || item.nameEn || item.nameAr || 'Unknown Item';
-        
+
         if (!itemStats[key]) {
           itemStats[key] = {
             name,
@@ -199,7 +199,7 @@ const calculateBestSellingItems = (orders: OrderWithDetails[]): BestSellingItem[
             type: item.type
           };
         }
-        
+
         itemStats[key].totalQuantity += item.quantity || 0;
         itemStats[key].totalRevenue += item.totalPrice || 0;
       });
@@ -232,7 +232,7 @@ const calculateHourlySales = (orders: OrderWithDetails[]): HourlySales[] => {
   orders.forEach(order => {
     const hour = new Date(order.createdAt).getHours();
     const amount = parseFloat(order.totalAmount || '0');
-    
+
     hourlyData[hour].count += 1;
     hourlyData[hour].revenue += amount;
   });
@@ -248,10 +248,10 @@ const calculateHourlySales = (orders: OrderWithDetails[]): HourlySales[] => {
  * Finds peak hour based on order count
  */
 const findPeakHour = (hourlySales: HourlySales[]): string => {
-  const peakHour = hourlySales.reduce((max, current) => 
+  const peakHour = hourlySales.reduce((max, current) =>
     current.orderCount > max.orderCount ? current : max
   );
-  
+
   return `${peakHour.hour}:00`;
 };
 
@@ -261,11 +261,11 @@ const findPeakHour = (hourlySales: HourlySales[]): string => {
 export const generateEODReport = async (request: EODReportRequest): Promise<EODReportData> => {
   // Validate request
   const validatedRequest = EODReportRequestSchema.parse(request);
-  
+
   // Convert string dates to Date objects
   const startDateTime = new Date(validatedRequest.startDateTime);
   const endDateTime = new Date(validatedRequest.endDateTime);
-  
+
   // Fetch data
   const [completedOrders, canceledOrdersData] = await Promise.all([
     fetchOrdersInRange(startDateTime, endDateTime),
@@ -282,8 +282,8 @@ export const generateEODReport = async (request: EODReportRequest): Promise<EODR
   const hourlySales = calculateHourlySales(completedOrders);
   const peakHour = findPeakHour(hourlySales);
   const averageOrderValue = completedOrders.length > 0 ? totalRevenue / completedOrders.length : 0;
-  const completionRate = (completedOrders.length + canceledOrdersData.length) > 0 
-    ? (completedOrders.length / (completedOrders.length + canceledOrdersData.length)) * 100 
+  const completionRate = (completedOrders.length + canceledOrdersData.length) > 0
+    ? (completedOrders.length / (completedOrders.length + canceledOrdersData.length)) * 100
     : 100;
 
   // Build report according to schema
@@ -291,7 +291,7 @@ export const generateEODReport = async (request: EODReportRequest): Promise<EODR
     startDateTime,
     endDateTime,
     reportGeneratedAt: new Date(),
-    
+
     // Core metrics
     totalCashOrders: cashTotal,
     totalCardOrders: cardTotal,
@@ -299,46 +299,66 @@ export const generateEODReport = async (request: EODReportRequest): Promise<EODR
     totalWithoutVat: Math.round(netRevenue * 100) / 100,
     totalCancelledOrders: canceledOrdersData.length,
     totalOrders: completedOrders.length,
-    
+
     // Additional order statistics
     completedOrders: completedOrders.length,
-    pendingOrders: 0, // We don't have pending orders in this range
-    
+
     // Financial breakdown
     vatAmount: Math.round(vatAmount * 100) / 100,
     averageOrderValue: Math.round(averageOrderValue * 100) / 100,
-    
+
     // Payment method breakdown
     paymentBreakdown,
-    
+
     // Performance metrics
     bestSellingItems,
     peakHour,
     hourlySales,
-    
+
     // Operational metrics
     orderCompletionRate: Math.round(completionRate * 100) / 100,
     orderCancellationRate: Math.round((100 - completionRate) * 100) / 100,
   };
 
   // Validate the final report
-  return EODReportDataSchema.parse(reportData);
+  const validatedReport = EODReportDataSchema.parse(reportData);
+
+  // After successful EOD generation, reset daily serial for the next day
+  await resetDailySerialSequence();
+
+  return validatedReport;
+};
+
+/**
+ * Reset the daily serial sequence for the next business day
+ * This should be called after EOD report generation
+ */
+const resetDailySerialSequence = async (): Promise<void> => {
+  try {
+    // Use the database connection to call our reset function
+    await db.execute(sql`SELECT reset_daily_serial_sequence()`);
+    console.log('✅ Daily serial sequence reset successfully');
+  } catch (error) {
+    console.error('⚠️ Failed to reset daily serial sequence:', error);
+    // Don't throw - EOD report generation is more important than serial reset
+    // The system can still function if this fails
+  }
 };
 
 /**
  * Saves an EOD report to the database
  */
 export const saveEODReportToDatabase = async (
-  reportData: EODReportData, 
+  reportData: EODReportData,
   generatedBy: string
 ): Promise<string> => {
   // Generate the report number
   const reportNumber = await generateEODReportNumber();
-  
+
   // Calculate cash and card order counts from payment breakdown
   const cashOrdersCount = reportData.paymentBreakdown.find(p => p.method === 'cash')?.orderCount || 0;
   const cardOrdersCount = reportData.paymentBreakdown.find(p => p.method === 'card')?.orderCount || 0;
-  
+
   const reportToSave: NewEODReport = {
     reportNumber,
     reportDate: reportData.startDateTime.toISOString().split('T')[0],
@@ -347,7 +367,6 @@ export const saveEODReportToDatabase = async (
     totalOrders: reportData.totalOrders,
     completedOrders: reportData.completedOrders,
     cancelledOrders: reportData.totalCancelledOrders,
-    pendingOrders: reportData.pendingOrders,
     totalRevenue: reportData.totalWithVat.toString(),
     totalWithVat: reportData.totalWithVat.toString(),
     totalWithoutVat: reportData.totalWithoutVat.toString(),
@@ -381,7 +400,7 @@ export const getEODReportsHistory = async (
   endDate?: Date
 ) => {
   const offset = (page - 1) * limit;
-  
+
   // Build the where condition
   const whereCondition = startDate && endDate
     ? between(eodReports.reportDate, startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0])
@@ -398,7 +417,6 @@ export const getEODReportsHistory = async (
         totalOrders: eodReports.totalOrders,
         completedOrders: eodReports.completedOrders,
         cancelledOrders: eodReports.cancelledOrders,
-        pendingOrders: eodReports.pendingOrders,
         totalRevenue: eodReports.totalRevenue,
         totalWithVat: eodReports.totalWithVat,
         totalWithoutVat: eodReports.totalWithoutVat,
@@ -460,13 +478,13 @@ export const getEODReportById = async (reportId: string) => {
   }
 
   const report = result[0];
-  
+
   // Convert the database record back to EODReportData format
   const reportData: EODReportData = {
     startDateTime: report.startDateTime,
     endDateTime: report.endDateTime,
     reportGeneratedAt: report.generatedAt,
-    
+
     // Core metrics
     totalCashOrders: parseFloat(report.totalCashOrders),
     totalCardOrders: parseFloat(report.totalCardOrders),
@@ -474,23 +492,22 @@ export const getEODReportById = async (reportId: string) => {
     totalWithoutVat: parseFloat(report.totalWithoutVat),
     totalCancelledOrders: report.cancelledOrders,
     totalOrders: report.totalOrders,
-    
+
     // Additional order statistics
     completedOrders: report.completedOrders,
-    pendingOrders: report.pendingOrders,
-    
+
     // Financial breakdown
     vatAmount: parseFloat(report.vatAmount),
     averageOrderValue: parseFloat(report.averageOrderValue),
-    
+
     // Payment method breakdown
     paymentBreakdown: JSON.parse(report.paymentBreakdown as string) as PaymentBreakdown[],
-    
+
     // Performance metrics
     bestSellingItems: JSON.parse(report.bestSellingItems as string) as BestSellingItem[],
     peakHour: report.peakHour || '12:00',
     hourlySales: JSON.parse(report.hourlySales as string) as HourlySales[],
-    
+
     // Operational metrics
     orderCompletionRate: parseFloat(report.orderCompletionRate),
     orderCancellationRate: parseFloat(report.orderCancellationRate),
@@ -506,15 +523,15 @@ export const getDatePresets = () => {
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-  
+
   const startOfYesterday = new Date(startOfToday);
   startOfYesterday.setDate(startOfYesterday.getDate() - 1);
   const endOfYesterday = new Date(endOfToday);
   endOfYesterday.setDate(endOfYesterday.getDate() - 1);
-  
+
   const startOfLast7Days = new Date(startOfToday);
   startOfLast7Days.setDate(startOfLast7Days.getDate() - 7);
-  
+
   return {
     today: { startDateTime: startOfToday, endDateTime: endOfToday },
     yesterday: { startDateTime: startOfYesterday, endDateTime: endOfYesterday },
@@ -555,11 +572,11 @@ export const deleteEODReport = async (reportId: string): Promise<void> => {
       .delete(eodReports)
       .where(eq(eodReports.id, reportId))
       .returning();
-    
+
     if (result.length === 0) {
       throw new Error(`EOD report with ID ${reportId} not found`);
     }
-    
+
     console.log(`EOD report ${reportId} deleted successfully`);
   } catch (error) {
     console.error(`Error deleting EOD report ${reportId}:`, error);

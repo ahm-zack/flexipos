@@ -49,11 +49,11 @@ export const useEODReportFormatters = () => {
 
   const formatPeakHour = (peakHour?: string): string => {
     if (!peakHour) return 'N/A';
-    
+
     const hour = parseInt(peakHour.split(':')[0]);
     const period = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    
+
     return `${displayHour}:00 ${period}`;
   };
 
@@ -75,12 +75,12 @@ export const useEODReportAnalytics = (reportData?: EODReportData) => {
 
     // Payment method analysis
     const paymentInsights = {
-      dominantPaymentMethod: reportData.paymentBreakdown.length > 0 
-        ? reportData.paymentBreakdown.reduce((prev, current) => 
-            prev.percentage > current.percentage ? prev : current
-          ).method
+      dominantPaymentMethod: reportData.paymentBreakdown.length > 0
+        ? reportData.paymentBreakdown.reduce((prev, current) =>
+          prev.percentage > current.percentage ? prev : current
+        ).method
         : 'N/A',
-      
+
       cashVsCardRatio: reportData.totalCashOrders > 0 && reportData.totalCardOrders > 0
         ? (reportData.totalCashOrders / reportData.totalCardOrders).toFixed(2)
         : 'N/A',
@@ -89,25 +89,25 @@ export const useEODReportAnalytics = (reportData?: EODReportData) => {
     // Performance insights
     const performanceInsights = {
       isHighPerformance: reportData.orderCompletionRate > 95,
-      cancellationTrend: reportData.orderCancellationRate > 10 ? 'high' : 
-                        reportData.orderCancellationRate > 5 ? 'moderate' : 'low',
-      averageOrderTrend: reportData.averageOrderValue > 50 ? 'high' : 
-                        reportData.averageOrderValue > 30 ? 'moderate' : 'low',
+      cancellationTrend: reportData.orderCancellationRate > 10 ? 'high' :
+        reportData.orderCancellationRate > 5 ? 'moderate' : 'low',
+      averageOrderTrend: reportData.averageOrderValue > 50 ? 'high' :
+        reportData.averageOrderValue > 30 ? 'moderate' : 'low',
     };
 
     // Sales pattern analysis
     const salesPattern = {
       busiestHour: reportData.peakHour,
       totalHoursActive: reportData.hourlySales.filter(h => h.orderCount > 0).length,
-      averageOrdersPerHour: reportData.totalOrders > 0 
-        ? (reportData.totalOrders / 24).toFixed(1) 
+      averageOrdersPerHour: reportData.totalOrders > 0
+        ? (reportData.totalOrders / 24).toFixed(1)
         : '0',
     };
 
     // Best sellers analysis
     const bestSellersInsights = {
-      topItem: reportData.bestSellingItems.length > 0 
-        ? reportData.bestSellingItems[0] 
+      topItem: reportData.bestSellingItems.length > 0
+        ? reportData.bestSellingItems[0]
         : null,
       totalItemsSold: reportData.bestSellingItems.reduce((sum, item) => sum + item.quantity, 0),
       averageItemPrice: reportData.bestSellingItems.length > 0
@@ -199,20 +199,20 @@ export const useEODReportSummary = (reportData?: EODReportData) => {
       totalOrders: reportData.totalOrders,
       completionRate: reportData.orderCompletionRate,
       cancellationRate: reportData.orderCancellationRate,
-      
+
       // Performance indicators
       averageOrderValue: reportData.averageOrderValue,
       peakHour: reportData.peakHour,
-      
+
       // Financial breakdown
       cashRevenue: reportData.totalCashOrders,
       cardRevenue: reportData.totalCardOrders,
       vatAmount: reportData.vatAmount,
-      
+
       // Activity metrics
       activeHours: reportData.hourlySales.filter(h => h.orderCount > 0).length,
       bestSellingItemsCount: reportData.bestSellingItems.length,
-      
+
       // Status indicators
       isHealthy: reportData.orderCompletionRate > 90 && reportData.orderCancellationRate < 10,
       needsAttention: reportData.orderCancellationRate > 15 || reportData.orderCompletionRate < 80,
@@ -256,7 +256,6 @@ export const useEODReportChartData = (reportData?: EODReportData) => {
     const orderStatusChart = [
       { status: 'Completed', count: reportData.completedOrders },
       { status: 'Cancelled', count: reportData.totalCancelledOrders },
-      { status: 'Pending', count: reportData.pendingOrders },
     ];
 
     return {

@@ -717,7 +717,7 @@ export const PaymentMethodEnum = z.enum(['cash', 'card', 'mixed']);
 export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
 
 // Order status enum for reporting
-export const OrderStatusEnum = z.enum(['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']);
+export const OrderStatusEnum = z.enum(['completed', 'canceled', 'modified']);
 export type OrderStatus = z.infer<typeof OrderStatusEnum>;
 
 // Best selling item schema
@@ -767,7 +767,6 @@ export const EODReportDataSchema = z.object({
 
   // Additional order statistics
   completedOrders: z.number().int().min(0),
-  pendingOrders: z.number().int().min(0),
 
   // Financial breakdown
   vatAmount: z.number().min(0),
@@ -817,7 +816,6 @@ export const SavedEODReportSchema = z.object({
   totalOrders: z.number().int().min(0),
   completedOrders: z.number().int().min(0),
   cancelledOrders: z.number().int().min(0),
-  pendingOrders: z.number().int().min(0),
 
   totalRevenue: z.number().min(0),
   totalWithVat: z.number().min(0),

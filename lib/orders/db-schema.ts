@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, pgEnum, decimal, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, pgEnum, decimal, jsonb, date } from 'drizzle-orm/pg-core';
 import { users } from '../db/schema';
 
 // Order status enum (using different name to avoid conflicts)
@@ -23,6 +23,8 @@ export const modificationTypeEnum = pgEnum('modification_type', [
 export const orders = pgTable('orders', {
   id: uuid('id').primaryKey().defaultRandom(),
   orderNumber: text('order_number').notNull().unique(), // Auto-generated unique order number
+  dailySerial: text('daily_serial'), // Daily resetting serial number (001, 002, 003...)
+  serialDate: date('serial_date'), // Date for the daily serial
   customerName: text('customer_name'), // Optional customer name
   items: jsonb('items').notNull(), // Array of order items in JSON format
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),

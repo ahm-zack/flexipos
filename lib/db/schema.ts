@@ -273,7 +273,7 @@ export type ModifierType = typeof modifierTypeEnum.enumValues[number];
 export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'mixed']);
 
 // Define order status enum for EOD reports
-export const eodOrderStatusEnum = pgEnum('eod_order_status', ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']);
+export const eodOrderStatusEnum = pgEnum('eod_order_status', ['confirmed', 'preparing', 'ready', 'completed', 'cancelled']);
 
 // Define report type enum
 export const reportTypeEnum = pgEnum('report_type', ['daily', 'custom', 'weekly', 'monthly']);
@@ -290,7 +290,6 @@ export const eodReports = pgTable('eod_reports', {
   totalOrders: integer('total_orders').notNull().default(0),
   completedOrders: integer('completed_orders').notNull().default(0),
   cancelledOrders: integer('cancelled_orders').notNull().default(0),
-  pendingOrders: integer('pending_orders').notNull().default(0),
 
   // Financial metrics
   totalRevenue: decimal('total_revenue', { precision: 12, scale: 2 }).notNull().default('0.00'),

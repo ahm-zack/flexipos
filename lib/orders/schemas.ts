@@ -51,6 +51,8 @@ export type OrderItem = z.infer<typeof OrderItemSchema>;
 export const OrderSchema = z.object({
   id: z.string().uuid(),
   orderNumber: z.string().min(1), // Unique order number for display
+  dailySerial: z.string().optional(), // Daily resetting serial (001, 002, 003...)
+  serialDate: z.string().optional(), // Date string for the daily serial (YYYY-MM-DD)
   customerName: z.string().optional(), // Optional customer name
   items: z.array(OrderItemSchema).min(1), // Array of order items
   totalAmount: z.number().min(0), // Total order amount
@@ -110,7 +112,7 @@ export type CreateCanceledOrder = z.infer<typeof CreateCanceledOrderSchema>;
 // Modification type enum
 export const ModificationTypeEnum = z.enum([
   'item_added',
-  'item_removed', 
+  'item_removed',
   'quantity_changed',
   'item_replaced',
   'multiple_changes'

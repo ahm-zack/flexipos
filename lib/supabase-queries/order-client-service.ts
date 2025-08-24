@@ -44,11 +44,13 @@ const transformCartItemsToOrderItems = (cartItems: CartItem[]): OrderItem[] => {
 const transformSupabaseToOrder = (row: Record<string, unknown>): Order => ({
     id: row.id as string,
     orderNumber: row.order_number as string,
+    dailySerial: (row.daily_serial as string) || undefined,
+    serialDate: (row.serial_date as string) || undefined,
     customerName: row.customer_name as string | undefined,
     items: Array.isArray(row.items) ? row.items as OrderItem[] : [],
     totalAmount: typeof row.total_amount === 'string' ? parseFloat(row.total_amount) : (row.total_amount as number),
     paymentMethod: row.payment_method as 'cash' | 'card' | 'mixed',
-    status: row.status === 'pending' ? 'completed' : row.status as 'completed' | 'canceled' | 'modified', // Handle pending status
+    status: row.status as 'completed' | 'canceled' | 'modified',
     createdAt: new Date(row.created_at as string).toISOString(),
     updatedAt: new Date(row.updated_at as string).toISOString(),
     createdBy: row.created_by as string,
@@ -92,7 +94,7 @@ const generateOrderNumber = async (): Promise<string> => {
         return 'ORD-0001';
     }
 
-    const lastOrderNumber = data[0].order_number;
+    const lastOrderNumber = data[0].order_number as string;
 
     // Extract the number from the last order number (e.g., "ORD-0001" -> 1)
     const match = lastOrderNumber.match(/ORD-(\d+)/);
@@ -107,6 +109,49 @@ const generateOrderNumber = async (): Promise<string> => {
     // Format with leading zeros (4 digits)
     return `ORD-${nextNumber.toString().padStart(4, '0')}`;
 };
+
+// Generate daily serial helper - robust version with fallbacks
+// TEMPORARILY DISABLED - will be re-enabled once database types are updated
+/*
+const generateDailySerial = async (): Promise<{ serial: string; serialDate: string }> => {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    try {
+        // Try to get count of orders from today using a simple approach
+        const { count, error } = await supabase
+            .from('orders')
+            .select('*', { count: 'exact', head: true })
+            .gte('created_at', `${today}T00:00:00.000Z`)
+            .lt('created_at', `${today}T23:59:59.999Z`);
+        
+        if (error) {
+            console.warn('Failed to count today\'s orders:', error.message);
+            // Fallback: use time-based serial
+            const now = new Date();
+            const timeSerial = (now.getHours() * 100 + now.getMinutes()).toString().padStart(4, '0').slice(-3);
+            return {
+                serial: timeSerial,
+                serialDate: today
+            };
+        }
+        
+        const nextSerial = ((count || 0) + 1).toString().padStart(3, '0');
+        
+        return {
+            serial: nextSerial,
+            serialDate: today
+        };
+    } catch (error) {
+        console.error('Error generating daily serial:', error);
+        // Ultimate fallback: use random 3-digit number
+        const fallbackSerial = Math.floor(Math.random() * 999 + 1).toString().padStart(3, '0');
+        return {
+            serial: fallbackSerial,
+            serialDate: today
+        };
+    }
+};
+*/
 
 export interface OrdersListResult {
     orders: Array<Order & { cashierName?: string }>;
@@ -145,8 +190,7 @@ export const orderClientService = {
         let query = supabase
             .from('orders')
             .select(`
-        *,
-        cashier:users!orders_created_by_fkey(name)
+        *
       `, { count: 'exact' })
             .order('created_at', { ascending: false });
 
@@ -170,7 +214,6 @@ export const orderClientService = {
         // Transform data
         const orders = (data || []).map(row => ({
             ...transformSupabaseToOrder(row),
-            cashierName: row.cashier?.name,
         }));
 
         return {
@@ -185,10 +228,7 @@ export const orderClientService = {
     async getOrderById(id: string): Promise<Order & { cashierName?: string }> {
         const { data, error } = await supabase
             .from('orders')
-            .select(`
-        *,
-        cashier:users!orders_created_by_fkey(name)
-      `)
+            .select(`*`)
             .eq('id', id)
             .single();
 
@@ -199,24 +239,34 @@ export const orderClientService = {
 
         return {
             ...transformSupabaseToOrder(data),
-            cashierName: data.cashier?.name,
         };
     },
 
     // Create new order
     async createOrder(orderData: CreateOrderData): Promise<Order> {
-        // Generate order number
+        // Generate order number (global)
         const orderNumber = await generateOrderNumber();
 
+        // Get the next daily serial from the database function
+        const { data: dailySerialData, error: dailySerialError } = await supabase
+            .rpc('get_next_daily_serial');
+
+        if (dailySerialError) {
+            console.error('Error generating daily serial:', dailySerialError);
+            // Continue without daily serial if there's an error
+        }
+
+        const dailySerial = dailySerialData?.[0];
+
         // Convert cart items to order items format
-        // This ensures items have the correct structure (unitPrice, totalPrice, etc.)
-        // that the UI components (especially restaurant-receipt) expect
         const orderItems = transformCartItemsToOrderItems(orderData.items);
 
         const { data, error } = await supabase
             .from('orders')
             .insert({
                 order_number: orderNumber,
+                daily_serial: dailySerial?.serial || null,
+                serial_date: dailySerial?.serial_date || null,
                 customer_name: orderData.customerName || null,
                 items: orderItems as unknown as Json,
                 total_amount: orderData.totalAmount,

@@ -93,7 +93,7 @@ export function RestaurantReceipt({
     try {
       setIsGeneratingPDF(true);
       await generateReceiptPDF(receiptRef.current, {
-        filename: `receipt-${order.orderNumber}.pdf`,
+        filename: `receipt-${order.dailySerial || order.orderNumber}.pdf`,
         silent: true,
         widthMM: 80,
       });
@@ -214,7 +214,9 @@ export function RestaurantReceipt({
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Receipt - Order #${order.orderNumber}</title>
+            <title>Receipt - Order #${
+              order.dailySerial || order.orderNumber
+            }</title>
             ${printStyles}
           </head>
           <body>
@@ -416,6 +418,9 @@ const OrderInfo = ({
 }) => {
   const orderDate = new Date(order.createdAt);
 
+  // Use daily serial if available, otherwise fall back to order number
+  const displayNumber = order.dailySerial || order.orderNumber;
+
   return (
     <>
       <div
@@ -440,7 +445,7 @@ const OrderInfo = ({
             textAlign: "center",
           }}
         >
-          ORDER #{order.orderNumber}
+          ORDER #{displayNumber}
         </div>
       </div>
 
@@ -753,7 +758,7 @@ export async function downloadReceiptPDF(
         "[downloadReceiptPDF] Found .receipt-content, generating PDF..."
       );
       await generateReceiptPDF(receiptElement, {
-        filename: `receipt-${order.orderNumber}.pdf`,
+        filename: `receipt-${order.dailySerial || order.orderNumber}.pdf`,
         silent: true,
         widthMM: 80,
       });
