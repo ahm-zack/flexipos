@@ -3,21 +3,18 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SaudiRiyalSymbol } from "@/components/currency/saudi-riyal-symbol";
+import { DateTimePicker } from "@/components/date-time-picker";
 import { useGenerateEODReport, useEODReportFormatters } from "../hooks";
 
 // Export the historical reports component
 export { HistoricalEODReports } from "./historical-eod-reports";
 
 export function EODReportDashboard() {
-  const [startDate, setStartDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const [startDateTime, setStartDateTime] = useState<Date | undefined>();
+  const [endDateTime, setEndDateTime] = useState<Date | undefined>();
   const [nextReportNumber, setNextReportNumber] = useState<string | null>(null);
 
   const generateReport = useGenerateEODReport();
@@ -40,21 +37,11 @@ export function EODReportDashboard() {
     fetchNextReportNumber();
   }, []);
 
-  // Helper function to format date for display
-  const formatDateForDisplay = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB"); // dd/mm/yyyy format
-  };
-
   const handleGenerateReport = () => {
-    if (!startDate || !startTime || !endDate || !endTime) {
-      alert("Please fill in all date and time fields");
+    if (!startDateTime || !endDateTime) {
+      alert("Please select both start and end date/time");
       return;
     }
-
-    const startDateTime = new Date(`${startDate}T${startTime}`);
-    const endDateTime = new Date(`${endDate}T${endTime}`);
 
     if (startDateTime >= endDateTime) {
       alert("End date/time must be after start date/time");
@@ -92,70 +79,25 @@ export function EODReportDashboard() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Start Date/Time */}
-            <div className="space-y-2">
-              <Label htmlFor="start-date" className="text-sm font-medium">
-                Start Date
-              </Label>
-              <Input
-                id="start-date"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="text-sm"
-                placeholder="dd/mm/yyyy"
-              />
-              {startDate && (
-                <p className="text-xs text-muted-foreground">
-                  {formatDateForDisplay(startDate)}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="start-time" className="text-sm font-medium">
-                Start Time
-              </Label>
-              <Input
-                id="start-time"
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="text-sm"
-              />
-            </div>
-
-            {/* End Date/Time */}
-            <div className="space-y-2">
-              <Label htmlFor="end-date" className="text-sm font-medium">
-                End Date
-              </Label>
-              <Input
-                id="end-date"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="text-sm"
-                placeholder="dd/mm/yyyy"
-              />
-              {endDate && (
-                <p className="text-xs text-muted-foreground">
-                  {formatDateForDisplay(endDate)}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="end-time" className="text-sm font-medium">
-                End Time
-              </Label>
-              <Input
-                id="end-time"
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="text-sm"
-              />
-            </div>
+          <div className="space-y-4">
+            {/* Date/Time Range Picker */}
+            <DateTimePicker
+              fromDate={startDateTime}
+              toDate={endDateTime}
+              onFromDateChange={setStartDateTime}
+              onToDateChange={setEndDateTime}
+              onClearDates={() => {
+                setStartDateTime(undefined);
+                setEndDateTime(undefined);
+              }}
+              fromDateLabel="Start Date"
+              toDateLabel="End Date"
+              fromTimeLabel="Start Time"
+              toTimeLabel="End Time"
+              showRange={true}
+              showClearButton={true}
+              className=""
+            />
           </div>
 
           <Button
