@@ -11,7 +11,7 @@ import {
 } from "@/lib/restaurant-config";
 import { Button } from "./ui/button";
 import type { Modifier } from "@/lib/schemas";
-import { Download, X, Printer } from "lucide-react";
+import { Download, X } from "lucide-react";
 import { generateReceiptPDF } from "@/lib/receipt-pdf-service";
 
 // Types
@@ -107,137 +107,137 @@ export function RestaurantReceipt({
   };
 
   // Print handler - direct print dialog without opening new tab
-  const handlePrint = () => {
-    // Create print-specific styles for thermal receipt
-    const printStyles = `
-      <style>
-        @media print {
-          @page {
-            size: 80mm auto;
-            margin: 0;
-            padding: 0;
-          }
-          
-          body {
-            font-family: "Courier New", monospace !important;
-            font-size: 11px !important;
-            line-height: 1.2 !important;
-            margin: 0 !important;
-            padding: 4px !important;
-            width: 80mm !important;
-            background: white !important;
-            color: black !important;
-          }
-          
-          .receipt-content {
-            width: 80mm !important;
-            max-width: 80mm !important;
-            font-family: "Courier New", monospace !important;
-            font-size: 11px !important;
-            line-height: 1.2 !important;
-            padding: 4px !important;
-            margin: 0 !important;
-            background: white !important;
-            color: black !important;
-          }
-          
-          /* Thermal receipt specific styles */
-          .receipt-content div {
-            margin-bottom: 2px !important;
-            word-wrap: break-word !important;
-          }
-          
-          .receipt-content .text-lg {
-            font-size: 14px !important;
-            font-weight: bold !important;
-          }
-          
-          .receipt-content .text-base {
-            font-size: 12px !important;
-          }
-          
-          .receipt-content .text-xs {
-            font-size: 10px !important;
-          }
-          
-          .receipt-content .text-center {
-            text-align: center !important;
-          }
-          
-          .receipt-content .flex {
-            display: flex !important;
-            justify-content: space-between !important;
-          }
-          
-          .receipt-content .border-t {
-            border-top: 1px solid black !important;
-          }
-          
-          .receipt-content .border-b {
-            border-bottom: 1px solid black !important;
-          }
-          
-          .receipt-content .border-double {
-            border-style: double !important;
-          }
-          
-          .receipt-content .border-2 {
-            border: 2px solid black !important;
-          }
-          
-          .receipt-content img {
-            max-width: 60px !important;
-            height: auto !important;
-          }
-        }
-      </style>
-    `;
+  // const handlePrint = () => {
+  //   // Create print-specific styles for thermal receipt
+  //   const printStyles = `
+  //     <style>
+  //       @media print {
+  //         @page {
+  //           size: 80mm auto;
+  //           margin: 0;
+  //           padding: 0;
+  //         }
 
-    // Create a hidden iframe for printing
-    const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
-    iframe.style.position = "absolute";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-    iframe.style.border = "none";
+  //         body {
+  //           font-family: "Courier New", monospace !important;
+  //           font-size: 11px !important;
+  //           line-height: 1.2 !important;
+  //           margin: 0 !important;
+  //           padding: 4px !important;
+  //           width: 80mm !important;
+  //           background: white !important;
+  //           color: black !important;
+  //         }
 
-    document.body.appendChild(iframe);
+  //         .receipt-content {
+  //           width: 80mm !important;
+  //           max-width: 80mm !important;
+  //           font-family: "Courier New", monospace !important;
+  //           font-size: 11px !important;
+  //           line-height: 1.2 !important;
+  //           padding: 4px !important;
+  //           margin: 0 !important;
+  //           background: white !important;
+  //           color: black !important;
+  //         }
 
-    // Get the receipt content
-    const receiptContent = receiptRef.current?.outerHTML || "";
+  //         /* Thermal receipt specific styles */
+  //         .receipt-content div {
+  //           margin-bottom: 2px !important;
+  //           word-wrap: break-word !important;
+  //         }
 
-    // Write content to iframe
-    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (iframeDoc) {
-      iframeDoc.open();
-      iframeDoc.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Receipt - Order #${
-              order.dailySerial || order.orderNumber
-            }</title>
-            ${printStyles}
-          </head>
-          <body>
-            ${receiptContent}
-          </body>
-        </html>
-      `);
-      iframeDoc.close();
+  //         .receipt-content .text-lg {
+  //           font-size: 14px !important;
+  //           font-weight: bold !important;
+  //         }
 
-      // Wait for content to load, then print
-      iframe.onload = () => {
-        setTimeout(() => {
-          iframe.contentWindow?.print();
-          // Remove iframe after printing
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-          }, 1000);
-        }, 500);
-      };
-    }
-  };
+  //         .receipt-content .text-base {
+  //           font-size: 12px !important;
+  //         }
+
+  //         .receipt-content .text-xs {
+  //           font-size: 10px !important;
+  //         }
+
+  //         .receipt-content .text-center {
+  //           text-align: center !important;
+  //         }
+
+  //         .receipt-content .flex {
+  //           display: flex !important;
+  //           justify-content: space-between !important;
+  //         }
+
+  //         .receipt-content .border-t {
+  //           border-top: 1px solid black !important;
+  //         }
+
+  //         .receipt-content .border-b {
+  //           border-bottom: 1px solid black !important;
+  //         }
+
+  //         .receipt-content .border-double {
+  //           border-style: double !important;
+  //         }
+
+  //         .receipt-content .border-2 {
+  //           border: 2px solid black !important;
+  //         }
+
+  //         .receipt-content img {
+  //           max-width: 60px !important;
+  //           height: auto !important;
+  //         }
+  //       }
+  //     </style>
+  //   `;
+
+  //   // Create a hidden iframe for printing
+  //   const iframe = document.createElement("iframe");
+  //   iframe.style.display = "none";
+  //   iframe.style.position = "absolute";
+  //   iframe.style.width = "0";
+  //   iframe.style.height = "0";
+  //   iframe.style.border = "none";
+
+  //   document.body.appendChild(iframe);
+
+  //   // Get the receipt content
+  //   const receiptContent = receiptRef.current?.outerHTML || "";
+
+  //   // Write content to iframe
+  //   const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+  //   if (iframeDoc) {
+  //     iframeDoc.open();
+  //     iframeDoc.write(`
+  //       <!DOCTYPE html>
+  //       <html>
+  //         <head>
+  //           <title>Receipt - Order #${
+  //             order.dailySerial || order.orderNumber
+  //           }</title>
+  //           ${printStyles}
+  //         </head>
+  //         <body>
+  //           ${receiptContent}
+  //         </body>
+  //       </html>
+  //     `);
+  //     iframeDoc.close();
+
+  //     // Wait for content to load, then print
+  //     iframe.onload = () => {
+  //       setTimeout(() => {
+  //         iframe.contentWindow?.print();
+  //         // Remove iframe after printing
+  //         setTimeout(() => {
+  //           document.body.removeChild(iframe);
+  //         }, 1000);
+  //       }, 500);
+  //     };
+  //   }
+  // };
 
   // Format date and time
   const formatDate = (date: Date) => date.toLocaleDateString("en-GB");
@@ -319,7 +319,7 @@ export function RestaurantReceipt({
               {isGeneratingPDF ? "Generating..." : "Print Invoice"}
             </Button>
 
-            <Button
+            {/* <Button
               onClick={handlePrint}
               variant="secondary"
               className="flex items-center gap-2"
@@ -327,7 +327,7 @@ export function RestaurantReceipt({
             >
               <Printer className="w-4 h-4" />
               Print
-            </Button>
+            </Button> */}
           </div>
 
           {onClose && (
