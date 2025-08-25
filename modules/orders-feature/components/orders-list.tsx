@@ -258,9 +258,16 @@ export function OrdersList() {
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex flex-col items-start gap-2">
-                      <CardTitle className="text-lg font-semibold">
-                        #{order.orderNumber}
-                      </CardTitle>
+                      <div className="flex flex-col">
+                        <CardTitle className="text-lg font-semibold">
+                          #{order.orderNumber}
+                        </CardTitle>
+                        {order.dailySerial && (
+                          <span className="text-xs text-muted-foreground">
+                            Daily: {order.dailySerial}
+                          </span>
+                        )}
+                      </div>
                       <Badge
                         variant={getStatusBadgeVariant(order.status)}
                         className={cn(
