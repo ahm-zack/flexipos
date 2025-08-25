@@ -723,7 +723,7 @@ export type OrderStatus = z.infer<typeof OrderStatusEnum>;
 // Best selling item schema
 export const BestSellingItemSchema = z.object({
   itemName: z.string(),
-  itemType: z.enum(['pizza', 'pie', 'sandwich', 'mini-pie', 'beverage', 'appetizer', 'burger', 'shawerma', 'side-order']),
+  itemType: z.enum(['pizza', 'pie', 'sandwich', 'mini_pie', 'beverage', 'appetizer', 'burger', 'shawerma', 'side-order']),
   quantity: z.number().int().min(0),
   totalRevenue: z.number().min(0),
   averagePrice: z.number().min(0),
