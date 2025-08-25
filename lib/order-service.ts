@@ -23,6 +23,7 @@ export type DatabaseModifiedOrder = typeof modifiedOrders.$inferSelect;
 export interface ApiOrder {
   id: string;
   orderNumber: string;
+  dailySerial?: string;
   customerName: string | null;
   items: OrderItem[];
   totalAmount: number;
@@ -110,7 +111,7 @@ function convertCartItemsToOrderItems(cartItems: CartItem[]): OrderItem[] {
     // Extract item type from category
     let itemType: 'pizza' | 'pie' | 'sandwich' | 'mini_pie';
     const category = cartItem.category.toLowerCase();
-    
+
     if (category.includes('pizza')) {
       itemType = 'pizza';
     } else if (category.includes('pie')) {
@@ -123,11 +124,11 @@ function convertCartItemsToOrderItems(cartItems: CartItem[]): OrderItem[] {
       // Default fallback
       itemType = 'pizza';
     }
-    
+
     // Calculate total price including modifiers
     const modifiersTotal = cartItem.modifiersTotal || 0;
     const totalItemPrice = (cartItem.price + modifiersTotal) * cartItem.quantity;
-    
+
     return {
       id: cartItem.id,
       type: itemType,
@@ -156,18 +157,18 @@ export const orderService = {
   ): Promise<OrderServiceResult<OrdersListResult>> {
     try {
       const offset = (page - 1) * limit;
-      
+
       // Build where conditions
       const whereConditions = [];
-      
+
       if (filters.status) {
         whereConditions.push(eq(orders.status, filters.status));
       }
-      
+
       if (filters.createdBy) {
         whereConditions.push(eq(orders.createdBy, filters.createdBy));
       }
-      
+
       if (filters.customerName) {
         whereConditions.push(like(orders.customerName, `%${filters.customerName}%`));
       }
@@ -178,7 +179,7 @@ export const orderService = {
       if (filters.dateFrom) {
         whereConditions.push(sql`${orders.createdAt} >= ${filters.dateFrom}`);
       }
-      
+
       if (filters.dateTo) {
         whereConditions.push(sql`${orders.createdAt} <= ${filters.dateTo}`);
       }
@@ -188,8 +189,8 @@ export const orderService = {
       }
 
       // Combine conditions
-      const whereClause = whereConditions.length > 0 
-        ? and(...whereConditions) 
+      const whereClause = whereConditions.length > 0
+        ? and(...whereConditions)
         : undefined;
 
       // Get orders with user information
@@ -258,7 +259,7 @@ export const orderService = {
 
       const result = orderWithUser[0];
       const baseOrder = transformDatabaseOrderToApi(result.order);
-      
+
       // No need to fetch modifiers separately, they are included in the order items
 
       const orderResponse: ApiOrderResponse = {
@@ -311,7 +312,7 @@ export const orderService = {
 
   // Update order
   async updateOrder(
-    id: string, 
+    id: string,
     updateData: {
       customerName?: string;
       items?: OrderItem[];

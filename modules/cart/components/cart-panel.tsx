@@ -189,6 +189,7 @@ export function CartPanel({ className }: CartPanelProps) {
         const apiOrder: ApiOrder = {
           id: data.id,
           orderNumber: data.orderNumber,
+          dailySerial: data.dailySerial,
           customerName: data.customerName || null,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           items: data.items as any[],
