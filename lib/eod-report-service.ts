@@ -212,7 +212,7 @@ const calculateBestSellingItems = (orders: OrderWithDetails[]): BestSellingItem[
     .slice(0, 10)
     .map(item => ({
       itemName: item.name,
-      itemType: item.type as 'pizza' | 'pie' | 'sandwich' | 'mini-pie' | 'beverage' | 'appetizer' | 'burger' | 'shawerma' | 'side-order',
+      itemType: item.type as 'pizza' | 'pie' | 'sandwich' | 'mini_pie' | 'beverage' | 'appetizer' | 'burger' | 'shawerma' | 'side-order',
       quantity: item.totalQuantity,
       totalRevenue: Math.round(item.totalRevenue * 100) / 100,
       averagePrice: item.totalQuantity > 0 ? Math.round((item.totalRevenue / item.totalQuantity) * 100) / 100 : 0

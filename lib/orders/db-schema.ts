@@ -8,7 +8,7 @@ export const ordersStatusEnum = pgEnum('orders_status', ['completed', 'canceled'
 export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'mixed']);
 
 // Item type enum
-export const itemTypeEnum = pgEnum('item_type', ['pizza', 'pie', 'sandwich', 'mini_pie']);
+export const itemTypeEnum = pgEnum('item_type', ['pizza', 'pie', 'sandwich', 'mini_pie', 'beverage', 'appetizer', 'burger', 'shawerma', 'side-order']);
 
 // Modification type enum
 export const modificationTypeEnum = pgEnum('modification_type', [
