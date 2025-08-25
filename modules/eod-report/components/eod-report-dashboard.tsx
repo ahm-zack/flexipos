@@ -13,8 +13,29 @@ import { useGenerateEODReport, useEODReportFormatters } from "../hooks";
 export { HistoricalEODReports } from "./historical-eod-reports";
 
 export function EODReportDashboard() {
-  const [startDateTime, setStartDateTime] = useState<Date | undefined>();
-  const [endDateTime, setEndDateTime] = useState<Date | undefined>();
+  // Calculate default date range: 4 PM today to 12 AM tomorrow (restaurant operating hours)
+  const getDefaultDateRange = () => {
+    const today = new Date();
+
+    // Start time: 4 PM today
+    const startDateTime = new Date(today);
+    startDateTime.setHours(16, 0, 0, 0); // 4:00 PM
+
+    // End time: 12 AM tomorrow (midnight)
+    const endDateTime = new Date(today);
+    endDateTime.setDate(today.getDate() + 1); // Next day
+    endDateTime.setHours(0, 0, 0, 0); // 12:00 AM (midnight)
+
+    return { startDateTime, endDateTime };
+  };
+
+  const defaultRange = getDefaultDateRange();
+  const [startDateTime, setStartDateTime] = useState<Date | undefined>(
+    defaultRange.startDateTime
+  );
+  const [endDateTime, setEndDateTime] = useState<Date | undefined>(
+    defaultRange.endDateTime
+  );
   const [nextReportNumber, setNextReportNumber] = useState<string | null>(null);
 
   const generateReport = useGenerateEODReport();
