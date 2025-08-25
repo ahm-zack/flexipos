@@ -11,7 +11,10 @@ SET status = 'completed'
 WHERE status = 'pending';
 
 -- Step 2: Remove 'pending' from the orders_status enum
--- First, create a new enum without 'pending'
+-- First, drop the existing default constraint
+ALTER TABLE orders ALTER COLUMN status DROP DEFAULT;
+
+-- Create a new enum without 'pending'
 CREATE TYPE orders_status_new AS ENUM ('completed', 'canceled', 'modified');
 
 -- Step 3: Update the orders table to use the new enum
