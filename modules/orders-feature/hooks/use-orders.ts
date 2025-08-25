@@ -125,7 +125,8 @@ export const useOrders = (
   return useQuery({
     queryKey: orderKeys.list(serializableFilters, page, limit),
     queryFn: () => fetchOrders(filters, page, limit),
-    staleTime: 1 * 60 * 1000, // 1 minute (orders change frequently)
+    staleTime: 0, // Always consider data stale for orders (real-time updates)
+    refetchOnMount: true, // Always refetch when component mounts
   });
 };
 
