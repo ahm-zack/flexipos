@@ -26,7 +26,7 @@ import { Upload, X } from "lucide-react";
 // 🔄 NEW: Import from client-side hooks
 import { useCreatePizza } from "../hooks/use-pizzas";
 import { uploadMenuImage } from "@/lib/image-upload";
-import type { CreatePizza, Modifier } from "@/lib/schemas";
+import type { CreatePizza, Modifier, PizzaType } from "@/lib/schemas";
 import { ModifierManager } from "@/components/modifier-manager";
 
 interface CreatePizzaFormProps {
@@ -79,9 +79,31 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
         setIsUploading(false);
       }
 
-      // 🔄 SAME: Mutation call remains the same
+      // Auto-generate type from English name or use default
+      const generatePizzaType = (nameEn: string): PizzaType => {
+        const name = nameEn.toLowerCase();
+
+        // Try to match with existing pizza types
+        if (name.includes("margherita")) {
+          return "Margherita";
+        } else if (name.includes("vegetable") || name.includes("veggie")) {
+          return "Vegetable";
+        } else if (name.includes("pepperoni")) {
+          return "Pepperoni";
+        } else if (name.includes("mortadella")) {
+          return "Mortadella";
+        } else if (name.includes("chicken")) {
+          return "Chicken";
+        } else {
+          // Default fallback
+          return "Margherita";
+        }
+      };
+
+      // 🔄 SAME: Mutation call with auto-generated type
       await createPizzaMutation.mutateAsync({
         ...formData,
+        type: generatePizzaType(formData.nameEn),
         imageUrl,
         priceWithVat: formData.priceWithVat,
       });
@@ -168,8 +190,8 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
-            {/* Pizza Type */}
-            <div className="space-y-2">
+            {/* Pizza Type - HIDDEN as per customer request */}
+            {/* <div className="space-y-2">
               <Label htmlFor="type">Pizza Type *</Label>
               <Select
                 value={formData.type}
@@ -191,7 +213,7 @@ export function CreatePizzaForm({ open, onOpenChange }: CreatePizzaFormProps) {
                   <SelectItem value="Chicken">Chicken</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             {/* English Name */}
             <div className="space-y-2">
@@ -501,7 +523,7 @@ export function CreatePizzaFormWithOptimisticUpdates({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Pizza (Optimistic Updates)</DialogTitle>
+          <DialogTitle>Create New Pizza</DialogTitle>
           <DialogDescription>
             Add a new pizza with instant feedback. Changes appear immediately!
           </DialogDescription>
@@ -510,7 +532,7 @@ export function CreatePizzaFormWithOptimisticUpdates({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
             {/* Pizza Type */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="type">Pizza Type *</Label>
               <Select
                 value={formData.type}
@@ -532,7 +554,7 @@ export function CreatePizzaFormWithOptimisticUpdates({
                   <SelectItem value="Chicken">Chicken</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             {/* English Name */}
             <div className="space-y-2">
@@ -564,7 +586,7 @@ export function CreatePizzaFormWithOptimisticUpdates({
             </div>
 
             {/* Crust Type */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="crust">Crust Type *</Label>
               <Select
                 value={formData.crust || "original"}
@@ -584,7 +606,7 @@ export function CreatePizzaFormWithOptimisticUpdates({
                   <SelectItem value="thick">Thick</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             {/* Image Upload */}
             <div className="space-y-2">

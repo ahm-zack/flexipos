@@ -25,7 +25,7 @@ import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 import { useCreateSandwich } from "../hooks/use-sandwiches";
 import { uploadMenuImage } from "@/lib/image-upload";
-import type { CreateSandwich, Modifier } from "@/lib/schemas";
+import type { CreateSandwich, Modifier, SandwichType } from "@/lib/schemas";
 import { ModifierManager } from "@/components/modifier-manager";
 
 interface CreateSandwichFormProps {
@@ -100,9 +100,27 @@ export function CreateSandwichForm({
         }
       }
 
-      // Create sandwich data
+      // Auto-generate type from English name or use default
+      const generateSandwichType = (nameEn: string): SandwichType => {
+        const name = nameEn.toLowerCase();
+
+        // Try to match with existing sandwich types
+        if (name.includes("beef")) {
+          return "Beef Sandwich with Cheese";
+        } else if (name.includes("chicken")) {
+          return "Chicken Sandwich with Cheese";
+        } else if (name.includes("muhammara")) {
+          return "Muhammara Sandwich with Cheese";
+        } else {
+          // Default fallback
+          return "Beef Sandwich with Cheese";
+        }
+      };
+
+      // Create sandwich data with auto-generated type
       const sandwichData: CreateSandwich = {
         ...formData,
+        type: generateSandwichType(formData.nameEn),
         imageUrl,
         priceWithVat: String(formData.priceWithVat),
         modifiers: formData.modifiers,
@@ -190,8 +208,8 @@ export function CreateSandwichForm({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
-            {/* Sandwich Type */}
-            <div className="space-y-2">
+            {/* Sandwich Type - HIDDEN as per customer request */}
+            {/* <div className="space-y-2">
               <Label htmlFor="type">Sandwich Type *</Label>
               <Select
                 value={formData.type}
@@ -212,7 +230,7 @@ export function CreateSandwichForm({
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             {/* English Name */}
             <div className="space-y-2">

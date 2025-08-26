@@ -25,8 +25,7 @@ import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 import { useCreateMiniPie } from "../hooks/use-mini-pies";
 import { uploadMenuImage } from "@/lib/image-upload";
-import type { CreateMiniPie } from "@/lib/schemas";
-import type { Modifier } from "@/lib/schemas";
+import type { CreateMiniPie, Modifier, MiniPieType } from "@/lib/schemas";
 import { ModifierManager } from "@/components/modifier-manager";
 
 interface CreateMiniPieFormProps {
@@ -105,9 +104,35 @@ export function CreateMiniPieForm({
         }
       }
 
-      // Create mini pie data
+      // Auto-generate type from English name or use default
+      const generateMiniPieType = (nameEn: string): MiniPieType => {
+        const name = nameEn.toLowerCase();
+
+        // Try to match with existing mini pie types
+        if (name.includes("zaatar")) {
+          return "Mini Zaatar Pie";
+        } else if (name.includes("cheese") && !name.includes("halloumi")) {
+          return "Mini Cheese Pie";
+        } else if (name.includes("spinach")) {
+          return "Mini Spinach Pie";
+        } else if (name.includes("meat") || name.includes("ba'lakiya")) {
+          return "Mini Meat Pie (Ba'lakiya style)";
+        } else if (name.includes("halloumi")) {
+          return "Mini Halloumi Cheese Pie";
+        } else if (name.includes("hot dog")) {
+          return "Mini Hot Dog Pie";
+        } else if (name.includes("pizza")) {
+          return "Mini Pizza Pie";
+        } else {
+          // Default fallback
+          return "Mini Cheese Pie";
+        }
+      };
+
+      // Create mini pie data with auto-generated type
       const miniPieData: CreateMiniPie = {
         ...formData,
+        type: generateMiniPieType(formData.nameEn),
         imageUrl: imageUrl || formData.imageUrl, // Use uploaded URL or keep existing
       };
 
@@ -193,8 +218,8 @@ export function CreateMiniPieForm({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
-            {/* Mini Pie Type */}
-            <div className="space-y-2">
+            {/* Mini Pie Type - HIDDEN as per customer request */}
+            {/* <div className="space-y-2">
               <Label htmlFor="type">Mini Pie Type *</Label>
               <Select
                 value={formData.type}
@@ -219,7 +244,7 @@ export function CreateMiniPieForm({
                   <SelectItem value="Mini Pizza Pie">Mini Pizza Pie</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             {/* English Name */}
             <div className="space-y-2">

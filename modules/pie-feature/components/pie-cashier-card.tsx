@@ -58,9 +58,12 @@ export function PieCashierCard({ pie }: PieCashierCardProps) {
         <div className="p-6 space-y-4">
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-1">
-              {pie.type} Pie
+              {pie.nameEn}
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 line-clamp-1">
+            <p
+              className="text-gray-600 dark:text-gray-300 line-clamp-1"
+              dir="rtl"
+            >
               {pie.nameAr}
             </p>
           </div>

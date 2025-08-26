@@ -95,10 +95,10 @@ export function MiniPieManagementCard({
 
       {/* Content Section */}
       <div className="p-6 space-y-4">
-        {/* Mini Pie Type & Name */}
+        {/* English & Arabic Names */}
         <div className="space-y-2">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-1">
-            {miniPie.type}
+            {miniPie.nameEn}
           </h3>
           <p className="text-gray-600 dark:text-gray-300 line-clamp-1">
             {miniPie.nameAr}

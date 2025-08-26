@@ -27,7 +27,7 @@ import { useUpdatePie } from "../hooks/use-pies";
 import { uploadMenuImage } from "@/lib/image-upload";
 import { ModifierManager } from "@/components/modifier-manager";
 import type { Pie } from "@/lib/db/schema";
-import type { UpdatePie } from "@/lib/schemas";
+import type { UpdatePie, PieType } from "@/lib/schemas";
 import type { Modifier } from "@/lib/schemas";
 
 interface EditPieFormProps {
@@ -110,9 +110,44 @@ export function EditPieForm({ pie, open, onOpenChange }: EditPieFormProps) {
         }
       }
 
-      // Update pie data
+      // Auto-generate type from English name or use default
+      const generatePieType = (nameEn: string): PieType => {
+        const name = nameEn.toLowerCase();
+
+        // Try to match with existing pie types
+        if (name.includes("akkawi") && name.includes("zaatar")) {
+          return "Akkawi Cheese + Zaatar";
+        } else if (name.includes("halloumi") && name.includes("zaatar")) {
+          return "Halloumi Cheese + Zaatar";
+        } else if (name.includes("labneh") && name.includes("zaatar")) {
+          return "Labneh + Zaatar";
+        } else if (name.includes("muhammara") && name.includes("akkawi")) {
+          return "Muhammara + Akkawi Cheese + Zaatar";
+        } else if (
+          name.includes("sweet cheese") ||
+          name.includes("mozzarella")
+        ) {
+          return "Sweet Cheese + Akkawi + Mozzarella";
+        } else if (name.includes("akkawi")) {
+          return "Akkawi Cheese";
+        } else if (name.includes("halloumi")) {
+          return "Halloumi Cheese";
+        } else if (name.includes("cream cheese")) {
+          return "Cream Cheese";
+        } else if (name.includes("zaatar")) {
+          return "Zaatar";
+        } else if (name.includes("labneh")) {
+          return "Labneh & Vegetables";
+        } else {
+          // Default fallback
+          return "Akkawi Cheese";
+        }
+      };
+
+      // Update pie data with auto-generated type
       const pieData: UpdatePie = {
         ...formData,
+        type: generatePieType(formData.nameEn || pie?.nameEn || ""),
         imageUrl,
       };
 
@@ -198,8 +233,8 @@ export function EditPieForm({ pie, open, onOpenChange }: EditPieFormProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
-            {/* Pie Type */}
-            <div className="space-y-2">
+            {/* Pie Type - HIDDEN as per customer request */}
+            {/* <div className="space-y-2">
               <Label htmlFor="type">Pie Type *</Label>
               <Select
                 value={formData.type}
@@ -235,7 +270,7 @@ export function EditPieForm({ pie, open, onOpenChange }: EditPieFormProps) {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             {/* English Name */}
             <div className="space-y-2">

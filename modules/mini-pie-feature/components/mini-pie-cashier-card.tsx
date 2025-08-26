@@ -18,7 +18,7 @@ export function MiniPieCashierCard({ miniPie }: MiniPieCashierCardProps) {
 
   const menuItem = {
     id: miniPie.id,
-    name: `${miniPie.type} - ${miniPie.nameAr}`,
+    name: `${miniPie.nameEn} - ${miniPie.nameAr}`,
     price: parseFloat(miniPie.priceWithVat),
     category: "Mini Pie",
     description: miniPie.nameEn,
@@ -36,7 +36,7 @@ export function MiniPieCashierCard({ miniPie }: MiniPieCashierCardProps) {
         onClick={() => setModalOpen(true)}
         tabIndex={0}
         role="button"
-        aria-label={`Add ${miniPie.type} Mini Pie to cart`}
+        aria-label={`Add ${miniPie.nameEn} Mini Pie to cart`}
       >
         {/* Image Section */}
         <div className="relative aspect-[4/3] overflow-hidden">
@@ -58,7 +58,7 @@ export function MiniPieCashierCard({ miniPie }: MiniPieCashierCardProps) {
         <div className="p-6 space-y-4">
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-1">
-              {miniPie.type}
+              {miniPie.nameEn}
             </h3>
             <p className="text-gray-600 dark:text-gray-300 line-clamp-1">
               {miniPie.nameAr}

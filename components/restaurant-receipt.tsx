@@ -93,7 +93,7 @@ export function RestaurantReceipt({
     try {
       setIsGeneratingPDF(true);
       await generateReceiptPDF(receiptRef.current, {
-        filename: `receipt-${order.dailySerial || order.orderNumber}.pdf`,
+        filename: `receipt-${order.orderNumber}.pdf`,
         silent: true,
         widthMM: 80,
       });

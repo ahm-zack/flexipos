@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getReliableImageUrl } from "@/lib/image-utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ import { useUpdatePizza } from "../hooks/use-pizzas";
 import { uploadMenuImage } from "@/lib/image-upload";
 import { ModifierManager } from "@/components/modifier-manager";
 import type { Pizza } from "@/lib/db/schema";
-import type { UpdatePizza, Modifier } from "@/lib/schemas";
+import type { UpdatePizza, Modifier, PizzaType } from "@/lib/schemas";
 
 interface EditPizzaFormProps {
   pizza: Pizza | null;
@@ -115,9 +115,31 @@ export function EditPizzaForm({
         }
       }
 
-      // Update pizza data
+      // Auto-generate type from English name or use default
+      const generatePizzaType = (nameEn: string): PizzaType => {
+        const name = nameEn.toLowerCase();
+
+        // Try to match with existing pizza types
+        if (name.includes("margherita")) {
+          return "Margherita";
+        } else if (name.includes("vegetable") || name.includes("veggie")) {
+          return "Vegetable";
+        } else if (name.includes("pepperoni")) {
+          return "Pepperoni";
+        } else if (name.includes("mortadella")) {
+          return "Mortadella";
+        } else if (name.includes("chicken")) {
+          return "Chicken";
+        } else {
+          // Default fallback
+          return "Margherita";
+        }
+      };
+
+      // Update pizza data with auto-generated type
       const pizzaData: UpdatePizza = {
         ...formData,
+        type: generatePizzaType(formData.nameEn || pizza?.nameEn || ""),
         imageUrl,
       };
 
@@ -203,8 +225,8 @@ export function EditPizzaForm({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
-            {/* Pizza Type */}
-            <div className="space-y-2">
+            {/* Pizza Type - HIDDEN as per customer request */}
+            {/* <div className="space-y-2">
               <Label htmlFor="type">Pizza Type *</Label>
               <Select
                 value={formData.type}
@@ -221,7 +243,7 @@ export function EditPizzaForm({
                   <SelectItem value="Chicken">Chicken</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             {/* English Name */}
             <div className="space-y-2">
@@ -247,7 +269,7 @@ export function EditPizzaForm({
             </div>
 
             {/* Crust */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="crust">Crust Type *</Label>
               <Select
                 value={formData.crust}
@@ -262,7 +284,7 @@ export function EditPizzaForm({
                   <SelectItem value="thick">Thick</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             {/* Image Upload */}
             <div className="space-y-2">
