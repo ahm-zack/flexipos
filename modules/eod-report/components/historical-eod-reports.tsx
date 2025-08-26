@@ -32,6 +32,7 @@ import {
   safeParseNumber,
   safeParseJSON,
 } from "@/lib/eod-pdf-generator";
+import { vatUtils } from "@/lib/vat-config";
 
 export function HistoricalEODReports() {
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
@@ -119,12 +120,17 @@ export function HistoricalEODReports() {
       ["Report Type", reportData.reportType || "daily"],
       [""],
       ["Financial Summary"],
-      ["Total Revenue (with VAT)", safeParseNumber(reportData.totalWithVat)],
-      [
-        "Total Revenue (without VAT)",
-        safeParseNumber(reportData.totalWithoutVat),
-      ],
-      ["VAT Amount", safeParseNumber(reportData.vatAmount)],
+      ["Total Revenue", safeParseNumber(reportData.totalWithVat)],
+      // VAT details temporarily hidden - can be re-enabled later
+      ...(vatUtils.shouldShowVAT()
+        ? [
+            [
+              "Total Revenue (without VAT)",
+              safeParseNumber(reportData.totalWithoutVat),
+            ],
+            ["VAT Amount", safeParseNumber(reportData.vatAmount)],
+          ]
+        : []),
       ["Average Order Value", safeParseNumber(reportData.averageOrderValue)],
       [""],
       ["Order Statistics"],

@@ -13,6 +13,7 @@ import {
   type HourlySales,
   type PaymentMethod
 } from './schemas';
+import { calculateVATBreakdown } from './vat-config';
 
 /**
  * Core EOD Report Generation Service
@@ -57,7 +58,7 @@ interface CanceledOrderWithDetails {
 }
 
 // Constants
-const VAT_RATE = 0.15; // 15% VAT rate
+// VAT_RATE constant removed - now handled by VAT configuration
 
 /**
  * Validates an EOD report request
@@ -276,8 +277,7 @@ export const generateEODReport = async (request: EODReportRequest): Promise<EODR
   // Calculate metrics
   const totalRevenue = calculateTotalRevenue(completedOrders);
   const { cashTotal, cardTotal } = calculateCashAndCardTotals(completedOrders);
-  const vatAmount = totalRevenue * VAT_RATE;
-  const netRevenue = totalRevenue - vatAmount;
+  const vatBreakdown = calculateVATBreakdown(totalRevenue);
   const paymentBreakdown = calculatePaymentBreakdown(completedOrders);
   const bestSellingItems = calculateBestSellingItems(completedOrders);
   const hourlySales = calculateHourlySales(completedOrders);
@@ -297,7 +297,7 @@ export const generateEODReport = async (request: EODReportRequest): Promise<EODR
     totalCashOrders: cashTotal,
     totalCardOrders: cardTotal,
     totalWithVat: Math.round(totalRevenue * 100) / 100,
-    totalWithoutVat: Math.round(netRevenue * 100) / 100,
+    totalWithoutVat: Math.round(vatBreakdown.netAmount * 100) / 100,
     totalCancelledOrders: canceledOrdersData.length,
     totalOrders: completedOrders.length,
 
@@ -305,7 +305,7 @@ export const generateEODReport = async (request: EODReportRequest): Promise<EODR
     completedOrders: completedOrders.length,
 
     // Financial breakdown
-    vatAmount: Math.round(vatAmount * 100) / 100,
+    vatAmount: Math.round(vatBreakdown.vatAmount * 100) / 100,
     averageOrderValue: Math.round(averageOrderValue * 100) / 100,
 
     // Payment method breakdown

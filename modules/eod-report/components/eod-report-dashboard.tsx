@@ -9,6 +9,7 @@ import { SaudiRiyalSymbol } from "@/components/currency/saudi-riyal-symbol";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { useGenerateEODReport, useEODReportFormatters } from "../hooks";
 import { generateEODReportPDF, safeGetString } from "@/lib/eod-pdf-generator";
+import { vatUtils } from "@/lib/vat-config";
 
 // Export the historical reports component
 export { HistoricalEODReports } from "./historical-eod-reports";
@@ -283,7 +284,7 @@ export function EODReportDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Total Revenue (with VAT):</span>
+                      <span className="text-sm">Total Revenue:</span>
                       <span className="font-bold text-sm text-green-600 flex items-center gap-1">
                         <SaudiRiyalSymbol
                           size={12}
@@ -292,22 +293,35 @@ export function EODReportDashboard() {
                         {formatters.formatCurrency(reportData.totalWithVat)}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">
-                        Total Revenue (without VAT):
-                      </span>
-                      <span className="text-sm flex items-center gap-1">
-                        <SaudiRiyalSymbol size={12} className="text-current" />
-                        {formatters.formatCurrency(reportData.totalWithoutVat)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">VAT Amount:</span>
-                      <span className="text-sm text-blue-600 flex items-center gap-1">
-                        <SaudiRiyalSymbol size={12} className="text-blue-600" />
-                        {formatters.formatCurrency(reportData.vatAmount)}
-                      </span>
-                    </div>
+                    {/* VAT details temporarily hidden - can be re-enabled later */}
+                    {vatUtils.shouldShowVAT() && (
+                      <>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">
+                            Total Revenue (without VAT):
+                          </span>
+                          <span className="text-sm flex items-center gap-1">
+                            <SaudiRiyalSymbol
+                              size={12}
+                              className="text-current"
+                            />
+                            {formatters.formatCurrency(
+                              reportData.totalWithoutVat
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">VAT Amount:</span>
+                          <span className="text-sm text-blue-600 flex items-center gap-1">
+                            <SaudiRiyalSymbol
+                              size={12}
+                              className="text-blue-600"
+                            />
+                            {formatters.formatCurrency(reportData.vatAmount)}
+                          </span>
+                        </div>
+                      </>
+                    )}
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Average Order Value:</span>
                       <span className="text-sm font-medium flex items-center gap-1">

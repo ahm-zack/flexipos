@@ -23,6 +23,7 @@ export interface BestSellingItem {
     totalRevenue: number;
 }
 
+
 // Utility functions for safe data handling
 export const safeGetString = (value: unknown): string => {
     if (typeof value === "string") return value;

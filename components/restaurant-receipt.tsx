@@ -13,6 +13,7 @@ import { Button } from "./ui/button";
 import type { Modifier } from "@/lib/schemas";
 import { Download, X } from "lucide-react";
 import { generateReceiptPDF } from "@/lib/receipt-pdf-service";
+import { vatUtils, calculateVATBreakdown } from "@/lib/vat-config";
 
 // Types
 interface RestaurantReceiptProps {
@@ -47,17 +48,15 @@ export function RestaurantReceipt({
   // Calculate totals
   const totals: TotalCalculations = React.useMemo(() => {
     const subtotal = order.totalAmount;
-    const vatRate = config.vatRate;
-    const vatAmount = (subtotal * vatRate) / (1 + vatRate);
-    const netAmount = subtotal - vatAmount;
+    const vatBreakdown = calculateVATBreakdown(subtotal);
 
     return {
-      subtotal,
-      vatAmount,
-      netAmount,
-      vatRate,
+      subtotal: vatBreakdown.subtotal,
+      vatAmount: vatBreakdown.vatAmount,
+      netAmount: vatBreakdown.netAmount,
+      vatRate: vatBreakdown.vatRate,
     };
-  }, [order.totalAmount, config.vatRate]);
+  }, [order.totalAmount]);
 
   // Generate QR Code
   useEffect(() => {
@@ -68,7 +67,7 @@ export function RestaurantReceipt({
           vatRegistrationNumber: config.vatNumber,
           timestamp: new Date(order.createdAt),
           invoiceTotal: order.totalAmount,
-          vatTotal: totals.vatAmount,
+          vatTotal: vatUtils.shouldShowVAT() ? totals.vatAmount : 0,
         };
 
         const qrCode = await generateZATCAQRCode(zatcaData, {
@@ -605,35 +604,40 @@ const OrderTotals = ({
     }}
   >
     <div>
+      {/* VAT breakdown temporarily hidden - can be re-enabled later */}
+      {vatUtils.shouldShowVAT() && (
+        <>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              marginBottom: "0.5rem",
+            }}
+          >
+            <span>Net Amount:</span>
+            <span>{totals.netAmount.toFixed(2)}</span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              marginBottom: "0.5rem",
+            }}
+          >
+            <span>VAT (15%):</span>
+            <span>{totals.vatAmount.toFixed(2)}</span>
+          </div>
+        </>
+      )}
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          fontSize: "0.75rem",
-          fontWeight: 700,
-          marginBottom: "0.5rem",
-        }}
-      >
-        <span>Net Amount:</span>
-        <span>{totals.netAmount.toFixed(2)}</span>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          fontSize: "0.75rem",
-          fontWeight: 700,
-          marginBottom: "0.5rem",
-        }}
-      >
-        <span>VAT (15%):</span>
-        <span>{totals.vatAmount.toFixed(2)}</span>
-      </div>
-      <div
-        style={{
-          borderTop: "1px solid #000",
-          paddingTop: "0.5rem",
-          marginTop: "0.5rem",
+          borderTop: vatUtils.shouldShowVAT() ? "1px solid #000" : "none",
+          paddingTop: vatUtils.shouldShowVAT() ? "0.5rem" : "0",
+          marginTop: vatUtils.shouldShowVAT() ? "0.5rem" : "0",
         }}
       >
         <div
