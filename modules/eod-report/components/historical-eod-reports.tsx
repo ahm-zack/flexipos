@@ -498,7 +498,7 @@ export function HistoricalEODReports() {
                         onClick={() => downloadReportPDF(report, "thermal")}
                         className="text-xs flex-1 sm:flex-initial"
                       >
-                        🧾 <span className="hidden sm:inline">Thermal </span>PDF
+                        🧾 <span className="hidden sm:inline">Print</span>
                       </Button>
                       <Button
                         size="sm"

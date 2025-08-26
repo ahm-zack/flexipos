@@ -99,10 +99,6 @@ export function EODReportDashboard() {
           : safeGetString(reportData.reportGeneratedAt),
     };
 
-    // Debug: Log the data being passed to PDF generator
-    console.log("Report data before conversion:", reportData);
-    console.log("Converted data for PDF:", convertedData);
-
     await generateEODReportPDF(convertedData, format, formatters);
   };
   const reportData = generateReport.data;
@@ -197,7 +193,7 @@ export function EODReportDashboard() {
                   variant="outline"
                   className="flex-1 sm:flex-none"
                 >
-                  🧾 Download Thermal PDF
+                  🧾 Print
                 </Button>
               </div>
 
