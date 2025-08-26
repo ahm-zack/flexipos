@@ -19,6 +19,8 @@ export function ShawermaCashierCard({ shawarma }: ShawermaCashierCardProps) {
   const menuItem = {
     id: shawarma.id,
     name: `${shawarma.nameEn} - ${shawarma.nameAr}`,
+    nameEn: shawarma.nameEn,
+    nameAr: shawarma.nameAr,
     price: parseFloat(shawarma.priceWithVat),
     category: "Shawarma",
     description: shawarma.nameEn,

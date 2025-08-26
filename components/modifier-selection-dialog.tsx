@@ -29,6 +29,8 @@ interface ModifierSelectionDialogProps {
   item: {
     id: string;
     name: string;
+    nameEn?: string;
+    nameAr?: string;
     price: number;
     category: string;
     description?: string;
@@ -162,9 +164,20 @@ export function ModifierSelectionDialog({
                   <div className="text-xl font-bold text-primary">
                     <PriceDisplay price={item.price} />
                   </div>
-                  <Badge variant="outline" className="text-xs">
-                    {item.category}
-                  </Badge>
+                  {(item.nameEn || item.nameAr) && (
+                    <div className="text-right mt-1 space-y-1">
+                      {item.nameEn && (
+                        <Badge variant="outline" className="text-xs block">
+                          {item.nameEn}
+                        </Badge>
+                      )}
+                      {item.nameAr && (
+                        <Badge variant="outline" className="text-xs block">
+                          {item.nameAr}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 

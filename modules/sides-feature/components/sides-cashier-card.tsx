@@ -19,6 +19,8 @@ export function SidesCashierCard({ side }: SidesCashierCardProps) {
   const menuItem = {
     id: side.id,
     name: `${side.nameEn} - ${side.nameAr}`,
+    nameEn: side.nameEn,
+    nameAr: side.nameAr,
     price: parseFloat(side.priceWithVat),
     category: "Side",
     description: side.nameEn,

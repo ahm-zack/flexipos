@@ -18,10 +18,12 @@ export function SandwichCashierCard({ sandwich }: SandwichCashierCardProps) {
 
   const menuItem = {
     id: sandwich.id,
-    name: `${sandwich.type} - ${sandwich.nameAr}`,
+    name: `${sandwich.nameEn} - ${sandwich.nameAr}`,
+    nameEn: sandwich.nameEn,
+    nameAr: sandwich.nameAr,
     price: parseFloat(sandwich.priceWithVat),
     category: "Sandwich",
-    description: `${sandwich.size} ${sandwich.type}`,
+    description: `${sandwich.size} ${sandwich.nameEn}`,
     image: sandwich.imageUrl,
     itemType: "sandwich" as const,
     modifiers: sandwich.modifiers || [],

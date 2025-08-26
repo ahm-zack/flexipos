@@ -19,6 +19,8 @@ export function MiniPieCashierCard({ miniPie }: MiniPieCashierCardProps) {
   const menuItem = {
     id: miniPie.id,
     name: `${miniPie.nameEn} - ${miniPie.nameAr}`,
+    nameEn: miniPie.nameEn,
+    nameAr: miniPie.nameAr,
     price: parseFloat(miniPie.priceWithVat),
     category: "Mini Pie",
     description: miniPie.nameEn,

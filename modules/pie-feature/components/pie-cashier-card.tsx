@@ -18,10 +18,12 @@ export function PieCashierCard({ pie }: PieCashierCardProps) {
 
   const menuItem = {
     id: pie.id,
-    name: `${pie.type} Pie - ${pie.nameAr}`,
+    name: `${pie.nameEn} - ${pie.nameAr}`,
+    nameEn: pie.nameEn,
+    nameAr: pie.nameAr,
     price: parseFloat(pie.priceWithVat),
     category: "Pie",
-    description: `${pie.size} ${pie.type} Pie`,
+    description: `${pie.size} ${pie.nameEn} Pie`,
     image: pie.imageUrl,
     itemType: "pie" as const,
     modifiers: pie.modifiers || [],

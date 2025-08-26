@@ -19,6 +19,8 @@ export function BurgerCashierCard({ burger }: BurgerCashierCardProps) {
   const menuItem = {
     id: burger.id,
     name: `${burger.nameEn} - ${burger.nameAr}`,
+    nameEn: burger.nameEn,
+    nameAr: burger.nameAr,
     price: parseFloat(burger.priceWithVat),
     category: "Burger",
     description: burger.nameEn,

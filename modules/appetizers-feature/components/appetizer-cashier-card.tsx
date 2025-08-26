@@ -19,6 +19,8 @@ export function AppetizerCashierCard({ appetizer }: AppetizerCashierCardProps) {
   const menuItem = {
     id: appetizer.id,
     name: `${appetizer.nameEn} - ${appetizer.nameAr}`,
+    nameEn: appetizer.nameEn,
+    nameAr: appetizer.nameAr,
     price: parseFloat(appetizer.priceWithVat),
     category: "Appetizer",
     description: appetizer.nameEn,

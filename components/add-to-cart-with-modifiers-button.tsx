@@ -17,6 +17,8 @@ interface AddToCartWithModifiersButtonProps {
   item: {
     id: string;
     name: string;
+    nameEn?: string;
+    nameAr?: string;
     price: number;
     category: string;
     description?: string;
