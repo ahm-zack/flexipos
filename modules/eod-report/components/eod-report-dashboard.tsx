@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SaudiRiyalSymbol } from "@/components/currency/saudi-riyal-symbol";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { useGenerateEODReport, useEODReportFormatters } from "../hooks";
+import { generateEODReportPDF, safeGetString } from "@/lib/eod-pdf-generator";
 
 // Export the historical reports component
 export { HistoricalEODReports } from "./historical-eod-reports";
@@ -77,6 +78,33 @@ export function EODReportDashboard() {
     });
   };
 
+  const handleDownloadPDF = async (format: "a4" | "thermal") => {
+    if (!reportData) return;
+
+    // Convert the report data to the format expected by the utility
+    // Handle both Date objects and string values safely
+    const convertedData = {
+      ...reportData,
+      startDateTime:
+        reportData.startDateTime instanceof Date
+          ? reportData.startDateTime.toISOString()
+          : safeGetString(reportData.startDateTime),
+      endDateTime:
+        reportData.endDateTime instanceof Date
+          ? reportData.endDateTime.toISOString()
+          : safeGetString(reportData.endDateTime),
+      reportGeneratedAt:
+        reportData.reportGeneratedAt instanceof Date
+          ? reportData.reportGeneratedAt.toISOString()
+          : safeGetString(reportData.reportGeneratedAt),
+    };
+
+    // Debug: Log the data being passed to PDF generator
+    console.log("Report data before conversion:", reportData);
+    console.log("Converted data for PDF:", convertedData);
+
+    await generateEODReportPDF(convertedData, format, formatters);
+  };
   const reportData = generateReport.data;
 
   return (
@@ -154,7 +182,26 @@ export function EODReportDashboard() {
                 {formatters.formatDate(new Date(reportData.reportGeneratedAt))}
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {/* PDF Download Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  onClick={() => handleDownloadPDF("a4")}
+                  variant="outline"
+                  className="flex-1 sm:flex-none"
+                >
+                  📄 Download A4 PDF
+                </Button>
+                <Button
+                  onClick={() => handleDownloadPDF("thermal")}
+                  variant="outline"
+                  className="flex-1 sm:flex-none"
+                >
+                  🧾 Download Thermal PDF
+                </Button>
+              </div>
+
+              {/* Summary Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-green-500/10 rounded-lg border border-green-500/20">
                   <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400 flex items-center justify-center gap-1">
@@ -220,7 +267,7 @@ export function EODReportDashboard() {
                 value="products"
                 className="text-xs sm:text-sm py-2 px-1 sm:px-3"
               >
-                Best Sellers
+                All Sold Items
               </TabsTrigger>
               <TabsTrigger
                 value="hourly"
@@ -358,7 +405,10 @@ export function EODReportDashboard() {
             <TabsContent value="products" className="space-y-4">
               <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
                 <CardHeader>
-                  <CardTitle className="text-lg">Best Selling Items</CardTitle>
+                  <CardTitle className="text-lg">All Sold Items</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Complete list of all items sold during the reporting period
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">

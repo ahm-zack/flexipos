@@ -25,6 +25,13 @@ import {
   useDeleteEODReport,
 } from "../hooks";
 import { format } from "date-fns";
+import {
+  generateEODReportPDF,
+  convertHistoricalReportData,
+  safeGetString,
+  safeParseNumber,
+  safeParseJSON,
+} from "@/lib/eod-pdf-generator";
 
 export function HistoricalEODReports() {
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
@@ -74,31 +81,6 @@ export function HistoricalEODReports() {
   }
 
   const reports = reportData?.reports || [];
-
-  const safeParseNumber = (
-    value: string | number | null | undefined
-  ): number => {
-    if (typeof value === "number") return value;
-    if (typeof value === "string") return parseFloat(value) || 0;
-    return 0;
-  };
-
-  const safeGetString = (value: unknown): string => {
-    if (typeof value === "string") return value;
-    return String(value || "");
-  };
-
-  const safeParseJSON = (value: unknown): unknown[] => {
-    try {
-      if (typeof value === "string") {
-        return JSON.parse(value) || [];
-      }
-      if (Array.isArray(value)) return value;
-      return [];
-    } catch {
-      return [];
-    }
-  };
 
   const safeGetDate = (value: unknown): Date => {
     if (value instanceof Date) return value;
@@ -188,6 +170,23 @@ export function HistoricalEODReports() {
     )}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  // PDF download functionality for historical reports
+  const downloadReportPDF = async (
+    reportData: Record<string, unknown>,
+    format: "a4" | "thermal"
+  ) => {
+    try {
+      // Convert historical report data to standard format
+      const convertedData = convertHistoricalReportData(reportData);
+
+      // Generate PDF using the reusable utility
+      await generateEODReportPDF(convertedData, format, formatters);
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      alert("Failed to generate PDF. Please try again.");
+    }
   };
 
   // Delete functionality for individual reports
@@ -484,6 +483,22 @@ export function HistoricalEODReports() {
                       >
                         <Download className="h-3 w-3 mr-1" />
                         <span className="hidden sm:inline">Download </span>CSV
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => downloadReportPDF(report, "a4")}
+                        className="text-xs flex-1 sm:flex-initial"
+                      >
+                        📄 <span className="hidden sm:inline">A4 </span>PDF
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => downloadReportPDF(report, "thermal")}
+                        className="text-xs flex-1 sm:flex-initial"
+                      >
+                        🧾 <span className="hidden sm:inline">Thermal </span>PDF
                       </Button>
                       <Button
                         size="sm"

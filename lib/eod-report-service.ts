@@ -176,7 +176,7 @@ const calculatePaymentBreakdown = (orders: OrderWithDetails[]): PaymentBreakdown
 };
 
 /**
- * Calculates best selling items
+ * Calculates all sold items (previously best selling items - now shows ALL items)
  */
 const calculateBestSellingItems = (orders: OrderWithDetails[]): BestSellingItem[] => {
   const itemStats: Record<string, {
@@ -207,9 +207,9 @@ const calculateBestSellingItems = (orders: OrderWithDetails[]): BestSellingItem[
     }
   });
 
+  // Return ALL items sorted by quantity (removed .slice(0, 10) to show all items)
   return Object.values(itemStats)
     .sort((a, b) => b.totalQuantity - a.totalQuantity)
-    .slice(0, 10)
     .map(item => ({
       itemName: item.name,
       itemType: item.type as 'pizza' | 'pie' | 'sandwich' | 'mini_pie' | 'beverage' | 'appetizer' | 'burger' | 'shawerma' | 'side-order',
