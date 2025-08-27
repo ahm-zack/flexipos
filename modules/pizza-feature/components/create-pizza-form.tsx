@@ -726,7 +726,7 @@ export function CreatePizzaFormWithOptimisticUpdates({
               ) : createPizzaMutation.isPending ? (
                 "Creating..."
               ) : (
-                "Create Pizza (Instant)"
+                "Create Pizza"
               )}
             </Button>
           </DialogFooter>
