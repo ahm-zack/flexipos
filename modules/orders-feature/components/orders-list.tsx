@@ -259,13 +259,19 @@ export function OrdersList() {
                   <div className="flex items-start justify-between">
                     <div className="flex flex-col items-start gap-2">
                       <div className="flex flex-col">
-                        <CardTitle className="text-lg font-semibold">
-                          #{order.orderNumber}
-                        </CardTitle>
-                        {order.dailySerial && (
-                          <span className="text-xs text-muted-foreground">
-                            Daily: {order.dailySerial}
-                          </span>
+                        {order.dailySerial ? (
+                          <>
+                            <CardTitle className="text-lg font-semibold">
+                              Daily: {order.dailySerial}
+                            </CardTitle>
+                            <span className="text-xs text-muted-foreground">
+                              #{order.orderNumber}
+                            </span>
+                          </>
+                        ) : (
+                          <CardTitle className="text-lg font-semibold">
+                            #{order.orderNumber}
+                          </CardTitle>
                         )}
                       </div>
                       <Badge
