@@ -30,6 +30,9 @@ export const orders = pgTable('orders', {
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
   paymentMethod: paymentMethodEnum('payment_method').notNull().default('cash'), // Payment method
   status: ordersStatusEnum('status').notNull().default('completed'),
+  discountType: text('discount_type'), // 'percentage' or 'amount'
+  discountValue: decimal('discount_value', { precision: 5, scale: 2 }),
+  discountAmount: decimal('discount_amount', { precision: 10, scale: 2 }).default('0'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   createdBy: uuid('created_by').notNull().references(() => users.id), // Foreign key to users table

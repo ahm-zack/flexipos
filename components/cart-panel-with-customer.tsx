@@ -15,7 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { useCart } from "@/modules/cart/hooks/use-cart";
-import { PriceDisplay } from "@/components/currency";
+import { PriceDisplay, SaudiRiyalSymbol } from "@/components/currency";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useCreateOrder } from "@/modules/orders-feature";
 import { useUpdateCustomerPurchases } from "@/modules/customer-feature";
@@ -23,12 +23,19 @@ import { CustomerClientService } from "@/lib/supabase-queries/customer-client-se
 import { toast } from "sonner";
 import { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { User } from "lucide-react";
+import { User, Percent } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function CartPanelWithCustomer() {
   const { cart, updateQuantity, removeItem, clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "mixed">(
-    "cash"
+    "card" // Default to card instead of cash
   );
 
   // Customer form states
@@ -38,7 +45,15 @@ export function CartPanelWithCustomer() {
   const [isExistingCustomer, setIsExistingCustomer] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isCustomerSectionCollapsed, setIsCustomerSectionCollapsed] =
-    useState(false);
+    useState(true); // Start collapsed
+
+  // Discount state
+  const [discountType, setDiscountType] = useState<"percentage" | "amount">(
+    "percentage"
+  );
+  const [discountValue, setDiscountValue] = useState<string>("");
+  const [isDiscountSectionCollapsed, setIsDiscountSectionCollapsed] =
+    useState(true); // Start collapsed
 
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const createOrder = useCreateOrder();
@@ -88,6 +103,22 @@ export function CartPanelWithCustomer() {
     setIsExistingCustomer(false);
   };
 
+  // Calculate discount amount and final total
+  const calculateDiscount = () => {
+    const subtotal = cart.total;
+    const discountNum = parseFloat(discountValue) || 0;
+
+    if (discountType === "percentage") {
+      const discountAmount = (subtotal * discountNum) / 100;
+      return Math.min(discountAmount, subtotal); // Cap at subtotal
+    } else {
+      return Math.min(discountNum, subtotal); // Cap at subtotal
+    }
+  };
+
+  const discountAmount = calculateDiscount();
+  const finalTotal = cart.total - discountAmount;
+
   const handleProceedToCheckout = async () => {
     if (!currentUser) {
       toast.error("Please log in to create an order");
@@ -96,10 +127,13 @@ export function CartPanelWithCustomer() {
 
     const orderData = {
       items: cart.items,
-      totalAmount: cart.total,
+      totalAmount: finalTotal, // Use final total after discount
       paymentMethod,
       createdBy: currentUser.id,
       customerName: customerName.trim() || undefined,
+      discountType: discountAmount > 0 ? discountType : undefined,
+      discountValue: discountAmount > 0 ? parseFloat(discountValue) : undefined,
+      discountAmount: discountAmount > 0 ? discountAmount : undefined,
     };
 
     createOrder.mutate(orderData, {
@@ -134,7 +168,7 @@ export function CartPanelWithCustomer() {
             if (customerId) {
               await updateCustomerPurchases.mutateAsync({
                 customerId,
-                orderTotal: cart.total,
+                orderTotal: finalTotal, // Use final total after discount
                 orderNumber: data.orderNumber,
               });
             }
@@ -147,6 +181,7 @@ export function CartPanelWithCustomer() {
 
         clearCart();
         clearCustomerData();
+        setDiscountValue(""); // Clear discount
 
         // Generate receipt
         const apiOrder = {
@@ -160,6 +195,9 @@ export function CartPanelWithCustomer() {
               : data.totalAmount,
           paymentMethod: data.paymentMethod,
           status: data.status,
+          discountType: data.discountType,
+          discountValue: data.discountValue,
+          discountAmount: data.discountAmount,
           createdAt:
             typeof data.createdAt === "string"
               ? data.createdAt
@@ -337,7 +375,10 @@ export function CartPanelWithCustomer() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={clearCart}
+                onClick={() => {
+                  clearCart();
+                  setDiscountValue(""); // Clear discount when clearing cart
+                }}
                 className="w-full text-muted-foreground hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -473,16 +514,153 @@ export function CartPanelWithCustomer() {
             </div>
           </div>
 
+          {/* Discount Section */}
+          <div className="bg-muted/20 rounded-lg p-3 space-y-2.5 transition-all duration-200 ease-in-out hover:bg-muted/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Percent className="h-3.5 w-3.5 text-primary" />
+                <Label className="text-xs font-medium text-foreground">
+                  Discount
+                </Label>
+                {discountAmount > 0 && (
+                  <span className="text-xs text-green-600 font-medium">
+                    -
+                    {discountType === "percentage"
+                      ? `${discountValue}%`
+                      : `${discountAmount.toFixed(2)}`}
+                  </span>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  setIsDiscountSectionCollapsed(!isDiscountSectionCollapsed)
+                }
+                className="h-6 w-6 p-0 transition-transform duration-200 ease-in-out"
+              >
+                <div
+                  className={`transition-transform duration-200 ease-in-out ${
+                    isDiscountSectionCollapsed ? "rotate-180" : "rotate-0"
+                  }`}
+                >
+                  <ChevronDown className="h-3 w-3" />
+                </div>
+              </Button>
+            </div>
+
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                isDiscountSectionCollapsed
+                  ? "max-h-0 opacity-0"
+                  : "max-h-96 opacity-100"
+              }`}
+            >
+              <div className="space-y-2 pt-2">
+                {/* Discount Type and Value */}
+                <div className="flex gap-2">
+                  {/* Discount Type */}
+                  <div className="flex-shrink-0">
+                    <Select
+                      value={discountType}
+                      onValueChange={(value: "percentage" | "amount") =>
+                        setDiscountType(value)
+                      }
+                    >
+                      <SelectTrigger className="w-24 h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percentage">
+                          <div className="flex items-center gap-1">
+                            <Percent className="h-3 w-3" />
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="amount">
+                          <div className="flex items-center gap-1">
+                            <SaudiRiyalSymbol className="h-3 w-3" />
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Discount Value */}
+                  <div className="flex-1">
+                    <Input
+                      type="number"
+                      placeholder={discountType === "percentage" ? "0" : "0.00"}
+                      value={discountValue}
+                      onChange={(e) => setDiscountValue(e.target.value)}
+                      min="0"
+                      max={
+                        discountType === "percentage"
+                          ? "100"
+                          : cart.total.toString()
+                      }
+                      step={discountType === "percentage" ? "1" : "0.01"}
+                      className="h-8 text-xs placeholder:text-xs w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Discount Preview */}
+                {discountAmount > 0 && (
+                  <div className="flex items-center justify-between text-xs text-green-600 bg-green-50 dark:bg-green-950/50 px-2 py-1 rounded">
+                    <span>Discount Applied:</span>
+                    <span className="font-medium">
+                      -{discountAmount.toFixed(2)} SAR
+                    </span>
+                  </div>
+                )}
+
+                {/* Clear Discount */}
+                {discountValue && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDiscountValue("")}
+                    className="w-full h-6 text-xs text-muted-foreground hover:text-red-600"
+                  >
+                    Clear Discount
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Subtotal ({cart.itemCount} items)</span>
               <PriceDisplay price={cart.total} symbolSize={14} />
             </div>
+
+            {/* Discount Display */}
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span>
+                  Discount (
+                  {discountType === "percentage"
+                    ? `${discountValue}%`
+                    : "Amount"}
+                  )
+                </span>
+                <span className="flex items-center">
+                  -
+                  <PriceDisplay
+                    price={discountAmount}
+                    symbolSize={14}
+                    className="text-green-600"
+                  />
+                </span>
+              </div>
+            )}
+
             {/* VAT temporarily hidden - can be re-enabled later */}
             {/* <div className="flex justify-between text-sm">
               <span>VAT (15% included)</span>
               <PriceDisplay
-                price={(cart.total * 0.15) / 1.15}
+                price={(finalTotal * 0.15) / 1.15}
                 symbolSize={14}
               />
             </div> */}
@@ -490,7 +668,7 @@ export function CartPanelWithCustomer() {
             <div className="flex justify-between font-semibold text-lg">
               <span>Total</span>
               <PriceDisplay
-                price={cart.total}
+                price={finalTotal}
                 symbolSize={16}
                 className="font-semibold text-lg"
               />

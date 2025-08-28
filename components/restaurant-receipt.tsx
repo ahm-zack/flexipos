@@ -279,7 +279,13 @@ export function RestaurantReceipt({
       <OrderItems items={order.items} />
 
       {/* Totals */}
-      <OrderTotals totals={totals} totalAmount={order.totalAmount} />
+      <OrderTotals
+        totals={totals}
+        totalAmount={order.totalAmount}
+        discountType={order.discountType}
+        discountValue={order.discountValue}
+        discountAmount={order.discountAmount}
+      />
 
       {/* QR Code */}
       {qrCodeDataURL && <QRCodeSection qrCodeDataURL={qrCodeDataURL} />}
@@ -591,9 +597,15 @@ const OrderItems = ({ items }: { items: Order["items"] }) => (
 const OrderTotals = ({
   totals,
   totalAmount,
+  discountType,
+  discountValue,
+  discountAmount,
 }: {
   totals: TotalCalculations;
   totalAmount: number;
+  discountType?: "percentage" | "amount";
+  discountValue?: number;
+  discountAmount?: number;
 }) => (
   <div
     style={{
@@ -633,6 +645,34 @@ const OrderTotals = ({
           </div>
         </>
       )}
+
+      {/* Discount Information */}
+      {discountAmount && discountAmount > 0 && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            marginBottom: "0.5rem",
+            color: "#000000",
+          }}
+        >
+          <span>
+            Discount{" "}
+            {discountType && discountValue
+              ? `(${
+                  discountType === "percentage"
+                    ? `${discountValue}%`
+                    : `${discountValue} SAR`
+                })`
+              : ""}
+            :
+          </span>
+          <span>{discountAmount.toFixed(2)}</span>
+        </div>
+      )}
+
       <div
         style={{
           borderTop: vatUtils.shouldShowVAT() ? "1px solid #000" : "none",

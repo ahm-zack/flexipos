@@ -341,6 +341,28 @@ export function OrdersList() {
                     </span>
                   </div>
 
+                  {/* Discount Information */}
+                  {order.discountAmount && order.discountAmount > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Discount</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-red-600 font-medium">
+                          -{order.discountAmount.toFixed(2)}
+                        </span>
+                        <SaudiRiyalSymbol size={12} />
+                        {order.discountType && order.discountValue && (
+                          <span className="text-xs text-muted-foreground ml-1">
+                            (
+                            {order.discountType === "percentage"
+                              ? `${order.discountValue}%`
+                              : `${order.discountValue} SAR`}
+                            )
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Date</span>
                     <span className="text-foreground">

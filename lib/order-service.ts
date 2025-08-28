@@ -29,6 +29,9 @@ export interface ApiOrder {
   totalAmount: number;
   paymentMethod: 'cash' | 'card' | 'mixed';
   status: 'completed' | 'canceled' | 'modified';
+  discountType?: 'percentage' | 'amount';
+  discountValue?: number;
+  discountAmount?: number;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -74,6 +77,9 @@ function transformDatabaseOrderToApi(dbOrder: DatabaseOrder): ApiOrder {
     totalAmount: parseFloat(dbOrder.totalAmount),
     paymentMethod: dbOrder.paymentMethod,
     status: dbOrder.status,
+    discountType: dbOrder.discountType as 'percentage' | 'amount' | undefined,
+    discountValue: dbOrder.discountValue ? parseFloat(dbOrder.discountValue) : undefined,
+    discountAmount: dbOrder.discountAmount ? parseFloat(dbOrder.discountAmount) : undefined,
     createdAt: dbOrder.createdAt.toISOString(),
     updatedAt: dbOrder.updatedAt.toISOString(),
     createdBy: dbOrder.createdBy,
@@ -280,6 +286,9 @@ export const orderService = {
     items: CartItem[]; // Changed to accept CartItem[] instead of OrderItem[]
     totalAmount: number;
     paymentMethod: 'cash' | 'card' | 'mixed';
+    discountType?: 'percentage' | 'amount';
+    discountValue?: number;
+    discountAmount?: number;
     createdBy: string;
   }): Promise<OrderServiceResult<ApiOrder>> {
     try {
@@ -296,6 +305,9 @@ export const orderService = {
         totalAmount: orderData.totalAmount.toString(),
         paymentMethod: orderData.paymentMethod,
         status: 'completed',
+        discountType: orderData.discountType || null,
+        discountValue: orderData.discountValue?.toString() || null,
+        discountAmount: orderData.discountAmount?.toString() || '0',
         createdBy: orderData.createdBy,
         createdAt: now,
         updatedAt: now,

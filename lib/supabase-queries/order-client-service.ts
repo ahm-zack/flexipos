@@ -51,6 +51,9 @@ const transformSupabaseToOrder = (row: Record<string, unknown>): Order => ({
     totalAmount: typeof row.total_amount === 'string' ? parseFloat(row.total_amount) : (row.total_amount as number),
     paymentMethod: row.payment_method as 'cash' | 'card' | 'mixed',
     status: row.status as 'completed' | 'canceled' | 'modified',
+    discountType: row.discount_type as 'percentage' | 'amount' | undefined,
+    discountValue: row.discount_value ? (typeof row.discount_value === 'string' ? parseFloat(row.discount_value) : row.discount_value as number) : undefined,
+    discountAmount: row.discount_amount ? (typeof row.discount_amount === 'string' ? parseFloat(row.discount_amount) : row.discount_amount as number) : undefined,
     createdAt: new Date(row.created_at as string).toISOString(),
     updatedAt: new Date(row.updated_at as string).toISOString(),
     createdBy: row.created_by as string,
@@ -171,6 +174,9 @@ export interface CreateOrderData {
     items: CartItem[]; // Accept CartItem[] for creating orders
     totalAmount: number;
     paymentMethod: 'cash' | 'card' | 'mixed';
+    discountType?: 'percentage' | 'amount';
+    discountValue?: number;
+    discountAmount?: number;
     createdBy: string;
 }
 
@@ -271,6 +277,9 @@ export const orderClientService = {
                 items: orderItems as unknown as Json,
                 total_amount: orderData.totalAmount,
                 payment_method: orderData.paymentMethod,
+                discount_type: orderData.discountType || null,
+                discount_value: orderData.discountValue || null,
+                discount_amount: orderData.discountAmount || 0,
                 created_by: orderData.createdBy,
             })
             .select()

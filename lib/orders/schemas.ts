@@ -58,6 +58,9 @@ export const OrderSchema = z.object({
   totalAmount: z.number().min(0), // Total order amount
   paymentMethod: PaymentMethodEnum, // Payment method
   status: OrderStatusEnum,
+  discountType: z.enum(['percentage', 'amount']).optional(), // Type of discount
+  discountValue: z.number().optional(), // Original discount value entered
+  discountAmount: z.number().min(0).optional(), // Actual discount amount applied
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   createdBy: z.string().uuid(), // Cashier who created the order
@@ -71,6 +74,9 @@ export const CreateOrderSchema = z.object({
   items: z.array(CartItemSchema).min(1, 'At least one item is required'),
   totalAmount: z.number().min(0, 'Total amount must be positive'),
   paymentMethod: PaymentMethodEnum, // No default here, let it come from the client
+  discountType: z.enum(['percentage', 'amount']).optional(), // Type of discount
+  discountValue: z.number().optional(), // Original discount value entered
+  discountAmount: z.number().min(0).optional(), // Actual discount amount applied
   createdBy: z.string().uuid(),
 });
 
@@ -83,6 +89,9 @@ export const UpdateOrderSchema = z.object({
   totalAmount: z.number().min(0).optional(),
   paymentMethod: PaymentMethodEnum.optional(),
   status: OrderStatusEnum.optional(),
+  discountType: z.enum(['percentage', 'amount']).optional(), // Type of discount
+  discountValue: z.number().optional(), // Original discount value entered
+  discountAmount: z.number().min(0).optional(), // Actual discount amount applied
 });
 
 export type UpdateOrder = z.infer<typeof UpdateOrderSchema>;
