@@ -187,6 +187,7 @@ export function CartPanelWithCustomer() {
         const apiOrder = {
           id: data.id,
           orderNumber: data.orderNumber,
+          dailySerial: data.dailySerial, // Add the daily serial field
           customerName: data.customerName,
           items: data.items,
           totalAmount:
