@@ -9,6 +9,7 @@ import {
   Minus,
   Plus,
   ChevronDown,
+  ParkingCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -32,9 +33,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CashCalculatorDialog } from "@/components/cash-calculator-dialog";
+import { ParkOrderDialog } from "@/components/park-order-dialog";
+import { ParkedOrdersPanel } from "@/components/parked-orders-panel";
+import { ParkedOrder, useParkedOrders } from "@/hooks/use-parked-orders";
 
 export function CartPanelWithCustomer() {
-  const { cart, updateQuantity, removeItem, clearCart } = useCart();
+  const { cart, updateQuantity, removeItem, clearCart, addItem, openCart } =
+    useCart();
+
+  // Parked orders hook to get count for notification badge
+  const { parkedOrders } = useParkedOrders();
+
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "mixed">(
     "card" // Default to card instead of cash
   );
@@ -65,6 +74,47 @@ export function CartPanelWithCustomer() {
   const createOrder = useCreateOrder();
   const updateCustomerPurchases = useUpdateCustomerPurchases();
   const customerService = useMemo(() => new CustomerClientService(), []);
+
+  // Park order functionality
+  const handleParkOrder = () => {
+    clearCart();
+    clearCustomerData();
+    setDiscountValue("");
+  };
+
+  const handleRestoreParkedOrder = (order: ParkedOrder) => {
+    // Clear current cart first
+    clearCart();
+
+    // Restore cart items
+    order.cartData.items.forEach((item) => {
+      addItem(item);
+    });
+
+    // Restore customer data
+    if (order.customerName) setCustomerName(order.customerName);
+    if (order.customerPhone) setCustomerPhone(order.customerPhone);
+    if (order.customerAddress) setCustomerAddress(order.customerAddress);
+
+    // Restore payment method
+    setPaymentMethod(order.paymentMethod);
+
+    // Restore discount
+    if (order.discountData) {
+      setDiscountType(order.discountData.type);
+      setDiscountValue(order.discountData.value);
+    }
+
+    // Open cart to show restored order
+    openCart();
+
+    toast.success(
+      `Order restored${order.customerName ? ` for ${order.customerName}` : ""}`,
+      {
+        description: "All items and settings have been restored to your cart.",
+      }
+    );
+  };
 
   // Search for customer when phone changes
   useEffect(() => {
@@ -291,9 +341,60 @@ export function CartPanelWithCustomer() {
   return (
     <div className="h-full w-full bg-background border-l shadow-2xl flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-2 p-6">
-        <ShoppingBag className="h-5 w-5" />
-        <h2 className="text-xl font-semibold">Your Order</h2>
+      <div className="border-b">
+        {/* Park Order and Parked Orders Section - Always Visible */}
+        <div className="p-6 pb-3">
+          <div className="flex gap-2">
+            <ParkOrderDialog
+              cartData={{
+                items: cart.items,
+                total: finalTotal,
+                itemCount: cart.itemCount,
+              }}
+              customerName={customerName}
+              customerPhone={customerPhone}
+              customerAddress={customerAddress}
+              paymentMethod={paymentMethod}
+              discountData={
+                discountAmount > 0
+                  ? {
+                      type: discountType,
+                      value: discountValue,
+                      amount: discountAmount,
+                    }
+                  : undefined
+              }
+              onParkSuccess={handleParkOrder}
+              trigger={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  disabled={cart.items.length === 0}
+                >
+                  <ParkingCircle className="h-4 w-4 mr-2" />
+                  Park Order
+                </Button>
+              }
+            />
+            <ParkedOrdersPanel
+              onRestoreOrder={handleRestoreParkedOrder}
+              trigger={
+                <div className="relative flex-1">
+                  <Button variant="outline" size="sm" className="w-full">
+                    <ParkingCircle className="h-4 w-4 mr-2" />
+                    Parked
+                  </Button>
+                  {parkedOrders.length > 0 && (
+                    <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium animate-pulse">
+                      {parkedOrders.length}
+                    </div>
+                  )}
+                </div>
+              }
+            />
+          </div>
+        </div>
       </div>
 
       {/* Cart Items */}

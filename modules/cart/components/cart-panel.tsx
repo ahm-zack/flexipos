@@ -12,6 +12,7 @@ import {
   ChevronDown,
   User,
   Percent,
+  ParkingCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -38,6 +39,9 @@ import { useState, useEffect, useMemo } from "react";
 import { RestaurantReceipt } from "@/components/restaurant-receipt";
 import { Dialog } from "@radix-ui/react-dialog";
 import { CashCalculatorDialog } from "@/components/cash-calculator-dialog";
+import { ParkOrderDialog } from "@/components/park-order-dialog";
+import { ParkedOrdersPanel } from "@/components/parked-orders-panel";
+import { ParkedOrder, useParkedOrders } from "@/hooks/use-parked-orders";
 
 interface CartPanelProps {
   className?: string;
@@ -64,8 +68,19 @@ export function ReceiptModal({
 }
 
 export function CartPanel({ className }: CartPanelProps) {
-  const { cart, isOpen, closeCart, updateQuantity, removeItem, clearCart } =
-    useCart();
+  const {
+    cart,
+    isOpen,
+    closeCart,
+    openCart,
+    updateQuantity,
+    removeItem,
+    clearCart,
+    addItem,
+  } = useCart();
+
+  // Parked orders hook to get count for notification badge
+  const { parkedOrders } = useParkedOrders();
 
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "mixed">(
     "card" // Default to card instead of cash
@@ -97,6 +112,48 @@ export function CartPanel({ className }: CartPanelProps) {
   const updateCustomerPurchases = useUpdateCustomerPurchases();
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const customerService = useMemo(() => new CustomerClientService(), []);
+
+  // Park order functionality
+  const handleParkOrder = () => {
+    clearCart();
+    clearCustomerData();
+    setDiscountValue("");
+    closeCart();
+  };
+
+  const handleRestoreParkedOrder = (order: ParkedOrder) => {
+    // Clear current cart first
+    clearCart();
+
+    // Restore cart items
+    order.cartData.items.forEach((item) => {
+      addItem(item);
+    });
+
+    // Restore customer data
+    if (order.customerName) setCustomerName(order.customerName);
+    if (order.customerPhone) setCustomerPhone(order.customerPhone);
+    if (order.customerAddress) setCustomerAddress(order.customerAddress);
+
+    // Restore payment method
+    setPaymentMethod(order.paymentMethod);
+
+    // Restore discount
+    if (order.discountData) {
+      setDiscountType(order.discountData.type);
+      setDiscountValue(order.discountData.value);
+    }
+
+    // Open cart to show restored order
+    openCart();
+
+    toast.success(
+      `Order restored${order.customerName ? ` for ${order.customerName}` : ""}`,
+      {
+        description: "All items and settings have been restored to your cart.",
+      }
+    );
+  };
 
   // Search for customer when phone changes
   useEffect(() => {
@@ -332,20 +389,76 @@ export function CartPanel({ className }: CartPanelProps) {
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5" />
-            <h2 className="text-xl font-semibold">Your Order</h2>
+        <div className="border-b">
+          <div className="flex items-center justify-between p-6 pb-3">
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5" />
+              <h2 className="text-xl font-semibold">Your Order</h2>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={closeCart}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close cart</span>
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={closeCart}
-            className="h-8 w-8 p-0"
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close cart</span>
-          </Button>
+
+          {/* Park Order and Parked Orders Section - Always Visible */}
+          <div className="px-6 pb-3">
+            <div className="flex gap-2">
+              <ParkOrderDialog
+                cartData={{
+                  items: cart.items,
+                  total: finalTotal,
+                  itemCount: cart.itemCount,
+                }}
+                customerName={customerName}
+                customerPhone={customerPhone}
+                customerAddress={customerAddress}
+                paymentMethod={paymentMethod}
+                discountData={
+                  discountAmount > 0
+                    ? {
+                        type: discountType,
+                        value: discountValue,
+                        amount: discountAmount,
+                      }
+                    : undefined
+                }
+                onParkSuccess={handleParkOrder}
+                trigger={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    disabled={cart.items.length === 0}
+                  >
+                    <ParkingCircle className="h-4 w-4 mr-2" />
+                    Park Order
+                  </Button>
+                }
+              />
+              <ParkedOrdersPanel
+                onRestoreOrder={handleRestoreParkedOrder}
+                trigger={
+                  <div className="relative flex-1">
+                    <Button variant="outline" size="sm" className="w-full">
+                      <ParkingCircle className="h-4 w-4 mr-2" />
+                      Parked
+                    </Button>
+                    {parkedOrders.length > 0 && (
+                      <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium animate-pulse">
+                        {parkedOrders.length}
+                      </div>
+                    )}
+                  </div>
+                }
+              />
+            </div>
+          </div>
         </div>
 
         {/* Cart Items */}
