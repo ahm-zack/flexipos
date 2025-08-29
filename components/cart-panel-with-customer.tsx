@@ -241,12 +241,6 @@ export function CartPanelWithCustomer() {
 
   return (
     <div className="h-full w-full bg-background border-l shadow-2xl flex flex-col">
-      {/* Header */}
-      <div className="flex items-center gap-2 p-6">
-        <ShoppingBag className="h-5 w-5" />
-        <h2 className="text-xl font-semibold">Your Order</h2>
-      </div>
-
       {/* Cart Items */}
       <div className="flex-1 overflow-y-auto p-6">
         {cart.items.length === 0 ? (
@@ -393,11 +387,16 @@ export function CartPanelWithCustomer() {
       {cart.items.length > 0 && (
         <div className="p-6 space-y-4">
           {/* Customer Section - Minimalistic Design */}
-          <div className="bg-muted/20 rounded-lg p-3 space-y-2.5 transition-all duration-200 ease-in-out hover:bg-muted/30">
-            <div className="flex items-center justify-between">
+          <div className="bg-muted/20 rounded-lg p-2 space-y-2 transition-all duration-200 ease-in-out hover:bg-muted/30">
+            <div
+              className="flex items-center justify-between cursor-pointer group"
+              onClick={() =>
+                setIsCustomerSectionCollapsed(!isCustomerSectionCollapsed)
+              }
+            >
               <div className="flex items-center gap-2">
                 <User className="h-3.5 w-3.5 text-primary" />
-                <Label className="text-xs font-medium text-foreground">
+                <Label className="text-xs font-medium text-foreground cursor-pointer">
                   Customer Info
                 </Label>
                 {customerName && (
@@ -406,22 +405,13 @@ export function CartPanelWithCustomer() {
                   </span>
                 )}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  setIsCustomerSectionCollapsed(!isCustomerSectionCollapsed)
-                }
-                className="h-6 w-6 p-0 transition-transform duration-200 ease-in-out"
+              <div
+                className={`transition-transform duration-200 ease-in-out group-hover:text-primary ${
+                  isCustomerSectionCollapsed ? "rotate-180" : "rotate-0"
+                }`}
               >
-                <div
-                  className={`transition-transform duration-200 ease-in-out ${
-                    isCustomerSectionCollapsed ? "rotate-180" : "rotate-0"
-                  }`}
-                >
-                  <ChevronDown className="h-3 w-3" />
-                </div>
-              </Button>
+                <ChevronDown className="h-3 w-3" />
+              </div>
             </div>
 
             <div
@@ -515,11 +505,16 @@ export function CartPanelWithCustomer() {
           </div>
 
           {/* Discount Section */}
-          <div className="bg-muted/20 rounded-lg p-3 space-y-2.5 transition-all duration-200 ease-in-out hover:bg-muted/30">
-            <div className="flex items-center justify-between">
+          <div className="bg-muted/20 rounded-lg p-2 space-y-2 transition-all duration-200 ease-in-out hover:bg-muted/30">
+            <div
+              className="flex items-center justify-between cursor-pointer group"
+              onClick={() =>
+                setIsDiscountSectionCollapsed(!isDiscountSectionCollapsed)
+              }
+            >
               <div className="flex items-center gap-2">
                 <Percent className="h-3.5 w-3.5 text-primary" />
-                <Label className="text-xs font-medium text-foreground">
+                <Label className="text-xs font-medium text-foreground cursor-pointer">
                   Discount
                 </Label>
                 {discountAmount > 0 && (
@@ -531,22 +526,13 @@ export function CartPanelWithCustomer() {
                   </span>
                 )}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  setIsDiscountSectionCollapsed(!isDiscountSectionCollapsed)
-                }
-                className="h-6 w-6 p-0 transition-transform duration-200 ease-in-out"
+              <div
+                className={`transition-transform duration-200 ease-in-out group-hover:text-primary ${
+                  isDiscountSectionCollapsed ? "rotate-180" : "rotate-0"
+                }`}
               >
-                <div
-                  className={`transition-transform duration-200 ease-in-out ${
-                    isDiscountSectionCollapsed ? "rotate-180" : "rotate-0"
-                  }`}
-                >
-                  <ChevronDown className="h-3 w-3" />
-                </div>
-              </Button>
+                <ChevronDown className="h-3 w-3" />
+              </div>
             </div>
 
             <div
@@ -680,55 +666,46 @@ export function CartPanelWithCustomer() {
             <Label className="text-sm font-medium mb-2 block">
               Payment Method
             </Label>
-            <div className="flex gap-3 justify-center">
+            <div className="flex gap-2 justify-center">
               {[
                 {
                   value: "cash",
                   label: "Cash",
-                  icon: <Banknote className="h-5 w-5" />,
-                  color: "bg-green-100 text-green-700 border-green-300",
-                  active: "bg-green-600 text-white border-green-600 shadow-lg",
+                  icon: <Banknote className="h-4 w-4" />,
                 },
                 {
                   value: "card",
                   label: "Card",
-                  icon: <CreditCard className="h-5 w-5" />,
-                  color: "bg-blue-100 text-blue-700 border-blue-300",
-                  active: "bg-blue-600 text-white border-blue-600 shadow-lg",
+                  icon: <CreditCard className="h-4 w-4" />,
                 },
                 {
                   value: "mixed",
                   label: "Mixed",
-                  icon: <Split className="h-5 w-5" />,
-                  color: "bg-purple-100 text-purple-700 border-purple-300",
-                  active:
-                    "bg-purple-600 text-white border-purple-600 shadow-lg",
+                  icon: <Split className="h-4 w-4" />,
                 },
               ].map((method) => (
-                <button
+                <Button
                   key={method.value}
                   type="button"
+                  variant={
+                    paymentMethod === method.value ? "default" : "outline"
+                  }
+                  size="sm"
                   onClick={() =>
                     setPaymentMethod(method.value as "cash" | "card" | "mixed")
                   }
-                  className={`flex-1 flex flex-col items-center gap-1 py-4 px-2 rounded-xl border font-semibold transition-all duration-200 cursor-pointer
+                  className={`flex-1 flex flex-col items-center gap-1 h-auto py-3 px-2 rounded-lg border transition-all duration-200
                     ${
                       paymentMethod === method.value
-                        ? method.active
-                        : method.color
+                        ? "bg-primary text-primary-foreground border-primary shadow-md"
+                        : "bg-card text-card-foreground border-border hover:bg-accent hover:text-accent-foreground"
                     }
-                    hover:scale-105 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${
-                      method.value === "cash"
-                        ? "green"
-                        : method.value === "card"
-                        ? "blue"
-                        : "purple"
-                    }-400
+                    hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
                   `}
                 >
                   {method.icon}
-                  <span className="text-sm">{method.label}</span>
-                </button>
+                  <span className="text-xs font-medium">{method.label}</span>
+                </Button>
               ))}
             </div>
           </div>
