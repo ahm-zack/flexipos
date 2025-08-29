@@ -240,7 +240,7 @@ export function CartPanelWithCustomer() {
   };
 
   return (
-    <div className="h-full w-full bg-background border-l shadow-2xl flex flex-col">
+    <div className="h-full w-full bg-background shadow-2xl flex flex-col">
       {/* Cart Items */}
       <div className="flex-1 overflow-y-auto p-6">
         {cart.items.length === 0 ? (

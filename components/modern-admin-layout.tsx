@@ -55,7 +55,7 @@ export function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
         {isAdminPage ? (
           // Single card layout for admin pages
           <div className="h-[calc(100vh-120px)]">
-            <div className="h-full bg-background border rounded-2xl shadow-lg overflow-hidden">
+            <div className="h-full bg-background rounded-2xl shadow-lg overflow-hidden">
               <div className="h-full overflow-y-auto p-6">{children}</div>
             </div>
           </div>
@@ -63,12 +63,12 @@ export function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
           // Two-card layout for menu pages
           <div className="flex gap-6 h-[calc(100vh-120px)]">
             {/* Left Card - Menu Items */}
-            <div className="flex-1 bg-background border rounded-2xl shadow-lg overflow-hidden">
+            <div className="flex-1 shadow-lg overflow-hidden rounded-2xl">
               <div className="h-full overflow-y-auto p-6">{children}</div>
             </div>
 
             {/* Right Card - Cart Panel */}
-            <div className="w-96 bg-card border rounded-2xl shadow-lg overflow-hidden">
+            <div className="w-96 bg-card shadow-lg overflow-hidden rounded-2xl">
               <div className="h-full overflow-y-auto">
                 <CartPanelWithCustomer />
               </div>
