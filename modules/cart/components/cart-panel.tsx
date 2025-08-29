@@ -37,6 +37,7 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { useState, useEffect, useMemo } from "react";
 import { RestaurantReceipt } from "@/components/restaurant-receipt";
 import { Dialog } from "@radix-ui/react-dialog";
+import { CashCalculatorDialog } from "@/components/cash-calculator-dialog";
 
 interface CartPanelProps {
   className?: string;
@@ -86,6 +87,11 @@ export function CartPanel({ className }: CartPanelProps) {
   const [discountValue, setDiscountValue] = useState<string>("");
   const [isDiscountSectionCollapsed, setIsDiscountSectionCollapsed] =
     useState(true); // Start collapsed
+
+  // Cash calculator state
+  const [showCashCalculator, setShowCashCalculator] = useState(false);
+  const [cashReceived, setCashReceived] = useState<number>(0);
+  const [changeAmount, setChangeAmount] = useState<number>(0);
 
   const createOrder = useCreateOrder();
   const updateCustomerPurchases = useUpdateCustomerPurchases();
@@ -159,6 +165,22 @@ export function CartPanel({ className }: CartPanelProps) {
       return;
     }
 
+    // If payment method is cash, show cash calculator first
+    if (paymentMethod === "cash") {
+      setShowCashCalculator(true);
+      return;
+    }
+
+    // For card and mixed payments, proceed directly
+    await processOrder();
+  };
+
+  const processOrder = async () => {
+    if (!currentUser) {
+      toast.error("Please log in to create an order");
+      return;
+    }
+
     // Send cart items directly - the order service will handle the conversion
     const orderData = {
       items: cart.items, // Send cart items directly
@@ -176,7 +198,19 @@ export function CartPanel({ className }: CartPanelProps) {
 
     createOrder.mutate(orderData, {
       onSuccess: async (data) => {
-        toast.success(`Order #${data.orderNumber} created successfully!`);
+        // Show cash change notification if it was a cash payment
+        if (paymentMethod === "cash" && changeAmount > 0) {
+          toast.success(
+            `Order #${
+              data.orderNumber
+            } created! Cash received: ${cashReceived.toFixed(
+              2
+            )} SAR | Change: ${changeAmount.toFixed(2)} SAR`,
+            { duration: 8000 }
+          );
+        } else {
+          toast.success(`Order #${data.orderNumber} created successfully!`);
+        }
 
         // Update customer purchase totals if customer is selected
         if (customerPhone.trim() && customerName.trim()) {
@@ -263,6 +297,18 @@ export function CartPanel({ className }: CartPanelProps) {
         toast.error(`Failed to create order: ${error.message}`);
       },
     });
+  };
+
+  const handleCashCalculation = (cashReceived: number, change: number) => {
+    setCashReceived(cashReceived);
+    setChangeAmount(change);
+    setShowCashCalculator(false);
+    // Show change information toast
+    toast.info(
+      `Cash: ${cashReceived.toFixed(2)} SAR | Change: ${change.toFixed(2)} SAR`
+    );
+    // Process the order after cash calculation
+    processOrder();
   };
 
   if (!isOpen) return null;
@@ -829,6 +875,13 @@ export function CartPanel({ className }: CartPanelProps) {
           </div>
         )}
       </div>
+
+      <CashCalculatorDialog
+        open={showCashCalculator}
+        onOpenChange={setShowCashCalculator}
+        totalAmount={finalTotal}
+        onCalculateChange={handleCashCalculation}
+      />
     </>
   );
 }

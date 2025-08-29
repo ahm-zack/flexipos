@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CashCalculatorDialog } from "@/components/cash-calculator-dialog";
 
 export function CartPanelWithCustomer() {
   const { cart, updateQuantity, removeItem, clearCart } = useCart();
@@ -54,6 +55,11 @@ export function CartPanelWithCustomer() {
   const [discountValue, setDiscountValue] = useState<string>("");
   const [isDiscountSectionCollapsed, setIsDiscountSectionCollapsed] =
     useState(true); // Start collapsed
+
+  // Cash calculator state
+  const [showCashCalculator, setShowCashCalculator] = useState(false);
+  const [cashReceived, setCashReceived] = useState<number>(0);
+  const [changeAmount, setChangeAmount] = useState<number>(0);
 
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const createOrder = useCreateOrder();
@@ -125,6 +131,22 @@ export function CartPanelWithCustomer() {
       return;
     }
 
+    // If payment method is cash, show cash calculator first
+    if (paymentMethod === "cash") {
+      setShowCashCalculator(true);
+      return;
+    }
+
+    // For card and mixed payments, proceed directly
+    await processOrder();
+  };
+
+  const processOrder = async () => {
+    if (!currentUser) {
+      toast.error("Please log in to create an order");
+      return;
+    }
+
     const orderData = {
       items: cart.items,
       totalAmount: finalTotal, // Use final total after discount
@@ -138,7 +160,19 @@ export function CartPanelWithCustomer() {
 
     createOrder.mutate(orderData, {
       onSuccess: async (data) => {
-        toast.success(`Order #${data.orderNumber} created successfully!`);
+        // Show cash change notification if it was a cash payment
+        if (paymentMethod === "cash" && changeAmount > 0) {
+          toast.success(
+            `Order #${
+              data.orderNumber
+            } created! Cash received: ${cashReceived.toFixed(
+              2
+            )} SAR | Change: ${changeAmount.toFixed(2)} SAR`,
+            { duration: 8000 }
+          );
+        } else {
+          toast.success(`Order #${data.orderNumber} created successfully!`);
+        }
 
         // Update customer purchase totals if customer is selected
         if (customerPhone.trim() && customerName.trim()) {
@@ -182,6 +216,9 @@ export function CartPanelWithCustomer() {
         clearCart();
         clearCustomerData();
         setDiscountValue(""); // Clear discount
+        // Reset cash calculator state
+        setCashReceived(0);
+        setChangeAmount(0);
 
         // Generate receipt
         const apiOrder = {
@@ -238,6 +275,17 @@ export function CartPanelWithCustomer() {
         toast.error(`Failed to create order: ${error.message}`);
       },
     });
+  };
+
+  const handleCashCalculation = (cashReceived: number, change: number) => {
+    setCashReceived(cashReceived);
+    setChangeAmount(change);
+    // Show change information toast
+    toast.info(
+      `Cash: ${cashReceived.toFixed(2)} SAR | Change: ${change.toFixed(2)} SAR`
+    );
+    // Process the order after cash calculation
+    processOrder();
   };
 
   return (
@@ -750,6 +798,14 @@ export function CartPanelWithCustomer() {
           </Button>
         </div>
       )}
+
+      {/* Cash Calculator Dialog */}
+      <CashCalculatorDialog
+        open={showCashCalculator}
+        onOpenChange={setShowCashCalculator}
+        totalAmount={finalTotal}
+        onCalculateChange={handleCashCalculation}
+      />
     </div>
   );
 }
