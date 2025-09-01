@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CashCalculatorDialog } from "@/components/cash-calculator-dialog";
+import { MixedPaymentDialog } from "@/components/mixed-payment-dialog";
 import { ParkOrderDialog } from "@/components/park-order-dialog";
 import { ParkedOrdersPanel } from "@/components/parked-orders-panel";
 import { ParkedOrder, useParkedOrders } from "@/hooks/use-parked-orders";
@@ -69,6 +70,11 @@ export function CartPanelWithCustomer() {
   const [showCashCalculator, setShowCashCalculator] = useState(false);
   const [cashReceived, setCashReceived] = useState<number>(0);
   const [changeAmount, setChangeAmount] = useState<number>(0);
+
+  // Mixed payment state
+  const [showMixedPayment, setShowMixedPayment] = useState(false);
+  const [mixedCashAmount, setMixedCashAmount] = useState<number>(0);
+  const [mixedCardAmount, setMixedCardAmount] = useState<number>(0);
 
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const createOrder = useCreateOrder();
@@ -187,7 +193,13 @@ export function CartPanelWithCustomer() {
       return;
     }
 
-    // For card and mixed payments, proceed directly
+    // If payment method is mixed, show mixed payment dialog first
+    if (paymentMethod === "mixed") {
+      setShowMixedPayment(true);
+      return;
+    }
+
+    // For card payments, proceed directly
     await processOrder();
   };
 
@@ -210,7 +222,7 @@ export function CartPanelWithCustomer() {
 
     createOrder.mutate(orderData, {
       onSuccess: async (data) => {
-        // Show cash change notification if it was a cash payment
+        // Show payment-specific notifications
         if (paymentMethod === "cash" && changeAmount > 0) {
           toast.success(
             `Order #${
@@ -218,6 +230,15 @@ export function CartPanelWithCustomer() {
             } created! Cash received: ${cashReceived.toFixed(
               2
             )} SAR | Change: ${changeAmount.toFixed(2)} SAR`,
+            { duration: 8000 }
+          );
+        } else if (paymentMethod === "mixed") {
+          toast.success(
+            `Order #${
+              data.orderNumber
+            } created! Mixed Payment - Cash: ${mixedCashAmount.toFixed(
+              2
+            )} SAR | Card: ${mixedCardAmount.toFixed(2)} SAR`,
             { duration: 8000 }
           );
         } else {
@@ -266,9 +287,11 @@ export function CartPanelWithCustomer() {
         clearCart();
         clearCustomerData();
         setDiscountValue(""); // Clear discount
-        // Reset cash calculator state
+        // Reset payment state
         setCashReceived(0);
         setChangeAmount(0);
+        setMixedCashAmount(0);
+        setMixedCardAmount(0);
 
         // Generate receipt
         const apiOrder = {
@@ -335,6 +358,19 @@ export function CartPanelWithCustomer() {
       `Cash: ${cashReceived.toFixed(2)} SAR | Change: ${change.toFixed(2)} SAR`
     );
     // Process the order after cash calculation
+    processOrder();
+  };
+
+  const handleMixedPayment = (cashAmount: number, cardAmount: number) => {
+    setMixedCashAmount(cashAmount);
+    setMixedCardAmount(cardAmount);
+    // Show mixed payment information toast
+    toast.info(
+      `Mixed Payment - Cash: ${cashAmount.toFixed(
+        2
+      )} SAR | Card: ${cardAmount.toFixed(2)} SAR`
+    );
+    // Process the order after mixed payment calculation
     processOrder();
   };
 
@@ -906,6 +942,14 @@ export function CartPanelWithCustomer() {
         onOpenChange={setShowCashCalculator}
         totalAmount={finalTotal}
         onCalculateChange={handleCashCalculation}
+      />
+
+      {/* Mixed Payment Dialog */}
+      <MixedPaymentDialog
+        open={showMixedPayment}
+        onOpenChange={setShowMixedPayment}
+        totalAmount={finalTotal}
+        onConfirmPayment={handleMixedPayment}
       />
     </div>
   );

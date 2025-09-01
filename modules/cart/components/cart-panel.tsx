@@ -39,6 +39,7 @@ import { useState, useEffect, useMemo } from "react";
 import { RestaurantReceipt } from "@/components/restaurant-receipt";
 import { Dialog } from "@radix-ui/react-dialog";
 import { CashCalculatorDialog } from "@/components/cash-calculator-dialog";
+import { MixedPaymentDialog } from "@/components/mixed-payment-dialog";
 import { ParkOrderDialog } from "@/components/park-order-dialog";
 import { ParkedOrdersPanel } from "@/components/parked-orders-panel";
 import { ParkedOrder, useParkedOrders } from "@/hooks/use-parked-orders";
@@ -107,6 +108,11 @@ export function CartPanel({ className }: CartPanelProps) {
   const [showCashCalculator, setShowCashCalculator] = useState(false);
   const [cashReceived, setCashReceived] = useState<number>(0);
   const [changeAmount, setChangeAmount] = useState<number>(0);
+
+  // Mixed payment state
+  const [showMixedPayment, setShowMixedPayment] = useState(false);
+  const [mixedCashAmount, setMixedCashAmount] = useState<number>(0);
+  const [mixedCardAmount, setMixedCardAmount] = useState<number>(0);
 
   const createOrder = useCreateOrder();
   const updateCustomerPurchases = useUpdateCustomerPurchases();
@@ -228,7 +234,13 @@ export function CartPanel({ className }: CartPanelProps) {
       return;
     }
 
-    // For card and mixed payments, proceed directly
+    // If payment method is mixed, show mixed payment dialog first
+    if (paymentMethod === "mixed") {
+      setShowMixedPayment(true);
+      return;
+    }
+
+    // For card payments, proceed directly
     await processOrder();
   };
 
@@ -255,7 +267,7 @@ export function CartPanel({ className }: CartPanelProps) {
 
     createOrder.mutate(orderData, {
       onSuccess: async (data) => {
-        // Show cash change notification if it was a cash payment
+        // Show payment-specific notifications
         if (paymentMethod === "cash" && changeAmount > 0) {
           toast.success(
             `Order #${
@@ -263,6 +275,15 @@ export function CartPanel({ className }: CartPanelProps) {
             } created! Cash received: ${cashReceived.toFixed(
               2
             )} SAR | Change: ${changeAmount.toFixed(2)} SAR`,
+            { duration: 8000 }
+          );
+        } else if (paymentMethod === "mixed") {
+          toast.success(
+            `Order #${
+              data.orderNumber
+            } created! Mixed Payment - Cash: ${mixedCashAmount.toFixed(
+              2
+            )} SAR | Card: ${mixedCardAmount.toFixed(2)} SAR`,
             { duration: 8000 }
           );
         } else {
@@ -311,6 +332,11 @@ export function CartPanel({ className }: CartPanelProps) {
         clearCart();
         clearCustomerData();
         setDiscountValue(""); // Clear discount
+        // Reset payment state
+        setCashReceived(0);
+        setChangeAmount(0);
+        setMixedCashAmount(0);
+        setMixedCardAmount(0);
         closeCart();
         // Convert the order data to ApiOrder format for the PDF
         const apiOrder: ApiOrder = {
@@ -365,6 +391,20 @@ export function CartPanel({ className }: CartPanelProps) {
       `Cash: ${cashReceived.toFixed(2)} SAR | Change: ${change.toFixed(2)} SAR`
     );
     // Process the order after cash calculation
+    processOrder();
+  };
+
+  const handleMixedPayment = (cashAmount: number, cardAmount: number) => {
+    setMixedCashAmount(cashAmount);
+    setMixedCardAmount(cardAmount);
+    setShowMixedPayment(false);
+    // Show mixed payment information toast
+    toast.info(
+      `Mixed Payment - Cash: ${cashAmount.toFixed(
+        2
+      )} SAR | Card: ${cardAmount.toFixed(2)} SAR`
+    );
+    // Process the order after mixed payment calculation
     processOrder();
   };
 
@@ -994,6 +1034,13 @@ export function CartPanel({ className }: CartPanelProps) {
         onOpenChange={setShowCashCalculator}
         totalAmount={finalTotal}
         onCalculateChange={handleCashCalculation}
+      />
+
+      <MixedPaymentDialog
+        open={showMixedPayment}
+        onOpenChange={setShowMixedPayment}
+        totalAmount={finalTotal}
+        onConfirmPayment={handleMixedPayment}
       />
     </>
   );
