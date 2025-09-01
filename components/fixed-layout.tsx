@@ -16,10 +16,10 @@ export default function POSLayout({ children }: POSLayoutProps) {
       </div>
 
       {/* Center Content */}
-      <div className="w-[60%] overflow-y-auto">{children}</div>
+      <div className="w-[55%] overflow-y-auto">{children}</div>
 
       {/* Right Sidebar */}
-      <div className="w-[25%] bg-sidebar overflow-hidden">
+      <div className="w-[30%] bg-sidebar overflow-hidden">
         <CartPanelWithCustomer />
       </div>
     </div>
