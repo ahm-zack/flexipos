@@ -26,6 +26,7 @@ const navItems = [
       { title: "Menu Items", url: "/admin/items", icon: "📋" },
       { title: "Users", url: "/admin/users", icon: "👥" },
       { title: "Reports", url: "/admin/reports", icon: "📊" },
+      { title: "Events", url: "/admin/events", icon: "🎉" },
     ],
   },
 ];
@@ -50,6 +51,7 @@ export function POSNav() {
           "/admin/items",
           "/admin/users",
           "/admin/reports",
+          "/admin/events",
         ].includes(item.url)
       ),
     },

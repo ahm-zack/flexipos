@@ -40,6 +40,7 @@ import { RestaurantReceipt } from "@/components/restaurant-receipt";
 import { Dialog } from "@radix-ui/react-dialog";
 import { CashCalculatorDialog } from "@/components/cash-calculator-dialog";
 import { MixedPaymentDialog } from "@/components/mixed-payment-dialog";
+import { useEventDiscountStore } from "@/hooks/use-event-discount";
 import { ParkOrderDialog } from "@/components/park-order-dialog";
 import { ParkedOrdersPanel } from "@/components/parked-orders-panel";
 import { ParkedOrder, useParkedOrders } from "@/hooks/use-parked-orders";
@@ -118,6 +119,9 @@ export function CartPanel({ className }: CartPanelProps) {
   const updateCustomerPurchases = useUpdateCustomerPurchases();
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const customerService = useMemo(() => new CustomerClientService(), []);
+
+  // Event discount store
+  const eventDiscount = useEventDiscountStore();
 
   // Park order functionality
   const handleParkOrder = () => {
@@ -217,8 +221,22 @@ export function CartPanel({ className }: CartPanelProps) {
     }
   };
 
+  // Calculate event discount amount
+  const calculateEventDiscount = () => {
+    if (!eventDiscount.isActive || eventDiscount.discountPercentage <= 0) {
+      return 0;
+    }
+
+    const subtotal = cart.total;
+    const eventDiscountAmount =
+      (subtotal * eventDiscount.discountPercentage) / 100;
+    return Math.min(eventDiscountAmount, subtotal);
+  };
+
   const discountAmount = calculateDiscount();
-  const finalTotal = cart.total - discountAmount;
+  const eventDiscountAmount = calculateEventDiscount();
+  const totalDiscountAmount = discountAmount + eventDiscountAmount;
+  const finalTotal = Math.max(0, cart.total - totalDiscountAmount);
   // const setCreatedOrder = useCreatedOrderStore((s) => s.setCreatedOrder);
 
   // Handle order creation
@@ -260,6 +278,13 @@ export function CartPanel({ className }: CartPanelProps) {
       discountType: discountAmount > 0 ? discountType : undefined,
       discountValue: discountAmount > 0 ? parseFloat(discountValue) : undefined,
       discountAmount: discountAmount > 0 ? discountAmount : undefined,
+      // Add event discount info for order history and receipts
+      eventDiscountName:
+        eventDiscountAmount > 0 ? eventDiscount.eventName : undefined,
+      eventDiscountPercentage:
+        eventDiscountAmount > 0 ? eventDiscount.discountPercentage : undefined,
+      eventDiscountAmount:
+        eventDiscountAmount > 0 ? eventDiscountAmount : undefined,
     };
 
     console.log("Creating order with payment method:", paymentMethod);
@@ -355,6 +380,10 @@ export function CartPanel({ className }: CartPanelProps) {
           discountType: data.discountType,
           discountValue: data.discountValue,
           discountAmount: data.discountAmount,
+          // Add event discount fields for receipt display
+          eventDiscountName: data.eventDiscountName,
+          eventDiscountPercentage: data.eventDiscountPercentage,
+          eventDiscountAmount: data.eventDiscountAmount,
           createdAt:
             typeof data.createdAt === "string"
               ? data.createdAt
@@ -901,11 +930,11 @@ export function CartPanel({ className }: CartPanelProps) {
                 <PriceDisplay price={cart.total} symbolSize={14} />
               </div>
 
-              {/* Discount Display */}
+              {/* Individual Order Discount Display */}
               {discountAmount > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
                   <span>
-                    Discount (
+                    Order Discount (
                     {discountType === "percentage"
                       ? `${discountValue}%`
                       : "Amount"}
@@ -917,6 +946,24 @@ export function CartPanel({ className }: CartPanelProps) {
                       price={discountAmount}
                       symbolSize={14}
                       className="text-green-600"
+                    />
+                  </span>
+                </div>
+              )}
+
+              {/* Event Discount Display */}
+              {eventDiscountAmount > 0 && (
+                <div className="flex justify-between text-sm text-purple-600">
+                  <span className="flex items-center gap-1">
+                    🎉 {eventDiscount.eventName} (
+                    {eventDiscount.discountPercentage}%)
+                  </span>
+                  <span className="flex items-center">
+                    -
+                    <PriceDisplay
+                      price={eventDiscountAmount}
+                      symbolSize={14}
+                      className="text-purple-600"
                     />
                   </span>
                 </div>

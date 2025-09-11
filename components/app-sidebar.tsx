@@ -17,6 +17,7 @@ import {
   Package,
   Zap,
   ShoppingBag,
+  Calendar,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -113,6 +114,11 @@ const data = {
       title: "Reports",
       url: "/admin/reports",
       icon: BarChart3,
+    },
+    {
+      title: "Events",
+      url: "/admin/events",
+      icon: Calendar,
     },
   ],
 };

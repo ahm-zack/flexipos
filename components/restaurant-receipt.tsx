@@ -285,6 +285,9 @@ export function RestaurantReceipt({
         discountType={order.discountType}
         discountValue={order.discountValue}
         discountAmount={order.discountAmount}
+        eventDiscountName={order.eventDiscountName}
+        eventDiscountPercentage={order.eventDiscountPercentage}
+        eventDiscountAmount={order.eventDiscountAmount}
       />
 
       {/* QR Code */}
@@ -600,12 +603,18 @@ const OrderTotals = ({
   discountType,
   discountValue,
   discountAmount,
+  eventDiscountName,
+  eventDiscountPercentage,
+  eventDiscountAmount,
 }: {
   totals: TotalCalculations;
   totalAmount: number;
   discountType?: "percentage" | "amount";
   discountValue?: number;
   discountAmount?: number;
+  eventDiscountName?: string;
+  eventDiscountPercentage?: number;
+  eventDiscountAmount?: number;
 }) => (
   <div
     style={{
@@ -646,7 +655,7 @@ const OrderTotals = ({
         </>
       )}
 
-      {/* Discount Information */}
+      {/* Regular Discount Information */}
       {discountAmount && discountAmount > 0 && (
         <div
           style={{
@@ -659,7 +668,7 @@ const OrderTotals = ({
           }}
         >
           <span>
-            Discount{" "}
+            Order Discount{" "}
             {discountType && discountValue
               ? `(${
                   discountType === "percentage"
@@ -669,7 +678,27 @@ const OrderTotals = ({
               : ""}
             :
           </span>
-          <span>{discountAmount.toFixed(2)}</span>
+          <span>-{discountAmount.toFixed(2)}</span>
+        </div>
+      )}
+
+      {/* Event Discount Information */}
+      {eventDiscountAmount && eventDiscountAmount > 0 && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            marginBottom: "0.5rem",
+            color: "#000000", // Purple color for event discount
+          }}
+        >
+          <span>
+            {eventDiscountName?.toLocaleUpperCase()}{" "}
+            {eventDiscountPercentage ? `(${eventDiscountPercentage}%)` : ""}:
+          </span>
+          <span>-{eventDiscountAmount.toFixed(2)}</span>
         </div>
       )}
 

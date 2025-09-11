@@ -1,8 +1,10 @@
 import { createClient } from '@/utils/supabase/client';
 import type { Order, OrderItem, CanceledOrder, ModifiedOrder } from '@/lib/orders/schemas';
 import type { OrderFilters } from '@/lib/order-service';
-import type { Json } from '@/database.types';
 import type { CartItem } from '@/lib/orders/schemas';
+
+// Local Json type definition to avoid import issues
+type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export const supabase = createClient();
 
@@ -54,6 +56,9 @@ const transformSupabaseToOrder = (row: Record<string, unknown>): Order => ({
     discountType: row.discount_type as 'percentage' | 'amount' | undefined,
     discountValue: row.discount_value ? (typeof row.discount_value === 'string' ? parseFloat(row.discount_value) : row.discount_value as number) : undefined,
     discountAmount: row.discount_amount ? (typeof row.discount_amount === 'string' ? parseFloat(row.discount_amount) : row.discount_amount as number) : undefined,
+    eventDiscountName: row.event_discount_name as string | undefined,
+    eventDiscountPercentage: row.event_discount_percentage ? (typeof row.event_discount_percentage === 'string' ? parseFloat(row.event_discount_percentage) : row.event_discount_percentage as number) : undefined,
+    eventDiscountAmount: row.event_discount_amount ? (typeof row.event_discount_amount === 'string' ? parseFloat(row.event_discount_amount) : row.event_discount_amount as number) : undefined,
     createdAt: new Date(row.created_at as string).toISOString(),
     updatedAt: new Date(row.updated_at as string).toISOString(),
     createdBy: row.created_by as string,
@@ -177,6 +182,9 @@ export interface CreateOrderData {
     discountType?: 'percentage' | 'amount';
     discountValue?: number;
     discountAmount?: number;
+    eventDiscountName?: string;
+    eventDiscountPercentage?: number;
+    eventDiscountAmount?: number;
     createdBy: string;
 }
 
@@ -280,6 +288,9 @@ export const orderClientService = {
                 discount_type: orderData.discountType || null,
                 discount_value: orderData.discountValue || null,
                 discount_amount: orderData.discountAmount || 0,
+                event_discount_name: orderData.eventDiscountName || null,
+                event_discount_percentage: orderData.eventDiscountPercentage || null,
+                event_discount_amount: orderData.eventDiscountAmount || 0,
                 created_by: orderData.createdBy,
             })
             .select()

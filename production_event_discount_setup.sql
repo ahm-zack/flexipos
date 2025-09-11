@@ -1,0 +1,54 @@
+-- Production Migration Script
+-- Run this directly in your Supabase SQL Editor or via psql
+-- This ensures the orders table has the correct event discount columns
+
+-- Remove events table if it exists (we're using simple approach)
+DROP TABLE IF EXISTS events CASCADE;
+
+-- Ensure event discount columns exist in orders table
+DO $$
+BEGIN
+    -- Add event_discount_name column if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'orders' AND column_name = 'event_discount_name'
+    ) THEN
+        ALTER TABLE orders ADD COLUMN event_discount_name TEXT;
+    END IF;
+
+    -- Add event_discount_percentage column if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'orders' AND column_name = 'event_discount_percentage'
+    ) THEN
+        ALTER TABLE orders ADD COLUMN event_discount_percentage DECIMAL(5,2);
+    END IF;
+
+    -- Add event_discount_amount column if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'orders' AND column_name = 'event_discount_amount'
+    ) THEN
+        ALTER TABLE orders ADD COLUMN event_discount_amount DECIMAL(10,2) DEFAULT 0;
+    END IF;
+END
+$$;
+
+-- Remove event_id column if it exists (not needed for simple approach)
+ALTER TABLE orders DROP COLUMN IF EXISTS event_id;
+
+-- Add comments for documentation
+COMMENT ON COLUMN orders.event_discount_name IS 'Name of the event discount (e.g., Grand Opening, Black Friday)';
+COMMENT ON COLUMN orders.event_discount_percentage IS 'Percentage of the event discount applied';
+COMMENT ON COLUMN orders.event_discount_amount IS 'Amount of event discount applied to this order';
+
+-- Verify the columns exist
+SELECT 
+    column_name, 
+    data_type, 
+    is_nullable,
+    column_default
+FROM information_schema.columns 
+WHERE table_name = 'orders' 
+AND column_name LIKE '%event_discount%'
+ORDER BY column_name;

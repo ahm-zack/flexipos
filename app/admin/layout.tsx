@@ -29,6 +29,7 @@ export default function AdminLayout({
     "/admin/items",
     "/admin/users",
     "/admin/reports",
+    "/admin/events",
   ];
   const isExcluded = excludedRoutes.some((route) => pathname.startsWith(route));
 

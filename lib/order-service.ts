@@ -32,6 +32,9 @@ export interface ApiOrder {
   discountType?: 'percentage' | 'amount';
   discountValue?: number;
   discountAmount?: number;
+  eventDiscountName?: string;
+  eventDiscountPercentage?: number;
+  eventDiscountAmount?: number;
   createdAt: string;
   updatedAt: string;
   createdBy: string;

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/mode-toggle";
-import { LogOut, Store, Users } from "lucide-react";
+import { LogOut, Store, Users, Calendar } from "lucide-react";
 import Link from "next/link";
 import { User } from "@/lib/db";
 
@@ -27,12 +27,20 @@ export function Navbar({ logoutAction, currentUser }: NavbarProps) {
 
         <div className="flex items-center space-x-4">
           {currentUser?.role === "superadmin" && (
-            <Link href="/admin/users">
-              <Button variant="ghost" size="sm">
-                <Users className="h-4 w-4 mr-2" />
-                Users
-              </Button>
-            </Link>
+            <>
+              <Link href="/admin/users">
+                <Button variant="ghost" size="sm">
+                  <Users className="h-4 w-4 mr-2" />
+                  Users
+                </Button>
+              </Link>
+              <Link href="/admin/events">
+                <Button variant="ghost" size="sm">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Events
+                </Button>
+              </Link>
+            </>
           )}
         </div>
 

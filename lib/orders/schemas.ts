@@ -61,6 +61,10 @@ export const OrderSchema = z.object({
   discountType: z.enum(['percentage', 'amount']).optional(), // Type of discount
   discountValue: z.number().optional(), // Original discount value entered
   discountAmount: z.number().min(0).optional(), // Actual discount amount applied
+  // Event discount fields (stored directly in order for receipt display)
+  eventDiscountName: z.string().optional(), // Name of the event discount applied
+  eventDiscountPercentage: z.number().min(0).max(100).optional(), // Event discount percentage
+  eventDiscountAmount: z.number().min(0).optional(), // Event discount amount applied
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   createdBy: z.string().uuid(), // Cashier who created the order
@@ -77,6 +81,10 @@ export const CreateOrderSchema = z.object({
   discountType: z.enum(['percentage', 'amount']).optional(), // Type of discount
   discountValue: z.number().optional(), // Original discount value entered
   discountAmount: z.number().min(0).optional(), // Actual discount amount applied
+  // Event discount fields (for receipt display)
+  eventDiscountName: z.string().optional(), // Name of the event discount applied
+  eventDiscountPercentage: z.number().min(0).max(100).optional(), // Event discount percentage
+  eventDiscountAmount: z.number().min(0).optional(), // Event discount amount applied
   createdBy: z.string().uuid(),
 });
 
@@ -92,6 +100,10 @@ export const UpdateOrderSchema = z.object({
   discountType: z.enum(['percentage', 'amount']).optional(), // Type of discount
   discountValue: z.number().optional(), // Original discount value entered
   discountAmount: z.number().min(0).optional(), // Actual discount amount applied
+  // Event discount fields (for receipt display)
+  eventDiscountName: z.string().optional(), // Name of the event discount applied
+  eventDiscountPercentage: z.number().min(0).max(100).optional(), // Event discount percentage
+  eventDiscountAmount: z.number().min(0).optional(), // Event discount amount applied
 });
 
 export type UpdateOrder = z.infer<typeof UpdateOrderSchema>;
