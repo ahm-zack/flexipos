@@ -33,8 +33,9 @@ export const orders = pgTable('orders', {
   discountType: text('discount_type'), // 'percentage' or 'amount'
   discountValue: decimal('discount_value', { precision: 5, scale: 2 }),
   discountAmount: decimal('discount_amount', { precision: 10, scale: 2 }).default('0'),
-  // Event reference
-  eventId: uuid('event_id'), // Reference to events table
+  // Event discount fields (simple approach without events table)
+  eventDiscountName: text('event_discount_name'), // Name of the event discount applied
+  eventDiscountPercentage: decimal('event_discount_percentage', { precision: 5, scale: 2 }), // Event discount percentage
   eventDiscountAmount: decimal('event_discount_amount', { precision: 10, scale: 2 }).default('0'), // Event discount amount applied
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
