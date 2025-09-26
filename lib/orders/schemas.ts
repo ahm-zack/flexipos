@@ -65,6 +65,11 @@ export const OrderSchema = z.object({
   eventDiscountName: z.string().optional(), // Name of the event discount applied
   eventDiscountPercentage: z.number().min(0).max(100).optional(), // Event discount percentage
   eventDiscountAmount: z.number().min(0).optional(), // Event discount amount applied
+  // Payment tracking fields
+  cashAmount: z.number().min(0).optional(), // Amount paid with cash
+  cardAmount: z.number().min(0).optional(), // Amount paid with card
+  cashReceived: z.number().min(0).optional(), // Total cash received from customer
+  changeAmount: z.number().min(0).optional(), // Change given to customer
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   createdBy: z.string().uuid(), // Cashier who created the order
@@ -85,6 +90,11 @@ export const CreateOrderSchema = z.object({
   eventDiscountName: z.string().optional(), // Name of the event discount applied
   eventDiscountPercentage: z.number().min(0).max(100).optional(), // Event discount percentage
   eventDiscountAmount: z.number().min(0).optional(), // Event discount amount applied
+  // Payment tracking fields
+  cashAmount: z.number().min(0).optional(), // Amount paid with cash
+  cardAmount: z.number().min(0).optional(), // Amount paid with card
+  cashReceived: z.number().min(0).optional(), // Total cash received from customer
+  changeAmount: z.number().min(0).optional(), // Change given to customer
   createdBy: z.string().uuid(),
 });
 

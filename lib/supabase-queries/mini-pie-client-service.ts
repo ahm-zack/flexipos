@@ -19,7 +19,7 @@ export const miniPieClientService = {
         // Transform Supabase response to match our MiniPie type
         return (data || []).map(miniPie => ({
             id: miniPie.id,
-            type: miniPie.type,
+            type: miniPie.type || 'Mini Pizza Pie', // Provide default if null
             nameAr: miniPie.name_ar,
             nameEn: miniPie.name_en,
             size: miniPie.size,
@@ -49,7 +49,7 @@ export const miniPieClientService = {
         // Transform Supabase response to match our MiniPie type
         return {
             id: data.id,
-            type: data.type,
+            type: data.type || 'Mini Pizza Pie', // Provide default if null
             nameAr: data.name_ar,
             nameEn: data.name_en,
             size: data.size,
@@ -84,7 +84,7 @@ export const miniPieClientService = {
         // Transform response to match our schema
         return {
             id: data.id,
-            type: data.type,
+            type: data.type || 'Mini Pizza Pie', // Provide default if null
             nameAr: data.name_ar,
             nameEn: data.name_en,
             size: data.size,
@@ -125,7 +125,7 @@ export const miniPieClientService = {
         // Transform response to match our schema
         return {
             id: data.id,
-            type: data.type,
+            type: data.type || 'Mini Pizza Pie', // Provide default if null
             nameAr: data.name_ar,
             nameEn: data.name_en,
             size: data.size,

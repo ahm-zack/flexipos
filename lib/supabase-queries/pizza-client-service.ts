@@ -19,7 +19,7 @@ export const pizzaClientService = {
     // Transform Supabase response to match our Pizza type
     return (data || []).map(pizza => ({
       id: pizza.id,
-      type: pizza.type,
+      type: pizza.type || 'Margherita', // Provide default if null
       nameAr: pizza.name_ar,
       nameEn: pizza.name_en,
       crust: pizza.crust,
@@ -50,7 +50,7 @@ export const pizzaClientService = {
     // Transform Supabase response to match our Pizza type
     return {
       id: data.id,
-      type: data.type,
+      type: data.type || 'Margherita', // Provide default if null
       nameAr: data.name_ar,
       nameEn: data.name_en,
       crust: data.crust,
@@ -58,8 +58,8 @@ export const pizzaClientService = {
       extras: data.extras,
       priceWithVat: data.price_with_vat.toString(),
       modifiers: Array.isArray(data.modifiers) ? data.modifiers as Modifier[] : [],
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at),
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
     };
   },
 
@@ -87,7 +87,7 @@ export const pizzaClientService = {
     // Transform response to match our schema
     return {
       id: data.id,
-      type: data.type,
+      type: data.type || 'Margherita', // Provide default if null
       nameAr: data.name_ar,
       nameEn: data.name_en,
       crust: data.crust,
@@ -102,7 +102,7 @@ export const pizzaClientService = {
 
   async updatePizza(id: string, updates: Partial<Omit<NewPizza, 'id' | 'createdAt'>>): Promise<Pizza> {
     const updateData: Record<string, unknown> = {};
-    
+
     if (updates.nameAr !== undefined) updateData.name_ar = updates.nameAr;
     if (updates.nameEn !== undefined) updateData.name_en = updates.nameEn;
     if (updates.type !== undefined) updateData.type = updates.type;
@@ -111,7 +111,7 @@ export const pizzaClientService = {
     if (updates.extras !== undefined) updateData.extras = updates.extras;
     if (updates.priceWithVat !== undefined) updateData.price_with_vat = parseFloat(updates.priceWithVat);
     if (updates.modifiers !== undefined) updateData.modifiers = updates.modifiers;
-    
+
     // Always update the updated_at timestamp
     updateData.updated_at = new Date().toISOString();
 
@@ -130,7 +130,7 @@ export const pizzaClientService = {
     // Transform response to match our schema
     return {
       id: data.id,
-      type: data.type,
+      type: data.type || 'Margherita', // Provide default if null
       nameAr: data.name_ar,
       nameEn: data.name_en,
       crust: data.crust,

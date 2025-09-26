@@ -59,6 +59,11 @@ const transformSupabaseToOrder = (row: Record<string, unknown>): Order => ({
     eventDiscountName: row.event_discount_name as string | undefined,
     eventDiscountPercentage: row.event_discount_percentage ? (typeof row.event_discount_percentage === 'string' ? parseFloat(row.event_discount_percentage) : row.event_discount_percentage as number) : undefined,
     eventDiscountAmount: row.event_discount_amount ? (typeof row.event_discount_amount === 'string' ? parseFloat(row.event_discount_amount) : row.event_discount_amount as number) : undefined,
+    // Payment tracking fields
+    cashAmount: row.cash_amount ? (typeof row.cash_amount === 'string' ? parseFloat(row.cash_amount) : row.cash_amount as number) : undefined,
+    cardAmount: row.card_amount ? (typeof row.card_amount === 'string' ? parseFloat(row.card_amount) : row.card_amount as number) : undefined,
+    cashReceived: row.cash_received ? (typeof row.cash_received === 'string' ? parseFloat(row.cash_received) : row.cash_received as number) : undefined,
+    changeAmount: row.change_amount ? (typeof row.change_amount === 'string' ? parseFloat(row.change_amount) : row.change_amount as number) : undefined,
     createdAt: new Date(row.created_at as string).toISOString(),
     updatedAt: new Date(row.updated_at as string).toISOString(),
     createdBy: row.created_by as string,
@@ -185,6 +190,11 @@ export interface CreateOrderData {
     eventDiscountName?: string;
     eventDiscountPercentage?: number;
     eventDiscountAmount?: number;
+    // Payment tracking fields
+    cashAmount?: number;
+    cardAmount?: number;
+    cashReceived?: number;
+    changeAmount?: number;
     createdBy: string;
 }
 
@@ -275,6 +285,15 @@ export const orderClientService = {
         // Convert cart items to order items format
         const orderItems = transformCartItemsToOrderItems(orderData.items);
 
+        // Debug log for payment data
+        console.log("💾 Inserting order with payment data:", {
+            paymentMethod: orderData.paymentMethod,
+            cashAmount: orderData.cashAmount,
+            cardAmount: orderData.cardAmount,
+            cashReceived: orderData.cashReceived,
+            changeAmount: orderData.changeAmount
+        });
+
         const { data, error } = await supabase
             .from('orders')
             .insert({
@@ -292,6 +311,11 @@ export const orderClientService = {
                 event_discount_percentage: orderData.eventDiscountPercentage || null,
                 event_discount_amount: orderData.eventDiscountAmount || 0,
                 created_by: orderData.createdBy,
+                // Payment tracking fields
+                cash_amount: orderData.cashAmount || null,
+                card_amount: orderData.cardAmount || null,
+                cash_received: orderData.cashReceived || null,
+                change_amount: orderData.changeAmount || null,
             })
             .select()
             .single();

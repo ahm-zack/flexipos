@@ -285,6 +285,27 @@ export function CartPanel({ className }: CartPanelProps) {
         eventDiscountAmount > 0 ? eventDiscount.discountPercentage : undefined,
       eventDiscountAmount:
         eventDiscountAmount > 0 ? eventDiscountAmount : undefined,
+      // Payment tracking fields
+      cashAmount:
+        paymentMethod === "cash"
+          ? finalTotal
+          : paymentMethod === "mixed"
+          ? mixedCashAmount
+          : undefined,
+      cardAmount:
+        paymentMethod === "card"
+          ? finalTotal
+          : paymentMethod === "mixed"
+          ? mixedCardAmount
+          : undefined,
+      cashReceived:
+        paymentMethod === "cash" || paymentMethod === "mixed"
+          ? cashReceived
+          : undefined,
+      changeAmount:
+        paymentMethod === "cash" || paymentMethod === "mixed"
+          ? changeAmount
+          : undefined,
     };
 
     console.log("Creating order with payment method:", paymentMethod);

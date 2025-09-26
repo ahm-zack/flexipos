@@ -35,6 +35,10 @@ export interface ApiOrder {
   eventDiscountName?: string;
   eventDiscountPercentage?: number;
   eventDiscountAmount?: number;
+  cashAmount?: number;
+  cardAmount?: number;
+  cashReceived?: number;
+  changeAmount?: number;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -83,6 +87,14 @@ function transformDatabaseOrderToApi(dbOrder: DatabaseOrder): ApiOrder {
     discountType: dbOrder.discountType as 'percentage' | 'amount' | undefined,
     discountValue: dbOrder.discountValue ? parseFloat(dbOrder.discountValue) : undefined,
     discountAmount: dbOrder.discountAmount ? parseFloat(dbOrder.discountAmount) : undefined,
+    eventDiscountName: dbOrder.eventDiscountName || undefined,
+    eventDiscountPercentage: dbOrder.eventDiscountPercentage ? parseFloat(dbOrder.eventDiscountPercentage) : undefined,
+    eventDiscountAmount: dbOrder.eventDiscountAmount ? parseFloat(dbOrder.eventDiscountAmount) : undefined,
+    // Payment tracking fields
+    cashAmount: dbOrder.cashAmount ? parseFloat(dbOrder.cashAmount) : undefined,
+    cardAmount: dbOrder.cardAmount ? parseFloat(dbOrder.cardAmount) : undefined,
+    cashReceived: dbOrder.cashReceived ? parseFloat(dbOrder.cashReceived) : undefined,
+    changeAmount: dbOrder.changeAmount ? parseFloat(dbOrder.changeAmount) : undefined,
     createdAt: dbOrder.createdAt.toISOString(),
     updatedAt: dbOrder.updatedAt.toISOString(),
     createdBy: dbOrder.createdBy,
@@ -292,6 +304,14 @@ export const orderService = {
     discountType?: 'percentage' | 'amount';
     discountValue?: number;
     discountAmount?: number;
+    eventDiscountName?: string;
+    eventDiscountPercentage?: number;
+    eventDiscountAmount?: number;
+    // Payment tracking fields
+    cashAmount?: number;
+    cardAmount?: number;
+    cashReceived?: number;
+    changeAmount?: number;
     createdBy: string;
   }): Promise<OrderServiceResult<ApiOrder>> {
     try {
@@ -311,6 +331,14 @@ export const orderService = {
         discountType: orderData.discountType || null,
         discountValue: orderData.discountValue?.toString() || null,
         discountAmount: orderData.discountAmount?.toString() || '0',
+        eventDiscountName: orderData.eventDiscountName || null,
+        eventDiscountPercentage: orderData.eventDiscountPercentage?.toString() || null,
+        eventDiscountAmount: orderData.eventDiscountAmount?.toString() || '0',
+        // Payment tracking fields
+        cashAmount: orderData.cashAmount?.toString() || null,
+        cardAmount: orderData.cardAmount?.toString() || null,
+        cashReceived: orderData.cashReceived?.toString() || null,
+        changeAmount: orderData.changeAmount?.toString() || null,
         createdBy: orderData.createdBy,
         createdAt: now,
         updatedAt: now,

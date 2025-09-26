@@ -392,9 +392,7 @@ export const saveEODReportToDatabase = async (
   // Reset daily serial sequence after EOD report is generated
   try {
     const supabase = createClient();
-    await supabase.rpc('reset_daily_serial_on_eod', {
-      eod_report_number: reportNumber
-    });
+    await supabase.rpc('reset_daily_serial_sequence');
     console.log(`Daily serial reset after EOD report: ${reportNumber}`);
   } catch (error) {
     console.error('Failed to reset daily serial:', error);

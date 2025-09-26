@@ -37,6 +37,11 @@ export const orders = pgTable('orders', {
   eventDiscountName: text('event_discount_name'), // Name of the event discount applied
   eventDiscountPercentage: decimal('event_discount_percentage', { precision: 5, scale: 2 }), // Event discount percentage
   eventDiscountAmount: decimal('event_discount_amount', { precision: 10, scale: 2 }).default('0'), // Event discount amount applied
+  // Payment tracking fields
+  cashAmount: decimal('cash_amount', { precision: 10, scale: 2 }), // Amount paid with cash
+  cardAmount: decimal('card_amount', { precision: 10, scale: 2 }), // Amount paid with card
+  cashReceived: decimal('cash_received', { precision: 10, scale: 2 }), // Total cash received from customer
+  changeAmount: decimal('change_amount', { precision: 10, scale: 2 }), // Change given to customer
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   createdBy: uuid('created_by').notNull().references(() => users.id), // Foreign key to users table

@@ -7,10 +7,30 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -338,101 +358,41 @@ export type Database = {
           },
         ]
       }
-      eod_serial_resets: {
-        Row: {
-          eod_report_id: string | null
-          id: number
-          reset_at: string
-          reset_date: string
-        }
-        Insert: {
-          eod_report_id?: string | null
-          id?: number
-          reset_at?: string
-          reset_date: string
-        }
-        Update: {
-          eod_report_id?: string | null
-          id?: number
-          reset_at?: string
-          reset_date?: string
-        }
-        Relationships: []
-      }
-      menu_item_modifiers: {
-        Row: {
-          created_at: string
-          display_order: number
-          id: string
-          is_active: string
-          menu_item_id: string
-          menu_item_type: string
-          name: string
-          price: number
-          type: Database["public"]["Enums"]["modifier_type"]
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          display_order?: number
-          id?: string
-          is_active?: string
-          menu_item_id: string
-          menu_item_type: string
-          name: string
-          price?: number
-          type: Database["public"]["Enums"]["modifier_type"]
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          display_order?: number
-          id?: string
-          is_active?: string
-          menu_item_id?: string
-          menu_item_type?: string
-          name?: string
-          price?: number
-          type?: Database["public"]["Enums"]["modifier_type"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
       mini_pies: {
         Row: {
           created_at: string | null
           id: string
           image_url: string
-          modifiers: Json | null
+          modifiers: Json
           name_ar: string
           name_en: string
           price_with_vat: string
           size: Database["public"]["Enums"]["mini_pie_size"]
-          type: Database["public"]["Enums"]["mini_pie_type"]
+          type: Database["public"]["Enums"]["mini_pie_type"] | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
           image_url?: string
-          modifiers?: Json | null
+          modifiers?: Json
           name_ar: string
           name_en: string
           price_with_vat: string
           size: Database["public"]["Enums"]["mini_pie_size"]
-          type: Database["public"]["Enums"]["mini_pie_type"]
+          type?: Database["public"]["Enums"]["mini_pie_type"] | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
           image_url?: string
-          modifiers?: Json | null
+          modifiers?: Json
           name_ar?: string
           name_en?: string
           price_with_vat?: string
           size?: Database["public"]["Enums"]["mini_pie_size"]
-          type?: Database["public"]["Enums"]["mini_pie_type"]
+          type?: Database["public"]["Enums"]["mini_pie_type"] | null
           updated_at?: string | null
         }
         Relationships: []
@@ -482,52 +442,12 @@ export type Database = {
           },
         ]
       }
-      order_item_modifiers: {
-        Row: {
-          created_at: string
-          id: string
-          menu_item_id: string
-          menu_item_type: string
-          modifier_id: string
-          modifier_name: string
-          modifier_type: Database["public"]["Enums"]["modifier_type"]
-          order_id: string
-          price_at_time: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          menu_item_id: string
-          menu_item_type: string
-          modifier_id: string
-          modifier_name: string
-          modifier_type: Database["public"]["Enums"]["modifier_type"]
-          order_id: string
-          price_at_time: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          menu_item_id?: string
-          menu_item_type?: string
-          modifier_id?: string
-          modifier_name?: string
-          modifier_type?: Database["public"]["Enums"]["modifier_type"]
-          order_id?: string
-          price_at_time?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "order_item_modifiers_modifier_id_menu_item_modifiers_id_fk"
-            columns: ["modifier_id"]
-            isOneToOne: false
-            referencedRelation: "menu_item_modifiers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       orders: {
         Row: {
+          card_amount: number | null
+          cash_amount: number | null
+          cash_received: number | null
+          change_amount: number | null
           created_at: string
           created_by: string
           customer_name: string | null
@@ -535,6 +455,9 @@ export type Database = {
           discount_amount: number | null
           discount_type: string | null
           discount_value: number | null
+          event_discount_amount: number | null
+          event_discount_name: string | null
+          event_discount_percentage: number | null
           id: string
           items: Json
           order_number: string
@@ -545,6 +468,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          card_amount?: number | null
+          cash_amount?: number | null
+          cash_received?: number | null
+          change_amount?: number | null
           created_at?: string
           created_by: string
           customer_name?: string | null
@@ -552,6 +479,9 @@ export type Database = {
           discount_amount?: number | null
           discount_type?: string | null
           discount_value?: number | null
+          event_discount_amount?: number | null
+          event_discount_name?: string | null
+          event_discount_percentage?: number | null
           id?: string
           items: Json
           order_number: string
@@ -562,6 +492,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          card_amount?: number | null
+          cash_amount?: number | null
+          cash_received?: number | null
+          change_amount?: number | null
           created_at?: string
           created_by?: string
           customer_name?: string | null
@@ -569,6 +503,9 @@ export type Database = {
           discount_amount?: number | null
           discount_type?: string | null
           discount_value?: number | null
+          event_discount_amount?: number | null
+          event_discount_name?: string | null
+          event_discount_percentage?: number | null
           id?: string
           items?: Json
           order_number?: string
@@ -593,36 +530,36 @@ export type Database = {
           created_at: string
           id: string
           image_url: string
-          modifiers: Json | null
+          modifiers: Json
           name_ar: string
           name_en: string
           price_with_vat: number
           size: Database["public"]["Enums"]["pie_size"]
-          type: Database["public"]["Enums"]["pie_type"]
+          type: Database["public"]["Enums"]["pie_type"] | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
           image_url: string
-          modifiers?: Json | null
+          modifiers?: Json
           name_ar: string
           name_en: string
           price_with_vat: number
           size: Database["public"]["Enums"]["pie_size"]
-          type: Database["public"]["Enums"]["pie_type"]
+          type?: Database["public"]["Enums"]["pie_type"] | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
           image_url?: string
-          modifiers?: Json | null
+          modifiers?: Json
           name_ar?: string
           name_en?: string
           price_with_vat?: number
           size?: Database["public"]["Enums"]["pie_size"]
-          type?: Database["public"]["Enums"]["pie_type"]
+          type?: Database["public"]["Enums"]["pie_type"] | null
           updated_at?: string
         }
         Relationships: []
@@ -634,11 +571,11 @@ export type Database = {
           extras: Database["public"]["Enums"]["pizza_extras"] | null
           id: string
           image_url: string
-          modifiers: Json | null
+          modifiers: Json
           name_ar: string
           name_en: string
           price_with_vat: number
-          type: Database["public"]["Enums"]["pizza_type"]
+          type: Database["public"]["Enums"]["pizza_type"] | null
           updated_at: string
         }
         Insert: {
@@ -647,11 +584,11 @@ export type Database = {
           extras?: Database["public"]["Enums"]["pizza_extras"] | null
           id?: string
           image_url: string
-          modifiers?: Json | null
+          modifiers?: Json
           name_ar: string
           name_en: string
           price_with_vat: number
-          type: Database["public"]["Enums"]["pizza_type"]
+          type?: Database["public"]["Enums"]["pizza_type"] | null
           updated_at?: string
         }
         Update: {
@@ -660,11 +597,11 @@ export type Database = {
           extras?: Database["public"]["Enums"]["pizza_extras"] | null
           id?: string
           image_url?: string
-          modifiers?: Json | null
+          modifiers?: Json
           name_ar?: string
           name_en?: string
           price_with_vat?: number
-          type?: Database["public"]["Enums"]["pizza_type"]
+          type?: Database["public"]["Enums"]["pizza_type"] | null
           updated_at?: string
         }
         Relationships: []
@@ -674,36 +611,36 @@ export type Database = {
           created_at: string
           id: string
           image_url: string
-          modifiers: Json | null
+          modifiers: Json
           name_ar: string
           name_en: string
           price_with_vat: number
           size: Database["public"]["Enums"]["sandwich_size"]
-          type: Database["public"]["Enums"]["sandwich_type"]
+          type: Database["public"]["Enums"]["sandwich_type"] | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
           image_url: string
-          modifiers?: Json | null
+          modifiers?: Json
           name_ar: string
           name_en: string
           price_with_vat: number
           size: Database["public"]["Enums"]["sandwich_size"]
-          type: Database["public"]["Enums"]["sandwich_type"]
+          type?: Database["public"]["Enums"]["sandwich_type"] | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
           image_url?: string
-          modifiers?: Json | null
+          modifiers?: Json
           name_ar?: string
           name_en?: string
           price_with_vat?: number
           size?: Database["public"]["Enums"]["sandwich_size"]
-          type?: Database["public"]["Enums"]["sandwich_type"]
+          type?: Database["public"]["Enums"]["sandwich_type"] | null
           updated_at?: string
         }
         Relationships: []
@@ -810,9 +747,21 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      generate_order_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_daily_serial_info: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          current_serial: number
+          last_reset_date: string
+          today_count: number
+        }[]
       }
       get_next_daily_serial: {
         Args: Record<PropertyKey, never>
@@ -833,12 +782,8 @@ export type Database = {
         Args: { required_role: string }
         Returns: boolean
       }
-      reset_daily_serial: {
+      reset_daily_serial_sequence: {
         Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      reset_daily_serial_on_eod: {
-        Args: { eod_report_number?: string }
         Returns: undefined
       }
       set_user_role_claim: {
@@ -870,8 +815,7 @@ export type Database = {
         | "quantity_changed"
         | "item_replaced"
         | "multiple_changes"
-      modifier_type: "extra" | "without"
-      orders_status: "completed" | "canceled" | "modified"
+      orders_status: "pending" | "completed" | "canceled" | "modified"
       payment_method: "cash" | "card" | "mixed"
       pie_size: "small" | "medium" | "large"
       pie_type:
@@ -1029,6 +973,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       eod_order_status: [
@@ -1057,8 +1004,7 @@ export const Constants = {
         "item_replaced",
         "multiple_changes",
       ],
-      modifier_type: ["extra", "without"],
-      orders_status: ["completed", "canceled", "modified"],
+      orders_status: ["pending", "completed", "canceled", "modified"],
       payment_method: ["cash", "card", "mixed"],
       pie_size: ["small", "medium", "large"],
       pie_type: [
@@ -1098,3 +1044,4 @@ export const Constants = {
     },
   },
 } as const
+

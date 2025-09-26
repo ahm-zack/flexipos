@@ -221,11 +221,22 @@ export function CartPanelWithCustomer() {
     await processOrder();
   };
 
-  const processOrder = async () => {
+  const processOrder = async (
+    overrideCashAmount?: number,
+    overrideCardAmount?: number,
+    overrideCashReceived?: number,
+    overrideChangeAmount?: number
+  ) => {
     if (!currentUser) {
       toast.error("Please log in to create an order");
       return;
     }
+
+    // Use provided amounts if available, otherwise use state
+    const effectiveCashAmount = overrideCashAmount ?? mixedCashAmount;
+    const effectiveCardAmount = overrideCardAmount ?? mixedCardAmount;
+    const effectiveCashReceived = overrideCashReceived ?? cashReceived;
+    const effectiveChangeAmount = overrideChangeAmount ?? changeAmount;
 
     const orderData = {
       items: cart.items,
@@ -243,7 +254,44 @@ export function CartPanelWithCustomer() {
         eventDiscountAmount > 0 ? eventDiscount.discountPercentage : undefined,
       eventDiscountAmount:
         eventDiscountAmount > 0 ? eventDiscountAmount : undefined,
+      // Payment tracking fields
+      cashAmount:
+        paymentMethod === "cash"
+          ? finalTotal
+          : paymentMethod === "mixed"
+          ? effectiveCashAmount
+          : undefined,
+      cardAmount:
+        paymentMethod === "card"
+          ? finalTotal
+          : paymentMethod === "mixed"
+          ? effectiveCardAmount
+          : undefined,
+      cashReceived:
+        paymentMethod === "cash" || paymentMethod === "mixed"
+          ? effectiveCashReceived
+          : undefined,
+      changeAmount:
+        paymentMethod === "cash" || paymentMethod === "mixed"
+          ? effectiveChangeAmount
+          : undefined,
     };
+
+    // Debug log to check payment data
+    console.log("🔍 Creating order with payment data:", {
+      paymentMethod,
+      finalTotal,
+      effectiveCashAmount,
+      effectiveCardAmount,
+      effectiveCashReceived,
+      effectiveChangeAmount,
+      orderData: {
+        cashAmount: orderData.cashAmount,
+        cardAmount: orderData.cardAmount,
+        cashReceived: orderData.cashReceived,
+        changeAmount: orderData.changeAmount,
+      },
+    });
 
     createOrder.mutate(orderData, {
       onSuccess: async (data) => {
@@ -386,21 +434,30 @@ export function CartPanelWithCustomer() {
     toast.info(
       `Cash: ${cashReceived.toFixed(2)} SAR | Change: ${change.toFixed(2)} SAR`
     );
-    // Process the order after cash calculation
-    processOrder();
+    // Process the order after cash calculation with direct values
+    processOrder(undefined, undefined, cashReceived, change);
   };
 
   const handleMixedPayment = (cashAmount: number, cardAmount: number) => {
     setMixedCashAmount(cashAmount);
     setMixedCardAmount(cardAmount);
+
+    // For mixed payment, if there's a cash portion, calculate received and change
+    // For now, assume exact cash (could be enhanced with cash calculator)
+    const mixedCashReceived = cashAmount;
+    const mixedChangeAmount = 0; // For mixed, we assume exact cash for the cash portion
+
+    setCashReceived(mixedCashReceived);
+    setChangeAmount(mixedChangeAmount);
+
     // Show mixed payment information toast
     toast.info(
       `Mixed Payment - Cash: ${cashAmount.toFixed(
         2
       )} SAR | Card: ${cardAmount.toFixed(2)} SAR`
     );
-    // Process the order after mixed payment calculation
-    processOrder();
+    // Process the order after mixed payment calculation with direct amounts
+    processOrder(cashAmount, cardAmount, mixedCashReceived, mixedChangeAmount);
   };
 
   return (
