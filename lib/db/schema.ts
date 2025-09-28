@@ -303,6 +303,10 @@ export const eodReports = pgTable('eod_reports', {
   cashOrdersCount: integer('cash_orders_count').notNull().default(0),
   cardOrdersCount: integer('card_orders_count').notNull().default(0),
 
+  // Detailed cash flow tracking
+  totalCashReceived: decimal('total_cash_received', { precision: 12, scale: 2 }).notNull().default('0.00'),
+  totalChangeGiven: decimal('total_change_given', { precision: 12, scale: 2 }).notNull().default('0.00'),
+
   // Performance metrics
   averageOrderValue: decimal('average_order_value', { precision: 10, scale: 2 }).notNull().default('0.00'),
   peakHour: text('peak_hour'),

@@ -1,28 +1,4 @@
-// Types for EOD report data
-export interface EODReportData {
-    startDateTime: string;
-    endDateTime: string;
-    reportGeneratedAt: string;
-    totalWithVat: number;
-    totalOrders: number;
-    averageOrderValue: number;
-    paymentBreakdown: PaymentBreakdown[];
-    bestSellingItems: BestSellingItem[];
-}
-
-export interface PaymentBreakdown {
-    method: string;
-    orderCount: number;
-    totalAmount: number;
-}
-
-export interface BestSellingItem {
-    itemName: string;
-    itemType: string;
-    quantity: number;
-    totalRevenue: number;
-}
-
+import type { EODReportData, PaymentBreakdown, BestSellingItem } from './schemas';
 
 // Utility functions for safe data handling
 export const safeGetString = (value: unknown): string => {
@@ -151,6 +127,25 @@ export const generateEODReportHTML = (
         </table>
       </div>
 
+      <div style="margin-bottom: ${isA4 ? "18px" : "20px"};">
+        <h2 style="
+            color: #000000; 
+            ${isA4 ? "font-size: 18px;" : "font-size: 16px;"} 
+            margin: 0 0 ${isA4 ? "8px" : "12px"} 0;
+            font-weight: 600;
+            border-left: 4px solid #000000;
+            padding-left: 12px;
+        ">Cash Flow Details</h2>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
+          <tr><td style="padding: ${isA4 ? "8px 6px" : "8px 6px"}; border-bottom: 1px solid #ddd; color: #000000; font-weight: 600; background-color: #f8f9fa;">Cash Paid (Orders):</td><td style="padding: ${isA4 ? "8px 6px" : "8px 6px"}; border-bottom: 1px solid #ddd; text-align: right; color: #000000; font-weight: 700; background-color: #f8f9fa;">${formatters.formatCurrency(
+                data.totalCashOrders
+            )} SAR</td></tr>
+          <tr><td style="padding: ${isA4 ? "8px 6px" : "8px 6px"}; border-bottom: 1px solid #ddd; color: #000000; font-weight: 600;">Card Paid (Orders):</td><td style="padding: ${isA4 ? "8px 6px" : "8px 6px"}; border-bottom: 1px solid #ddd; text-align: right; color: #000000; font-weight: 700;">${formatters.formatCurrency(
+                data.totalCardOrders
+            )} SAR</td></tr>
+        </table>
+      </div>
+
       <div>
         <h2 style="
             color: #000000; 
@@ -202,16 +197,28 @@ export const convertHistoricalReportData = (
     report: Record<string, unknown>
 ): EODReportData => {
     return {
-        startDateTime: safeGetString(report.startDateTime),
-        endDateTime: safeGetString(report.endDateTime),
-        reportGeneratedAt: safeGetString(
+        startDateTime: new Date(safeGetString(report.startDateTime)),
+        endDateTime: new Date(safeGetString(report.endDateTime)),
+        reportGeneratedAt: new Date(safeGetString(
             report.reportGeneratedAt || report.createdAt
-        ),
+        )),
         totalWithVat: safeParseNumber(report.totalWithVat),
         totalOrders: safeParseNumber(report.totalOrders),
+        totalCashOrders: safeParseNumber(report.totalCashOrders),
+        totalCardOrders: safeParseNumber(report.totalCardOrders),
+        totalWithoutVat: safeParseNumber(report.totalWithoutVat),
+        totalCancelledOrders: safeParseNumber(report.totalCancelledOrders || report.cancelledOrders),
+        totalCashReceived: safeParseNumber(report.totalCashReceived),
+        totalChangeGiven: safeParseNumber(report.totalChangeGiven),
+        completedOrders: safeParseNumber(report.completedOrders),
+        vatAmount: safeParseNumber(report.vatAmount),
         averageOrderValue: safeParseNumber(report.averageOrderValue),
         paymentBreakdown: (safeParseJSON(report.paymentBreakdown) as unknown) as PaymentBreakdown[],
         bestSellingItems: (safeParseJSON(report.bestSellingItems) as unknown) as BestSellingItem[],
+        peakHour: safeGetString(report.peakHour),
+        hourlySales: (safeParseJSON(report.hourlySales) as unknown) as { hour: number; orderCount: number; revenue: number }[],
+        orderCompletionRate: safeParseNumber(report.orderCompletionRate),
+        orderCancellationRate: safeParseNumber(report.orderCancellationRate),
     };
 };
 

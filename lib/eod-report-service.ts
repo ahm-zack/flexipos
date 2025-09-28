@@ -46,6 +46,11 @@ interface OrderWithDetails {
   createdAt: Date;
   updatedAt: Date;
   createdBy: string;
+  // Payment tracking fields
+  cashAmount?: string | null;
+  cardAmount?: string | null;
+  cashReceived?: string | null;
+  changeAmount?: string | null;
 }
 
 interface CanceledOrderWithDetails {
@@ -121,59 +126,94 @@ const calculateTotalRevenue = (orders: OrderWithDetails[]): number => {
 };
 
 /**
- * Calculates cash/card totals
+ * Calculates cash/card totals using actual payment amounts
  */
 const calculateCashAndCardTotals = (orders: OrderWithDetails[]) => {
   let cashTotal = 0;
   let cardTotal = 0;
+  let cashReceived = 0;
+  let changeGiven = 0;
 
   orders.forEach(order => {
-    const amount = parseFloat(order.totalAmount || '0');
+    const orderAmount = parseFloat(order.totalAmount || '0');
+    const cashAmount = parseFloat(order.cashAmount || '0');
+    const cardAmount = parseFloat(order.cardAmount || '0');
+    const cashReceivedAmount = parseFloat(order.cashReceived || '0');
+    const changeAmount = parseFloat(order.changeAmount || '0');
+
     if (order.paymentMethod === 'cash') {
-      cashTotal += amount;
+      cashTotal += orderAmount;
+      cashReceived += cashReceivedAmount;
+      changeGiven += changeAmount;
     } else if (order.paymentMethod === 'card') {
-      cardTotal += amount;
-    }
-    // 'mixed' payments are split - for now, we'll count them as card
-    else if (order.paymentMethod === 'mixed') {
-      cardTotal += amount;
+      cardTotal += orderAmount;
+    } else if (order.paymentMethod === 'mixed') {
+      // For mixed payments, use the actual split amounts
+      cashTotal += cashAmount;
+      cardTotal += cardAmount;
+      cashReceived += cashReceivedAmount;
+      changeGiven += changeAmount;
     }
   });
 
   return {
     cashTotal: Math.round(cashTotal * 100) / 100,
-    cardTotal: Math.round(cardTotal * 100) / 100
+    cardTotal: Math.round(cardTotal * 100) / 100,
+    cashReceived: Math.round(cashReceived * 100) / 100,
+    changeGiven: Math.round(changeGiven * 100) / 100
   };
 };
 
 /**
- * Calculates payment method breakdown
+ * Calculates payment method breakdown - splits mixed payments into cash/card components
  */
 const calculatePaymentBreakdown = (orders: OrderWithDetails[]): PaymentBreakdown[] => {
-  const breakdown: Record<PaymentMethod, { amount: number; count: number }> = {
+  const breakdown = {
     cash: { amount: 0, count: 0 },
-    card: { amount: 0, count: 0 },
-    mixed: { amount: 0, count: 0 }
+    card: { amount: 0, count: 0 }
   };
 
   orders.forEach(order => {
-    const amount = parseFloat(order.totalAmount || '0');
-    const paymentMethod = order.paymentMethod as PaymentMethod;
+    const cashAmount = parseFloat(order.cashAmount || '0');
+    const cardAmount = parseFloat(order.cardAmount || '0');
 
-    if (breakdown[paymentMethod]) {
-      breakdown[paymentMethod].amount += amount;
-      breakdown[paymentMethod].count += 1;
+    if (order.paymentMethod === 'cash') {
+      const amount = parseFloat(order.totalAmount || '0');
+      breakdown.cash.amount += amount;
+      breakdown.cash.count += 1;
+    } else if (order.paymentMethod === 'card') {
+      const amount = parseFloat(order.totalAmount || '0');
+      breakdown.card.amount += amount;
+      breakdown.card.count += 1;
+    } else if (order.paymentMethod === 'mixed') {
+      // Split mixed payments: add cash portion to cash, card portion to card
+      if (cashAmount > 0) {
+        breakdown.cash.amount += cashAmount;
+        breakdown.cash.count += 1; // Count as cash order for the cash portion
+      }
+      if (cardAmount > 0) {
+        breakdown.card.amount += cardAmount;
+        breakdown.card.count += 1; // Count as card order for the card portion
+      }
     }
   });
 
   const totalRevenue = calculateTotalRevenue(orders);
 
-  return Object.entries(breakdown).map(([method, data]) => ({
-    method: method as PaymentMethod,
-    orderCount: data.count,
-    totalAmount: Math.round(data.amount * 100) / 100,
-    percentage: totalRevenue > 0 ? Math.round((data.amount / totalRevenue) * 100 * 100) / 100 : 0
-  }));
+  return [
+    {
+      method: 'cash' as PaymentMethod,
+      orderCount: breakdown.cash.count,
+      totalAmount: Math.round(breakdown.cash.amount * 100) / 100,
+      percentage: totalRevenue > 0 ? Math.round((breakdown.cash.amount / totalRevenue) * 100 * 100) / 100 : 0
+    },
+    {
+      method: 'card' as PaymentMethod,
+      orderCount: breakdown.card.count,
+      totalAmount: Math.round(breakdown.card.amount * 100) / 100,
+      percentage: totalRevenue > 0 ? Math.round((breakdown.card.amount / totalRevenue) * 100 * 100) / 100 : 0
+    }
+  ].filter(item => item.totalAmount > 0); // Only show payment methods that have amounts
 };
 
 /**
@@ -276,7 +316,7 @@ export const generateEODReport = async (request: EODReportRequest): Promise<EODR
 
   // Calculate metrics
   const totalRevenue = calculateTotalRevenue(completedOrders);
-  const { cashTotal, cardTotal } = calculateCashAndCardTotals(completedOrders);
+  const { cashTotal, cardTotal, cashReceived, changeGiven } = calculateCashAndCardTotals(completedOrders);
   const vatBreakdown = calculateVATBreakdown(totalRevenue);
   const paymentBreakdown = calculatePaymentBreakdown(completedOrders);
   const bestSellingItems = calculateBestSellingItems(completedOrders);
@@ -300,6 +340,10 @@ export const generateEODReport = async (request: EODReportRequest): Promise<EODR
     totalWithoutVat: Math.round(vatBreakdown.netAmount * 100) / 100,
     totalCancelledOrders: canceledOrdersData.length,
     totalOrders: completedOrders.length,
+
+    // Detailed payment tracking
+    totalCashReceived: cashReceived,
+    totalChangeGiven: changeGiven,
 
     // Additional order statistics
     completedOrders: completedOrders.length,
@@ -376,6 +420,8 @@ export const saveEODReportToDatabase = async (
     totalCardOrders: reportData.totalCardOrders.toString(),
     cashOrdersCount,
     cardOrdersCount,
+    totalCashReceived: reportData.totalCashReceived.toString(),
+    totalChangeGiven: reportData.totalChangeGiven.toString(),
     averageOrderValue: reportData.averageOrderValue.toString(),
     peakHour: reportData.peakHour,
     orderCompletionRate: reportData.orderCompletionRate.toString(),
@@ -435,6 +481,8 @@ export const getEODReportsHistory = async (
         vatAmount: eodReports.vatAmount,
         totalCashOrders: eodReports.totalCashOrders,
         totalCardOrders: eodReports.totalCardOrders,
+        totalCashReceived: eodReports.totalCashReceived,
+        totalChangeGiven: eodReports.totalChangeGiven,
         averageOrderValue: eodReports.averageOrderValue,
         peakHour: eodReports.peakHour,
         orderCompletionRate: eodReports.orderCompletionRate,
@@ -504,6 +552,10 @@ export const getEODReportById = async (reportId: string) => {
     totalWithoutVat: parseFloat(report.totalWithoutVat),
     totalCancelledOrders: report.cancelledOrders,
     totalOrders: report.totalOrders,
+
+    // Detailed payment tracking
+    totalCashReceived: parseFloat(report.totalCashReceived || '0'),
+    totalChangeGiven: parseFloat(report.totalChangeGiven || '0'),
 
     // Additional order statistics
     completedOrders: report.completedOrders,

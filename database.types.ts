@@ -279,6 +279,8 @@ export type Database = {
           start_date_time: string
           total_card_orders: number
           total_cash_orders: number
+          total_cash_received: number
+          total_change_given: number
           total_orders: number
           total_revenue: number
           total_with_vat: number
@@ -310,6 +312,8 @@ export type Database = {
           start_date_time: string
           total_card_orders?: number
           total_cash_orders?: number
+          total_cash_received?: number
+          total_change_given?: number
           total_orders?: number
           total_revenue?: number
           total_with_vat?: number
@@ -341,6 +345,8 @@ export type Database = {
           start_date_time?: string
           total_card_orders?: number
           total_cash_orders?: number
+          total_cash_received?: number
+          total_change_given?: number
           total_orders?: number
           total_revenue?: number
           total_with_vat?: number

@@ -765,6 +765,10 @@ export const EODReportDataSchema = z.object({
   totalCancelledOrders: z.number().int().min(0),
   totalOrders: z.number().int().min(0),
 
+  // Detailed payment tracking
+  totalCashReceived: z.number().min(0),
+  totalChangeGiven: z.number().min(0),
+
   // Additional order statistics
   completedOrders: z.number().int().min(0),
 

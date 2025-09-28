@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SaudiRiyalSymbol } from "@/components/currency/saudi-riyal-symbol";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { useGenerateEODReport, useEODReportFormatters } from "../hooks";
-import { generateEODReportPDF, safeGetString } from "@/lib/eod-pdf-generator";
+import { generateEODReportPDF } from "@/lib/eod-pdf-generator";
 import { vatUtils } from "@/lib/vat-config";
 
 // Export the historical reports component
@@ -82,25 +82,8 @@ export function EODReportDashboard() {
   const handleDownloadPDF = async (format: "a4" | "thermal") => {
     if (!reportData) return;
 
-    // Convert the report data to the format expected by the utility
-    // Handle both Date objects and string values safely
-    const convertedData = {
-      ...reportData,
-      startDateTime:
-        reportData.startDateTime instanceof Date
-          ? reportData.startDateTime.toISOString()
-          : safeGetString(reportData.startDateTime),
-      endDateTime:
-        reportData.endDateTime instanceof Date
-          ? reportData.endDateTime.toISOString()
-          : safeGetString(reportData.endDateTime),
-      reportGeneratedAt:
-        reportData.reportGeneratedAt instanceof Date
-          ? reportData.reportGeneratedAt.toISOString()
-          : safeGetString(reportData.reportGeneratedAt),
-    };
-
-    await generateEODReportPDF(convertedData, format, formatters);
+    // Pass the report data directly - it already has the correct Date types
+    await generateEODReportPDF(reportData, format, formatters);
   };
   const reportData = generateReport.data;
 
@@ -407,6 +390,45 @@ export function EODReportDashboard() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Cash Flow Details Card */}
+              <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
+                <CardHeader>
+                  <CardTitle className="text-lg">Cash Flow Details</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Detailed cash handling breakdown for the reporting period
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-3 border rounded bg-amber-50 dark:bg-amber-900/10">
+                      <div className="font-semibold text-sm text-amber-800 dark:text-amber-200">
+                        Cash Sales Total
+                      </div>
+                      <div className="text-lg font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-1">
+                        <SaudiRiyalSymbol size={16} className="text-current" />
+                        {formatters.formatCurrency(reportData.totalCashOrders)}
+                      </div>
+                      <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        Total cash payment orders
+                      </div>
+                    </div>
+
+                    <div className="p-3 border rounded bg-purple-50 dark:bg-purple-900/10">
+                      <div className="font-semibold text-sm text-purple-800 dark:text-purple-200">
+                        Card Sales Total
+                      </div>
+                      <div className="text-lg font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1 mt-1">
+                        <SaudiRiyalSymbol size={16} className="text-current" />
+                        {formatters.formatCurrency(reportData.totalCardOrders)}
+                      </div>
+                      <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                        Total card payment orders
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
