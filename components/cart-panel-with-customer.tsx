@@ -366,6 +366,15 @@ export function CartPanelWithCustomer() {
         setMixedCashAmount(0);
         setMixedCardAmount(0);
 
+        // Debug: log the order data returned from server
+        console.log("🔍 Order data returned from server:", {
+          paymentMethod: data.paymentMethod,
+          cashAmount: data.cashAmount,
+          cardAmount: data.cardAmount,
+          cashReceived: data.cashReceived,
+          changeAmount: data.changeAmount,
+        });
+
         // Generate receipt
         const apiOrder = {
           id: data.id,
@@ -386,14 +395,21 @@ export function CartPanelWithCustomer() {
           eventDiscountName: data.eventDiscountName,
           eventDiscountPercentage: data.eventDiscountPercentage,
           eventDiscountAmount: data.eventDiscountAmount,
+          // Add payment tracking fields for receipt display
+          cashAmount: data.cashAmount,
+          cardAmount: data.cardAmount,
+          cashReceived: data.cashReceived,
+          changeAmount: data.changeAmount,
           createdAt:
             typeof data.createdAt === "string"
               ? data.createdAt
-              : data.createdAt,
+              : new Date(data.createdAt).toISOString(),
           updatedAt:
             typeof data.updatedAt === "string"
               ? data.updatedAt
-              : data.updatedAt,
+              : data.updatedAt
+              ? new Date(data.updatedAt).toISOString()
+              : new Date().toISOString(),
           createdBy: data.createdBy,
         };
 
@@ -414,12 +430,22 @@ export function CartPanelWithCustomer() {
             }))
           : [];
 
-        await downloadReceiptPDF({
+        // Debug: log the final order object being sent to PDF
+        const finalOrderForPDF = {
           ...apiOrder,
           items: mappedItems,
           customerName:
             apiOrder.customerName === null ? undefined : apiOrder.customerName,
+        };
+        console.log("🔍 Final order object for PDF:", {
+          paymentMethod: finalOrderForPDF.paymentMethod,
+          cashAmount: finalOrderForPDF.cashAmount,
+          cardAmount: finalOrderForPDF.cardAmount,
+          cashReceived: finalOrderForPDF.cashReceived,
+          changeAmount: finalOrderForPDF.changeAmount,
         });
+
+        await downloadReceiptPDF(finalOrderForPDF);
       },
       onError: (error) => {
         toast.error(`Failed to create order: ${error.message}`);

@@ -262,11 +262,38 @@ export function CartPanel({ className }: CartPanelProps) {
     await processOrder();
   };
 
-  const processOrder = async () => {
+  const processOrder = async (
+    overrideCashAmount?: number,
+    overrideCardAmount?: number,
+    overrideCashReceived?: number,
+    overrideChangeAmount?: number
+  ) => {
     if (!currentUser) {
       toast.error("Please log in to create an order");
       return;
     }
+
+    // Use provided amounts if available, otherwise use state
+    const effectiveCashAmount = overrideCashAmount ?? mixedCashAmount;
+    const effectiveCardAmount = overrideCardAmount ?? mixedCardAmount;
+    const effectiveCashReceived = overrideCashReceived ?? cashReceived;
+    const effectiveChangeAmount = overrideChangeAmount ?? changeAmount;
+
+    // Debug: log all the payment values being used
+    console.log("🔧 processOrder payment values:", {
+      overrideCashAmount,
+      overrideCardAmount,
+      overrideCashReceived,
+      overrideChangeAmount,
+      mixedCashAmount,
+      mixedCardAmount,
+      cashReceived,
+      changeAmount,
+      effectiveCashAmount,
+      effectiveCardAmount,
+      effectiveCashReceived,
+      effectiveChangeAmount,
+    });
 
     // Send cart items directly - the order service will handle the conversion
     const orderData = {
@@ -290,21 +317,21 @@ export function CartPanel({ className }: CartPanelProps) {
         paymentMethod === "cash"
           ? finalTotal
           : paymentMethod === "mixed"
-          ? mixedCashAmount
+          ? effectiveCashAmount
           : undefined,
       cardAmount:
         paymentMethod === "card"
           ? finalTotal
           : paymentMethod === "mixed"
-          ? mixedCardAmount
+          ? effectiveCardAmount
           : undefined,
       cashReceived:
         paymentMethod === "cash" || paymentMethod === "mixed"
-          ? cashReceived
+          ? effectiveCashReceived
           : undefined,
       changeAmount:
         paymentMethod === "cash" || paymentMethod === "mixed"
-          ? changeAmount
+          ? effectiveChangeAmount
           : undefined,
     };
 
@@ -405,6 +432,11 @@ export function CartPanel({ className }: CartPanelProps) {
           eventDiscountName: data.eventDiscountName,
           eventDiscountPercentage: data.eventDiscountPercentage,
           eventDiscountAmount: data.eventDiscountAmount,
+          // Add payment tracking fields for receipt display
+          cashAmount: data.cashAmount,
+          cardAmount: data.cardAmount,
+          cashReceived: data.cashReceived,
+          changeAmount: data.changeAmount,
           createdAt:
             typeof data.createdAt === "string"
               ? data.createdAt
@@ -440,22 +472,45 @@ export function CartPanel({ className }: CartPanelProps) {
     toast.info(
       `Cash: ${cashReceived.toFixed(2)} SAR | Change: ${change.toFixed(2)} SAR`
     );
-    // Process the order after cash calculation
-    processOrder();
+    // Process the order after cash calculation with direct values
+    processOrder(undefined, undefined, cashReceived, change);
   };
 
   const handleMixedPayment = (cashAmount: number, cardAmount: number) => {
+    // Debug: log the values being passed from mixed payment dialog
+    console.log("🔧 handleMixedPayment called with:", {
+      cashAmount,
+      cardAmount,
+    });
+
     setMixedCashAmount(cashAmount);
     setMixedCardAmount(cardAmount);
+
+    // For mixed payment, set cash received to cash amount and change to 0
+    const mixedCashReceived = cashAmount;
+    const mixedChangeAmount = 0;
+
+    setCashReceived(mixedCashReceived);
+    setChangeAmount(mixedChangeAmount);
     setShowMixedPayment(false);
+
     // Show mixed payment information toast
     toast.info(
       `Mixed Payment - Cash: ${cashAmount.toFixed(
         2
       )} SAR | Card: ${cardAmount.toFixed(2)} SAR`
     );
-    // Process the order after mixed payment calculation
-    processOrder();
+
+    // Debug: log what we're about to pass to processOrder
+    console.log("🔧 About to call processOrder with:", {
+      cashAmount,
+      cardAmount,
+      mixedCashReceived,
+      mixedChangeAmount,
+    });
+
+    // Process the order after mixed payment calculation with direct amounts
+    processOrder(cashAmount, cardAmount, mixedCashReceived, mixedChangeAmount);
   };
 
   if (!isOpen) return null;

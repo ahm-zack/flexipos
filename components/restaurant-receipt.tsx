@@ -42,15 +42,6 @@ export function RestaurantReceipt({
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>("");
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
-  // Debug: log payment data when component renders
-  console.log("[RestaurantReceipt] Payment data:", {
-    paymentMethod: order.paymentMethod,
-    cashAmount: order.cashAmount,
-    cardAmount: order.cardAmount,
-    cashReceived: order.cashReceived,
-    changeAmount: order.changeAmount,
-  });
-
   // Merge with default configuration
   const config = { ...RESTAURANT_CONFIG, ...restaurantInfo };
 
@@ -297,6 +288,7 @@ export function RestaurantReceipt({
         eventDiscountName={order.eventDiscountName}
         eventDiscountPercentage={order.eventDiscountPercentage}
         eventDiscountAmount={order.eventDiscountAmount}
+        order={order}
       />
 
       {/* QR Code */}
@@ -511,83 +503,6 @@ const OrderInfo = ({
             {order.paymentMethod}
           </span>
         </div>
-
-        {/* Show detailed payment breakdown for mixed payments */}
-        {order.paymentMethod === "mixed" &&
-          order.cashAmount &&
-          order.cardAmount && (
-            <>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "0.25rem",
-                  paddingLeft: "1rem",
-                  fontSize: "0.9rem",
-                }}
-              >
-                <span>Cash:</span>
-                <span>
-                  <SaudiRiyalSymbol />
-                  {order.cashAmount.toFixed(2)}
-                </span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "0.25rem",
-                  paddingLeft: "1rem",
-                  fontSize: "0.9rem",
-                }}
-              >
-                <span>Card:</span>
-                <span>
-                  <SaudiRiyalSymbol />
-                  {order.cardAmount.toFixed(2)}
-                </span>
-              </div>
-            </>
-          )}
-
-        {/* Show cash received and change for cash or mixed payments */}
-        {(order.paymentMethod === "cash" || order.paymentMethod === "mixed") &&
-          order.cashReceived && (
-            <>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "0.25rem",
-                  paddingLeft: order.paymentMethod === "mixed" ? "1rem" : "0",
-                  fontSize: "0.9rem",
-                }}
-              >
-                <span>Cash Received:</span>
-                <span>
-                  <SaudiRiyalSymbol />
-                  {order.cashReceived.toFixed(2)}
-                </span>
-              </div>
-              {order.changeAmount && order.changeAmount > 0 && (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "0.25rem",
-                    paddingLeft: order.paymentMethod === "mixed" ? "1rem" : "0",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  <span>Change:</span>
-                  <span>
-                    <SaudiRiyalSymbol />
-                    {order.changeAmount.toFixed(2)}
-                  </span>
-                </div>
-              )}
-            </>
-          )}
       </div>
 
       <div
@@ -692,6 +607,7 @@ const OrderTotals = ({
   eventDiscountName,
   eventDiscountPercentage,
   eventDiscountAmount,
+  order,
 }: {
   totals: TotalCalculations;
   totalAmount: number;
@@ -701,6 +617,7 @@ const OrderTotals = ({
   eventDiscountName?: string;
   eventDiscountPercentage?: number;
   eventDiscountAmount?: number;
+  order: Order;
 }) => (
   <div
     style={{
@@ -787,6 +704,76 @@ const OrderTotals = ({
           <span>-{eventDiscountAmount.toFixed(2)}</span>
         </div>
       )}
+
+      {/* Payment Details for Mixed Payments */}
+      {order.paymentMethod === "mixed" &&
+        order.cashAmount !== undefined &&
+        order.cashAmount !== null &&
+        order.cardAmount !== undefined &&
+        order.cardAmount !== null && (
+          <>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "0.875rem",
+                marginBottom: "0.5rem",
+                fontWeight: 700,
+              }}
+            >
+              <span>Cash Paid:</span>
+              <span>{order.cashAmount.toFixed(2)}</span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "0.875rem",
+                marginBottom: "0.5rem",
+                fontWeight: 700,
+              }}
+            >
+              <span>Card Paid:</span>
+              <span>{order.cardAmount.toFixed(2)}</span>
+            </div>
+          </>
+        )}
+
+      {/* Payment Details for Cash Payments */}
+      {order.paymentMethod === "cash" &&
+        order.cashReceived !== undefined &&
+        order.cashReceived !== null && (
+          <>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "0.875rem",
+                marginBottom: "0.5rem",
+                fontWeight: 700,
+              }}
+            >
+              <span>Cash Received:</span>
+              <span>{order.cashReceived.toFixed(2)}</span>
+            </div>
+            {order.changeAmount !== undefined &&
+              order.changeAmount !== null &&
+              order.changeAmount > 0 && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "0.875rem",
+                    marginBottom: "0.5rem",
+                    fontWeight: 700,
+                  }}
+                >
+                  <span>Change:</span>
+                  <span>{order.changeAmount.toFixed(2)}</span>
+                </div>
+              )}
+          </>
+        )}
 
       <div
         style={{
@@ -890,16 +877,6 @@ export async function downloadReceiptPDF(
     const root = createRoot(tempContainer);
 
     await new Promise<void>((resolve) => {
-      // Debug: log order data for PDF generation
-      console.log("[downloadReceiptPDF] Order data:", {
-        orderNumber: order.orderNumber,
-        paymentMethod: order.paymentMethod,
-        cashAmount: order.cashAmount,
-        cardAmount: order.cardAmount,
-        cashReceived: order.cashReceived,
-        changeAmount: order.changeAmount,
-      });
-      
       root.render(
         React.createElement(RestaurantReceipt, {
           order,
