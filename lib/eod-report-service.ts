@@ -217,7 +217,7 @@ const calculatePaymentBreakdown = (orders: OrderWithDetails[]): PaymentBreakdown
 };
 
 /**
- * Calculates all sold items (previously best selling items - now shows ALL items)
+ * Calculates all sold items with proper aggregation by name and type
  */
 const calculateBestSellingItems = (orders: OrderWithDetails[]): BestSellingItem[] => {
   const itemStats: Record<string, {
@@ -230,8 +230,9 @@ const calculateBestSellingItems = (orders: OrderWithDetails[]): BestSellingItem[
   orders.forEach(order => {
     if (Array.isArray(order.items)) {
       order.items.forEach(item => {
-        const key = `${item.id}_${item.type}`;
         const name = item.name || item.nameEn || item.nameAr || 'Unknown Item';
+        // Use name and type as key to ensure items with same name are grouped together
+        const key = `${name}_${item.type}`.toLowerCase();
 
         if (!itemStats[key]) {
           itemStats[key] = {
@@ -248,7 +249,7 @@ const calculateBestSellingItems = (orders: OrderWithDetails[]): BestSellingItem[
     }
   });
 
-  // Return ALL items sorted by quantity (removed .slice(0, 10) to show all items)
+  // Return ALL items sorted by quantity
   return Object.values(itemStats)
     .sort((a, b) => b.totalQuantity - a.totalQuantity)
     .map(item => ({
