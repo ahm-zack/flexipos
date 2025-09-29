@@ -26,7 +26,7 @@ interface ParkOrderDialogProps {
   customerName?: string;
   customerPhone?: string;
   customerAddress?: string;
-  paymentMethod: "cash" | "card" | "mixed";
+  paymentMethod: "cash" | "card" | "mixed" | "delivery";
   discountData?: {
     type: "percentage" | "amount";
     value: string;

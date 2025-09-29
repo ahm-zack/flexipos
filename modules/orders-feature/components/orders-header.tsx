@@ -23,6 +23,7 @@ import {
   Edit,
   Check,
   Filter,
+  Truck,
 } from "lucide-react";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { useOrdersContext } from "../contexts/orders-context";
@@ -155,11 +156,18 @@ export function OrdersHeader() {
                   Card
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={filters.activeFilters.has("split")}
-                  onCheckedChange={() => toggleFilter("split")}
+                  checked={filters.activeFilters.has("mixed")}
+                  onCheckedChange={() => toggleFilter("mixed")}
                 >
                   <Split className="mr-2 h-4 w-4" />
-                  Split
+                  Mixed
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={filters.activeFilters.has("delivery")}
+                  onCheckedChange={() => toggleFilter("delivery")}
+                >
+                  <Truck className="mr-2 h-4 w-4" />
+                  Delivery
                 </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
             </DropdownMenu>

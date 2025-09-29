@@ -10,8 +10,10 @@ import {
   type EODReportRequest,
   type BestSellingItem,
   type PaymentBreakdown,
+  type DeliveryPlatformBreakdown,
   type HourlySales,
-  type PaymentMethod
+  type PaymentMethod,
+  type DeliveryPlatform
 } from './schemas';
 import { calculateVATBreakdown } from './vat-config';
 
@@ -41,7 +43,8 @@ interface OrderWithDetails {
   customerName: string | null;
   items: OrderItem[];
   totalAmount: string;
-  paymentMethod: 'cash' | 'card' | 'mixed';
+  paymentMethod: 'cash' | 'card' | 'mixed' | 'delivery';
+  deliveryPlatform?: 'keeta' | 'hunger_station' | 'jahez' | null;
   status: 'completed' | 'canceled' | 'modified';
   createdAt: Date;
   updatedAt: Date;
@@ -165,12 +168,13 @@ const calculateCashAndCardTotals = (orders: OrderWithDetails[]) => {
 };
 
 /**
- * Calculates payment method breakdown - splits mixed payments into cash/card components
+ * Calculates payment method breakdown - splits mixed payments into cash/card components and tracks delivery
  */
 const calculatePaymentBreakdown = (orders: OrderWithDetails[]): PaymentBreakdown[] => {
   const breakdown = {
     cash: { amount: 0, count: 0 },
-    card: { amount: 0, count: 0 }
+    card: { amount: 0, count: 0 },
+    delivery: { amount: 0, count: 0 }
   };
 
   orders.forEach(order => {
@@ -185,6 +189,10 @@ const calculatePaymentBreakdown = (orders: OrderWithDetails[]): PaymentBreakdown
       const amount = parseFloat(order.totalAmount || '0');
       breakdown.card.amount += amount;
       breakdown.card.count += 1;
+    } else if (order.paymentMethod === 'delivery') {
+      const amount = parseFloat(order.totalAmount || '0');
+      breakdown.delivery.amount += amount;
+      breakdown.delivery.count += 1;
     } else if (order.paymentMethod === 'mixed') {
       // Split mixed payments: add cash portion to cash, card portion to card
       if (cashAmount > 0) {
@@ -212,8 +220,61 @@ const calculatePaymentBreakdown = (orders: OrderWithDetails[]): PaymentBreakdown
       orderCount: breakdown.card.count,
       totalAmount: Math.round(breakdown.card.amount * 100) / 100,
       percentage: totalRevenue > 0 ? Math.round((breakdown.card.amount / totalRevenue) * 100 * 100) / 100 : 0
+    },
+    {
+      method: 'delivery' as PaymentMethod,
+      orderCount: breakdown.delivery.count,
+      totalAmount: Math.round(breakdown.delivery.amount * 100) / 100,
+      percentage: totalRevenue > 0 ? Math.round((breakdown.delivery.amount / totalRevenue) * 100 * 100) / 100 : 0
     }
   ].filter(item => item.totalAmount > 0); // Only show payment methods that have amounts
+};
+
+/**
+ * Calculates delivery platform breakdown for delivery orders
+ */
+const calculateDeliveryPlatformBreakdown = (orders: OrderWithDetails[]): DeliveryPlatformBreakdown[] => {
+  const breakdown: Record<DeliveryPlatform, { amount: number; count: number }> = {
+    keeta: { amount: 0, count: 0 },
+    hunger_station: { amount: 0, count: 0 },
+    jahez: { amount: 0, count: 0 }
+  };
+
+  // Only process delivery orders
+  const deliveryOrders = orders.filter(order => order.paymentMethod === 'delivery');
+
+  deliveryOrders.forEach(order => {
+    const amount = parseFloat(order.totalAmount || '0');
+    const platform = order.deliveryPlatform;
+
+    if (platform && breakdown[platform]) {
+      breakdown[platform].amount += amount;
+      breakdown[platform].count += 1;
+    }
+  });
+
+  const totalDeliveryAmount = Object.values(breakdown).reduce((sum, item) => sum + item.amount, 0);
+
+  return [
+    {
+      platform: 'keeta' as DeliveryPlatform,
+      orderCount: breakdown.keeta.count,
+      totalAmount: Math.round(breakdown.keeta.amount * 100) / 100,
+      percentage: totalDeliveryAmount > 0 ? Math.round((breakdown.keeta.amount / totalDeliveryAmount) * 100 * 100) / 100 : 0
+    },
+    {
+      platform: 'hunger_station' as DeliveryPlatform,
+      orderCount: breakdown.hunger_station.count,
+      totalAmount: Math.round(breakdown.hunger_station.amount * 100) / 100,
+      percentage: totalDeliveryAmount > 0 ? Math.round((breakdown.hunger_station.amount / totalDeliveryAmount) * 100 * 100) / 100 : 0
+    },
+    {
+      platform: 'jahez' as DeliveryPlatform,
+      orderCount: breakdown.jahez.count,
+      totalAmount: Math.round(breakdown.jahez.amount * 100) / 100,
+      percentage: totalDeliveryAmount > 0 ? Math.round((breakdown.jahez.amount / totalDeliveryAmount) * 100 * 100) / 100 : 0
+    }
+  ].filter(item => item.totalAmount > 0); // Only show platforms that have orders
 };
 
 /**
@@ -320,6 +381,7 @@ export const generateEODReport = async (request: EODReportRequest): Promise<EODR
   const { cashTotal, cardTotal, cashReceived, changeGiven } = calculateCashAndCardTotals(completedOrders);
   const vatBreakdown = calculateVATBreakdown(totalRevenue);
   const paymentBreakdown = calculatePaymentBreakdown(completedOrders);
+  const deliveryPlatformBreakdown = calculateDeliveryPlatformBreakdown(completedOrders);
   const bestSellingItems = calculateBestSellingItems(completedOrders);
   const hourlySales = calculateHourlySales(completedOrders);
   const peakHour = findPeakHour(hourlySales);
@@ -355,6 +417,9 @@ export const generateEODReport = async (request: EODReportRequest): Promise<EODR
 
     // Payment method breakdown
     paymentBreakdown,
+
+    // Delivery platform breakdown
+    deliveryPlatformBreakdown,
 
     // Performance metrics
     bestSellingItems,
@@ -428,6 +493,7 @@ export const saveEODReportToDatabase = async (
     orderCompletionRate: reportData.orderCompletionRate.toString(),
     orderCancellationRate: reportData.orderCancellationRate.toString(),
     paymentBreakdown: JSON.stringify(reportData.paymentBreakdown),
+    deliveryPlatformBreakdown: JSON.stringify(reportData.deliveryPlatformBreakdown),
     bestSellingItems: JSON.stringify(reportData.bestSellingItems),
     hourlySales: JSON.stringify(reportData.hourlySales),
     generatedBy,
@@ -489,6 +555,7 @@ export const getEODReportsHistory = async (
         orderCompletionRate: eodReports.orderCompletionRate,
         orderCancellationRate: eodReports.orderCancellationRate,
         paymentBreakdown: eodReports.paymentBreakdown,
+        deliveryPlatformBreakdown: eodReports.deliveryPlatformBreakdown,
         bestSellingItems: eodReports.bestSellingItems,
         hourlySales: eodReports.hourlySales,
         generatedBy: eodReports.generatedBy,
@@ -567,6 +634,9 @@ export const getEODReportById = async (reportId: string) => {
 
     // Payment method breakdown
     paymentBreakdown: JSON.parse(report.paymentBreakdown as string) as PaymentBreakdown[],
+
+    // Delivery platform breakdown
+    deliveryPlatformBreakdown: JSON.parse(report.deliveryPlatformBreakdown as string || '[]') as DeliveryPlatformBreakdown[],
 
     // Performance metrics
     bestSellingItems: JSON.parse(report.bestSellingItems as string) as BestSellingItem[],

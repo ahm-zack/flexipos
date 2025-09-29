@@ -1,4 +1,4 @@
-import type { EODReportData, PaymentBreakdown, BestSellingItem } from './schemas';
+import type { EODReportData, PaymentBreakdown, BestSellingItem, DeliveryPlatformBreakdown } from './schemas';
 
 // Utility functions for safe data handling
 export const safeGetString = (value: unknown): string => {
@@ -127,6 +127,47 @@ export const generateEODReportHTML = (
         </table>
       </div>
 
+      ${data.deliveryPlatformBreakdown && data.deliveryPlatformBreakdown.length > 0 ? `
+      <div style="margin-bottom: ${isA4 ? "18px" : "20px"};">
+        <h2 style="
+            color: #F59E0B; 
+            ${isA4 ? "font-size: 18px;" : "font-size: 16px;"} 
+            margin: 0 0 ${isA4 ? "8px" : "12px"} 0;
+            font-weight: 600;
+            border-left: 4px solid #F59E0B;
+            padding-left: 12px;
+        ">Delivery Platform Breakdown</h2>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
+          ${data.deliveryPlatformBreakdown
+                .map(
+                    (platform) => {
+                        const formatPlatformName = (platformName: string): string => {
+                            switch (platformName) {
+                                case 'keeta':
+                                    return 'Keeta';
+                                case 'hunger_station':
+                                    return 'Hunger Station';
+                                case 'jahez':
+                                    return 'Jahez';
+                                default:
+                                    return platformName;
+                            }
+                        };
+
+                        return `
+            <tr>
+              <td style="padding: ${isA4 ? "7px 6px" : "8px 6px"}; border-bottom: 1px solid #ddd; color: #F59E0B; font-weight: 600; background-color: #FFFBEB;">${formatPlatformName(platform.platform)}</td>
+              <td style="padding: ${isA4 ? "7px 6px" : "8px 6px"}; border-bottom: 1px solid #ddd; text-align: right; color: #F59E0B; font-weight: 500; background-color: #FFFBEB;">${platform.orderCount} delivery orders</td>
+              <td style="padding: ${isA4 ? "7px 6px" : "8px 6px"}; border-bottom: 1px solid #ddd; text-align: right; color: #F59E0B; font-weight: 700; background-color: #FFFBEB;">${formatters.formatCurrency(platform.totalAmount)} SAR</td>
+              <td style="padding: ${isA4 ? "7px 6px" : "8px 6px"}; border-bottom: 1px solid #ddd; text-align: right; color: #F59E0B; font-weight: 500; background-color: #FFFBEB;">${platform.percentage.toFixed(1)}%</td>
+            </tr>
+          `;
+                    }
+                )
+                .join("")}
+        </table>
+      </div>` : ''}
+
       <div style="margin-bottom: ${isA4 ? "18px" : "20px"};">
         <h2 style="
             color: #000000; 
@@ -138,11 +179,11 @@ export const generateEODReportHTML = (
         ">Cash Flow Details</h2>
         <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
           <tr><td style="padding: ${isA4 ? "8px 6px" : "8px 6px"}; border-bottom: 1px solid #ddd; color: #000000; font-weight: 600; background-color: #f8f9fa;">Cash Paid (Orders):</td><td style="padding: ${isA4 ? "8px 6px" : "8px 6px"}; border-bottom: 1px solid #ddd; text-align: right; color: #000000; font-weight: 700; background-color: #f8f9fa;">${formatters.formatCurrency(
-                data.totalCashOrders
-            )} SAR</td></tr>
+                    data.totalCashOrders
+                )} SAR</td></tr>
           <tr><td style="padding: ${isA4 ? "8px 6px" : "8px 6px"}; border-bottom: 1px solid #ddd; color: #000000; font-weight: 600;">Card Paid (Orders):</td><td style="padding: ${isA4 ? "8px 6px" : "8px 6px"}; border-bottom: 1px solid #ddd; text-align: right; color: #000000; font-weight: 700;">${formatters.formatCurrency(
-                data.totalCardOrders
-            )} SAR</td></tr>
+                    data.totalCardOrders
+                )} SAR</td></tr>
         </table>
       </div>
 
@@ -214,6 +255,7 @@ export const convertHistoricalReportData = (
         vatAmount: safeParseNumber(report.vatAmount),
         averageOrderValue: safeParseNumber(report.averageOrderValue),
         paymentBreakdown: (safeParseJSON(report.paymentBreakdown) as unknown) as PaymentBreakdown[],
+        deliveryPlatformBreakdown: (safeParseJSON(report.deliveryPlatformBreakdown) as unknown) as DeliveryPlatformBreakdown[],
         bestSellingItems: (safeParseJSON(report.bestSellingItems) as unknown) as BestSellingItem[],
         peakHour: safeGetString(report.peakHour),
         hourlySales: (safeParseJSON(report.hourlySales) as unknown) as { hour: number; orderCount: number; revenue: number }[],

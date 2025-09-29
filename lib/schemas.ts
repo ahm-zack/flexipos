@@ -713,8 +713,12 @@ export type UpdateMiniPie = z.infer<typeof UpdateMiniPieSchema>;
 // EOD Report Schemas
 
 // Payment method enum
-export const PaymentMethodEnum = z.enum(['cash', 'card', 'mixed']);
+export const PaymentMethodEnum = z.enum(['cash', 'card', 'mixed', 'delivery']);
 export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
+
+// Delivery platform enum
+export const DeliveryPlatformEnum = z.enum(['keeta', 'hunger_station', 'jahez']);
+export type DeliveryPlatform = z.infer<typeof DeliveryPlatformEnum>;
 
 // Order status enum for reporting
 export const OrderStatusEnum = z.enum(['completed', 'canceled', 'modified']);
@@ -740,6 +744,16 @@ export const PaymentBreakdownSchema = z.object({
 });
 
 export type PaymentBreakdown = z.infer<typeof PaymentBreakdownSchema>;
+
+// Delivery platform breakdown schema (for delivery orders)
+export const DeliveryPlatformBreakdownSchema = z.object({
+  platform: DeliveryPlatformEnum,
+  orderCount: z.number().int().min(0),
+  totalAmount: z.number().min(0),
+  percentage: z.number().min(0).max(100),
+});
+
+export type DeliveryPlatformBreakdown = z.infer<typeof DeliveryPlatformBreakdownSchema>;
 
 // Hourly sales data schema
 export const HourlySalesSchema = z.object({
@@ -778,6 +792,9 @@ export const EODReportDataSchema = z.object({
 
   // Payment method breakdown
   paymentBreakdown: z.array(PaymentBreakdownSchema),
+
+  // Delivery platform breakdown (for delivery orders)
+  deliveryPlatformBreakdown: z.array(DeliveryPlatformBreakdownSchema),
 
   // Performance metrics
   bestSellingItems: z.array(BestSellingItemSchema),
@@ -836,6 +853,7 @@ export const SavedEODReportSchema = z.object({
 
   // JSON fields for complex data
   paymentBreakdown: z.string(), // JSON string
+  deliveryPlatformBreakdown: z.string(), // JSON string
   bestSellingItems: z.string(), // JSON string
   hourlySales: z.string(), // JSON string
 

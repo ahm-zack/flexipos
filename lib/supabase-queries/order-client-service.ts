@@ -3,6 +3,7 @@ import type { Order, OrderItem, CanceledOrder, ModifiedOrder } from '@/lib/order
 import type { OrderFilters } from '@/lib/order-service';
 import type { CartItem } from '@/lib/orders/schemas';
 
+
 // Local Json type definition to avoid import issues
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -48,6 +49,7 @@ const transformSupabaseToOrder = (row: Record<string, unknown>): Order => ({
     orderNumber: row.order_number as string,
     dailySerial: (row.daily_serial as string) || undefined,
     serialDate: (row.serial_date as string) || undefined,
+    deliveryPlatform: (row.delivery_platform as 'keeta' | 'hunger_station' | 'jahez') || undefined,
     customerName: row.customer_name as string | undefined,
     items: Array.isArray(row.items) ? row.items as OrderItem[] : [],
     totalAmount: typeof row.total_amount === 'string' ? parseFloat(row.total_amount) : (row.total_amount as number),
@@ -183,7 +185,8 @@ export interface CreateOrderData {
     customerName?: string;
     items: CartItem[]; // Accept CartItem[] for creating orders
     totalAmount: number;
-    paymentMethod: 'cash' | 'card' | 'mixed';
+    paymentMethod: 'cash' | 'card' | 'mixed' | 'delivery';
+    deliveryPlatform?: 'keeta' | 'hunger_station' | 'jahez';
     discountType?: 'percentage' | 'amount';
     discountValue?: number;
     discountAmount?: number;
@@ -204,7 +207,8 @@ export interface ModifyOrderData {
     customerName?: string;
     items?: OrderItem[];
     totalAmount?: number;
-    paymentMethod?: 'cash' | 'card' | 'mixed';
+    paymentMethod?: 'cash' | 'card' | 'mixed' | 'delivery';
+    deliveryPlatform?: 'keeta' | 'hunger_station' | 'jahez';
     reason?: string;
 }
 
@@ -220,7 +224,7 @@ export const orderClientService = {
 
         // Apply filters
         if (filters.status) query = query.eq('status', filters.status);
-        if (filters.paymentMethod) query = query.eq('payment_method', filters.paymentMethod);
+        if (filters.paymentMethod) query = query.eq('payment_method', filters.paymentMethod as 'cash' | 'card' | 'mixed');
         if (filters.customerName) query = query.ilike('customer_name', `%${filters.customerName}%`);
         if (filters.orderNumber) query = query.ilike('order_number', `%${filters.orderNumber}%`);
         if (filters.createdBy) query = query.eq('created_by', filters.createdBy);
@@ -303,7 +307,8 @@ export const orderClientService = {
                 customer_name: orderData.customerName || null,
                 items: orderItems as unknown as Json,
                 total_amount: orderData.totalAmount,
-                payment_method: orderData.paymentMethod,
+                payment_method: orderData.paymentMethod as 'cash' | 'card' | 'mixed',
+                delivery_platform: orderData.deliveryPlatform || null,
                 discount_type: orderData.discountType || null,
                 discount_value: orderData.discountValue || null,
                 discount_amount: orderData.discountAmount || 0,

@@ -15,7 +15,7 @@ export interface ParkedOrder {
         total: number;
         itemCount: number;
     };
-    paymentMethod: "cash" | "card" | "mixed";
+    paymentMethod: "cash" | "card" | "mixed" | "delivery";
     discountData?: {
         type: "percentage" | "amount";
         value: string;

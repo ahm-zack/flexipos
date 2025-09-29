@@ -2,11 +2,45 @@ import { db } from '@/lib/db';
 import { orders, canceledOrders, modifiedOrders, users } from '@/lib/db/schema';
 import { eq, desc, and, like, sql } from 'drizzle-orm';
 import { generateOrderNumber } from '@/lib/orders/server-utils';
-import type { OrderItem, OrderFilters } from '@/lib/orders';
-import type { CartItem } from '@/lib/orders/schemas';
+import type { OrderItem, CartItem } from '@/lib/orders';
 
-// Re-export for external use
-export type { OrderFilters };
+// Re-export OrderFilters interface
+export interface OrderFilters {
+  status?: 'completed' | 'canceled' | 'modified';
+  paymentMethod?: 'cash' | 'card' | 'mixed' | 'delivery';
+  customerName?: string;
+  orderNumber?: string;
+  createdBy?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export class OrderService {
+  // Create new order
+  async createOrder(orderData: {
+    customerName?: string;
+    items: CartItem[];
+    totalAmount: number;
+    paymentMethod: 'cash' | 'card' | 'mixed' | 'delivery';
+    deliveryPlatform?: 'keeta' | 'hunger_station' | 'jahez';
+    discountType?: 'percentage' | 'amount';
+    discountValue?: number;
+    discountAmount?: number;
+    eventDiscountName?: string;
+    eventDiscountPercentage?: number;
+    eventDiscountAmount?: number;
+    // Payment tracking fields
+    cashAmount?: number;
+    cardAmount?: number;
+    cashReceived?: number;
+    changeAmount?: number;
+    createdBy: string;
+  }): Promise<OrderServiceResult<ApiOrder>> {
+    // TODO: Implement order creation logic
+    console.log('Creating order with data:', orderData);
+    return { success: false, error: 'Not implemented' };
+  }
+}
 
 export interface OrderServiceResult<T> {
   success: boolean;
@@ -27,7 +61,8 @@ export interface ApiOrder {
   customerName: string | null;
   items: OrderItem[];
   totalAmount: number;
-  paymentMethod: 'cash' | 'card' | 'mixed';
+  paymentMethod: 'cash' | 'card' | 'mixed' | 'delivery';
+  deliveryPlatform?: 'keeta' | 'hunger_station' | 'jahez';
   status: 'completed' | 'canceled' | 'modified';
   discountType?: 'percentage' | 'amount';
   discountValue?: number;
@@ -79,25 +114,26 @@ function transformDatabaseOrderToApi(dbOrder: DatabaseOrder): ApiOrder {
   return {
     id: dbOrder.id,
     orderNumber: dbOrder.orderNumber,
+    deliveryPlatform: dbOrder.deliveryPlatform || undefined,
+    dailySerial: dbOrder.dailySerial || undefined,
     customerName: dbOrder.customerName,
-    items: (dbOrder.items as OrderItem[]) || [],
-    totalAmount: parseFloat(dbOrder.totalAmount),
+    items: JSON.parse(JSON.stringify(dbOrder.items)),
+    totalAmount: parseFloat(dbOrder.totalAmount.toString()),
     paymentMethod: dbOrder.paymentMethod,
     status: dbOrder.status,
-    discountType: dbOrder.discountType as 'percentage' | 'amount' | undefined,
-    discountValue: dbOrder.discountValue ? parseFloat(dbOrder.discountValue) : undefined,
-    discountAmount: dbOrder.discountAmount ? parseFloat(dbOrder.discountAmount) : undefined,
+    discountType: (dbOrder.discountType as 'percentage' | 'amount') || undefined,
+    discountValue: dbOrder.discountValue ? parseFloat(dbOrder.discountValue.toString()) : undefined,
+    discountAmount: dbOrder.discountAmount ? parseFloat(dbOrder.discountAmount.toString()) : undefined,
     eventDiscountName: dbOrder.eventDiscountName || undefined,
-    eventDiscountPercentage: dbOrder.eventDiscountPercentage ? parseFloat(dbOrder.eventDiscountPercentage) : undefined,
-    eventDiscountAmount: dbOrder.eventDiscountAmount ? parseFloat(dbOrder.eventDiscountAmount) : undefined,
-    // Payment tracking fields
-    cashAmount: dbOrder.cashAmount ? parseFloat(dbOrder.cashAmount) : undefined,
-    cardAmount: dbOrder.cardAmount ? parseFloat(dbOrder.cardAmount) : undefined,
-    cashReceived: dbOrder.cashReceived ? parseFloat(dbOrder.cashReceived) : undefined,
-    changeAmount: dbOrder.changeAmount ? parseFloat(dbOrder.changeAmount) : undefined,
+    eventDiscountPercentage: dbOrder.eventDiscountPercentage ? parseFloat(dbOrder.eventDiscountPercentage.toString()) : undefined,
+    eventDiscountAmount: dbOrder.eventDiscountAmount ? parseFloat(dbOrder.eventDiscountAmount.toString()) : undefined,
+    cashAmount: dbOrder.cashAmount ? parseFloat(dbOrder.cashAmount.toString()) : undefined,
+    cardAmount: dbOrder.cardAmount ? parseFloat(dbOrder.cardAmount.toString()) : undefined,
+    cashReceived: dbOrder.cashReceived ? parseFloat(dbOrder.cashReceived.toString()) : undefined,
+    changeAmount: dbOrder.changeAmount ? parseFloat(dbOrder.changeAmount.toString()) : undefined,
     createdAt: dbOrder.createdAt.toISOString(),
     updatedAt: dbOrder.updatedAt.toISOString(),
-    createdBy: dbOrder.createdBy,
+    createdBy: dbOrder.createdBy
   };
 }
 
@@ -300,7 +336,7 @@ export const orderService = {
     customerName?: string;
     items: CartItem[]; // Changed to accept CartItem[] instead of OrderItem[]
     totalAmount: number;
-    paymentMethod: 'cash' | 'card' | 'mixed';
+    paymentMethod: 'cash' | 'card' | 'mixed' | 'delivery';
     discountType?: 'percentage' | 'amount';
     discountValue?: number;
     discountAmount?: number;
@@ -361,7 +397,7 @@ export const orderService = {
       items?: OrderItem[];
       totalAmount?: number;
       status?: 'completed' | 'canceled' | 'modified';
-      paymentMethod?: 'cash' | 'card' | 'mixed';
+      paymentMethod?: 'cash' | 'card' | 'mixed' | 'delivery';
     }
   ): Promise<OrderServiceResult<ApiOrder>> {
     try {
@@ -465,7 +501,7 @@ export const orderService = {
       customerName?: string;
       items?: OrderItem[];
       totalAmount?: number;
-      paymentMethod?: 'cash' | 'card' | 'mixed';
+      paymentMethod?: 'cash' | 'card' | 'mixed' | 'delivery';
     },
     modificationType: 'item_added' | 'item_removed' | 'quantity_changed' | 'item_replaced' | 'multiple_changes'
   ): Promise<OrderServiceResult<ApiModifiedOrder>> {
@@ -560,5 +596,5 @@ export const orderService = {
       console.error('Error fetching order history:', error);
       return { success: false, error: 'Failed to fetch order history' };
     }
-  },
-};
+  }
+}

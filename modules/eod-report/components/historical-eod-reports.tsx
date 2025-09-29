@@ -17,6 +17,7 @@ import {
   Banknote,
   Download,
   Trash2,
+  Truck,
 } from "lucide-react";
 import { SaudiRiyalSymbol } from "@/components/currency/saudi-riyal-symbol";
 import {
@@ -146,6 +147,32 @@ export function HistoricalEODReports() {
       ["Payment Breakdown"],
       ["Cash Orders", safeParseNumber(reportData.totalCashOrders)],
       ["Card Orders", safeParseNumber(reportData.totalCardOrders)],
+      [""],
+      ["Delivery Platform Breakdown"],
+      ...(() => {
+        const deliveryPlatforms = safeParseJSON(
+          reportData.deliveryPlatformBreakdown || "[]"
+        ) as { platform: string; orderCount: number; totalAmount: number }[];
+        return deliveryPlatforms.map((platform) => {
+          const formatPlatformName = (name: string): string => {
+            switch (name) {
+              case "keeta":
+                return "Keeta";
+              case "hunger_station":
+                return "Hunger Station";
+              case "jahez":
+                return "Jahez";
+              default:
+                return name;
+            }
+          };
+          return [
+            formatPlatformName(platform.platform),
+            `${platform.orderCount} orders`,
+            safeParseNumber(platform.totalAmount),
+          ];
+        });
+      })(),
       [""],
       ["Best Selling Items"],
       ...bestSellingItems.map((item: unknown) => {
@@ -415,6 +442,93 @@ export function HistoricalEODReports() {
                             </span>
                           </span>
                         </div>
+                        {/* Delivery Platform Breakdown */}
+                        {(() => {
+                          const deliveryPlatforms = safeParseJSON(
+                            report.deliveryPlatformBreakdown || "[]"
+                          ) as {
+                            platform: string;
+                            orderCount: number;
+                            totalAmount: number;
+                          }[];
+                          const totalDeliveryAmount = deliveryPlatforms.reduce(
+                            (sum, platform) =>
+                              sum + (platform.totalAmount || 0),
+                            0
+                          );
+
+                          if (totalDeliveryAmount > 0) {
+                            return (
+                              <div className="space-y-1 pt-1 border-t border-muted-foreground/20">
+                                <div className="flex justify-between text-xs sm:text-sm font-medium text-yellow-600 dark:text-yellow-400">
+                                  <span className="flex items-center gap-1">
+                                    <Truck className="h-3 w-3 flex-shrink-0" />
+                                    <span className="truncate">Delivery</span>
+                                  </span>
+                                  <span className="flex items-center gap-1 flex-shrink-0">
+                                    <SaudiRiyalSymbol
+                                      size={10}
+                                      className="sm:hidden"
+                                    />
+                                    <SaudiRiyalSymbol
+                                      size={12}
+                                      className="hidden sm:block"
+                                    />
+                                    <span className="truncate">
+                                      {formatters.formatCurrency(
+                                        totalDeliveryAmount
+                                      )}
+                                    </span>
+                                  </span>
+                                </div>
+                                {deliveryPlatforms.map((platform, index) => {
+                                  const formatPlatformName = (
+                                    name: string
+                                  ): string => {
+                                    switch (name) {
+                                      case "keeta":
+                                        return "Keeta";
+                                      case "hunger_station":
+                                        return "Hunger Station";
+                                      case "jahez":
+                                        return "Jahez";
+                                      default:
+                                        return name;
+                                    }
+                                  };
+
+                                  return (
+                                    <div
+                                      key={index}
+                                      className="flex justify-between text-xs text-yellow-600/80 dark:text-yellow-400/80 ml-4"
+                                    >
+                                      <span className="truncate">
+                                        {formatPlatformName(platform.platform)}{" "}
+                                        ({platform.orderCount})
+                                      </span>
+                                      <span className="flex items-center gap-1 flex-shrink-0">
+                                        <SaudiRiyalSymbol
+                                          size={8}
+                                          className="sm:hidden"
+                                        />
+                                        <SaudiRiyalSymbol
+                                          size={10}
+                                          className="hidden sm:block"
+                                        />
+                                        <span className="truncate">
+                                          {formatters.formatCurrency(
+                                            platform.totalAmount || 0
+                                          )}
+                                        </span>
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
 

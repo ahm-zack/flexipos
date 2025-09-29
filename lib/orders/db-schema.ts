@@ -5,7 +5,10 @@ import { users } from '../db/schema';
 export const ordersStatusEnum = pgEnum('orders_status', ['completed', 'canceled', 'modified']);
 
 // Payment method enum
-export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'mixed']);
+export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'mixed', 'delivery']);
+
+// Delivery platform enum
+export const deliveryPlatformEnum = pgEnum('delivery_platform', ['keeta', 'hunger_station', 'jahez']);
 
 // Item type enum
 export const itemTypeEnum = pgEnum('item_type', ['pizza', 'pie', 'sandwich', 'mini_pie', 'beverage', 'appetizer', 'burger', 'shawerma', 'side-order']);
@@ -29,6 +32,7 @@ export const orders = pgTable('orders', {
   items: jsonb('items').notNull(), // Array of order items in JSON format
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
   paymentMethod: paymentMethodEnum('payment_method').notNull().default('cash'), // Payment method
+  deliveryPlatform: deliveryPlatformEnum('delivery_platform'), // Delivery platform (only for delivery orders)
   status: ordersStatusEnum('status').notNull().default('completed'),
   discountType: text('discount_type'), // 'percentage' or 'amount'
   discountValue: decimal('discount_value', { precision: 5, scale: 2 }),

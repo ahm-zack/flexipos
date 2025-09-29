@@ -394,6 +394,77 @@ export function EODReportDashboard() {
                 </CardContent>
               </Card>
 
+              {/* Delivery Platform Breakdown Card */}
+              {reportData.deliveryPlatformBreakdown &&
+                reportData.deliveryPlatformBreakdown.length > 0 && (
+                  <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-yellow-600">
+                        Delivery Platform Breakdown
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Orders breakdown by delivery platform (Keeta, Hunger
+                        Station, Jahez)
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {reportData.deliveryPlatformBreakdown.map(
+                          (platform, index) => {
+                            const formatPlatformName = (
+                              platformName: string
+                            ): string => {
+                              switch (platformName) {
+                                case "keeta":
+                                  return "Keeta";
+                                case "hunger_station":
+                                  return "Hunger Station";
+                                case "jahez":
+                                  return "Jahez";
+                                default:
+                                  return platformName;
+                              }
+                            };
+
+                            return (
+                              <div
+                                key={index}
+                                className="flex flex-col sm:flex-row justify-between sm:items-center p-3 border rounded bg-yellow-50 dark:bg-yellow-900/10 gap-2"
+                              >
+                                <div className="flex-1">
+                                  <div className="font-semibold text-sm text-yellow-800 dark:text-yellow-200">
+                                    {formatPlatformName(platform.platform)}
+                                  </div>
+                                  <div className="text-xs text-yellow-600 dark:text-yellow-400">
+                                    {platform.orderCount} delivery orders
+                                  </div>
+                                </div>
+                                <div className="text-left sm:text-right">
+                                  <div className="font-bold text-sm flex items-center gap-1 text-yellow-700 dark:text-yellow-300">
+                                    <SaudiRiyalSymbol
+                                      size={12}
+                                      className="text-current"
+                                    />
+                                    {formatters.formatCurrency(
+                                      platform.totalAmount
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-yellow-600 dark:text-yellow-400">
+                                    {formatters.formatPercentage(
+                                      platform.percentage
+                                    )}{" "}
+                                    of delivery orders
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
               {/* Cash Flow Details Card */}
               <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
                 <CardHeader>

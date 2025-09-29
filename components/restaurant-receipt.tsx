@@ -15,6 +15,20 @@ import { Download, X } from "lucide-react";
 import { generateReceiptPDF } from "@/lib/receipt-pdf-service";
 import { vatUtils, calculateVATBreakdown } from "@/lib/vat-config";
 
+// Helper function to format delivery platform names
+const formatDeliveryPlatform = (platform: string): string => {
+  switch (platform) {
+    case "keeta":
+      return "Keeta";
+    case "hunger_station":
+      return "Hunger Station";
+    case "jahez":
+      return "Jahez";
+    default:
+      return platform;
+  }
+};
+
 // Types
 interface RestaurantReceiptProps {
   order: Order;
@@ -500,7 +514,9 @@ const OrderInfo = ({
         >
           <span>Payment:</span>
           <span style={{ textTransform: "capitalize", fontWeight: 700 }}>
-            {order.paymentMethod}
+            {order.paymentMethod === "delivery" && order.deliveryPlatform
+              ? `Delivery(${formatDeliveryPlatform(order.deliveryPlatform)})`
+              : order.paymentMethod}
           </span>
         </div>
       </div>

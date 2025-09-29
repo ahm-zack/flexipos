@@ -5,8 +5,12 @@ export const OrderStatusEnum = z.enum(['completed', 'canceled', 'modified']);
 export type OrderStatus = z.infer<typeof OrderStatusEnum>;
 
 // Payment method enum
-export const PaymentMethodEnum = z.enum(['cash', 'card', 'mixed']);
+export const PaymentMethodEnum = z.enum(['cash', 'card', 'mixed', 'delivery']);
 export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
+
+// Delivery platform enum
+export const DeliveryPlatformEnum = z.enum(['keeta', 'hunger_station', 'jahez']);
+export type DeliveryPlatform = z.infer<typeof DeliveryPlatformEnum>;
 
 // Modifier schema for cart items
 export const CartItemModifierSchema = z.object({
@@ -57,6 +61,7 @@ export const OrderSchema = z.object({
   items: z.array(OrderItemSchema).min(1), // Array of order items
   totalAmount: z.number().min(0), // Total order amount
   paymentMethod: PaymentMethodEnum, // Payment method
+  deliveryPlatform: DeliveryPlatformEnum.optional(), // Delivery platform (only for delivery orders)
   status: OrderStatusEnum,
   discountType: z.enum(['percentage', 'amount']).optional(), // Type of discount
   discountValue: z.number().optional(), // Original discount value entered
@@ -83,6 +88,7 @@ export const CreateOrderSchema = z.object({
   items: z.array(CartItemSchema).min(1, 'At least one item is required'),
   totalAmount: z.number().min(0, 'Total amount must be positive'),
   paymentMethod: PaymentMethodEnum, // No default here, let it come from the client
+  deliveryPlatform: DeliveryPlatformEnum.optional(), // Delivery platform (only for delivery orders)
   discountType: z.enum(['percentage', 'amount']).optional(), // Type of discount
   discountValue: z.number().optional(), // Original discount value entered
   discountAmount: z.number().min(0).optional(), // Actual discount amount applied
@@ -106,6 +112,7 @@ export const UpdateOrderSchema = z.object({
   items: z.array(OrderItemSchema).min(1).optional(),
   totalAmount: z.number().min(0).optional(),
   paymentMethod: PaymentMethodEnum.optional(),
+  deliveryPlatform: DeliveryPlatformEnum.optional(),
   status: OrderStatusEnum.optional(),
   discountType: z.enum(['percentage', 'amount']).optional(), // Type of discount
   discountValue: z.number().optional(), // Original discount value entered

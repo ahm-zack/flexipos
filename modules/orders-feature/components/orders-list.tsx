@@ -17,6 +17,7 @@ import {
   CreditCard,
   Banknote,
   Split,
+  Truck,
 } from "lucide-react";
 import { getOrderStatusText } from "@/lib/orders/utils";
 import { EditOrderDialog } from "@/components/edit-order-dialog";
@@ -42,6 +43,7 @@ const convertOrderToApiOrderResponse = (order: any): ApiOrderResponse => {
         ? parseFloat(order.totalAmount)
         : order.totalAmount,
     paymentMethod: order.paymentMethod,
+    deliveryPlatform: order.deliveryPlatform,
     status: order.status,
     createdAt:
       order.createdAt instanceof Date
@@ -93,10 +95,12 @@ export function OrdersList() {
     if (filters.activeFilters.has("completed")) status = "completed";
     if (filters.activeFilters.has("canceled")) status = "canceled";
     if (filters.activeFilters.has("modified")) status = "modified";
-    let paymentMethod: "cash" | "card" | "mixed" | undefined = undefined;
+    let paymentMethod: "cash" | "card" | "mixed" | "delivery" | undefined =
+      undefined;
     if (filters.activeFilters.has("cash")) paymentMethod = "cash";
     if (filters.activeFilters.has("card")) paymentMethod = "card";
     if (filters.activeFilters.has("mixed")) paymentMethod = "mixed";
+    if (filters.activeFilters.has("delivery")) paymentMethod = "delivery";
     const orderNumber = filters.searchTerm || undefined;
     return {
       status,
@@ -114,7 +118,10 @@ export function OrdersList() {
     error,
   } = useOrders(apiFilters, currentPage, limit);
 
-  const getPaymentMethodDisplay = (paymentMethod: string) => {
+  const getPaymentMethodDisplay = (
+    paymentMethod: string,
+    deliveryPlatform?: string
+  ) => {
     switch (paymentMethod) {
       case "cash":
         return { icon: Banknote, text: "Cash", color: "text-green-600" };
@@ -122,8 +129,30 @@ export function OrdersList() {
         return { icon: CreditCard, text: "Card", color: "text-blue-600" };
       case "mixed":
         return { icon: Split, text: "Mixed", color: "text-purple-600" };
+      case "delivery":
+        const platformText = deliveryPlatform
+          ? formatDeliveryPlatform(deliveryPlatform)
+          : "";
+        const displayText = platformText
+          ? `Delivery(${platformText})`
+          : "Delivery";
+        return { icon: Truck, text: displayText, color: "text-yellow-600" };
       default:
         return { icon: Banknote, text: "Cash", color: "text-green-600" };
+    }
+  };
+
+  // Helper function to format delivery platform names
+  const formatDeliveryPlatform = (platform: string): string => {
+    switch (platform) {
+      case "keeta":
+        return "Keeta";
+      case "hunger_station":
+        return "Hunger Station";
+      case "jahez":
+        return "Jahez";
+      default:
+        return platform;
     }
   };
 
@@ -404,7 +433,8 @@ export function OrdersList() {
                     <div className="flex items-center gap-1">
                       {(() => {
                         const paymentDisplay = getPaymentMethodDisplay(
-                          order.paymentMethod || "cash"
+                          order.paymentMethod || "cash",
+                          order.deliveryPlatform || undefined
                         );
                         const IconComponent = paymentDisplay.icon;
                         return (

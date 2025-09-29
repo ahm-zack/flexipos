@@ -127,8 +127,8 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     setFilters((prev) => {
       const newActiveFilters = new Set(prev.activeFilters);
       // If it's a payment method filter, clear other payment method filters
-      if (["cash", "card", "mixed"].includes(filterKey)) {
-        ["cash", "card", "mixed"].forEach((key) =>
+      if (["cash", "card", "mixed", "delivery"].includes(filterKey)) {
+        ["cash", "card", "mixed", "delivery"].forEach((key) =>
           newActiveFilters.delete(key)
         );
         if (!prev.activeFilters.has(filterKey)) {
@@ -277,6 +277,7 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       cash: { text: "Cash", color: "text-green-600" },
       card: { text: "Card", color: "text-blue-600" },
       mixed: { text: "Mixed", color: "text-purple-600" },
+      delivery: { text: "Delivery", color: "text-yellow-600" },
     };
 
     return (

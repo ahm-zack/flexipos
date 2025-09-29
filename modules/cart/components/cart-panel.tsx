@@ -13,6 +13,7 @@ import {
   User,
   Percent,
   ParkingCircle,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -40,6 +41,7 @@ import { RestaurantReceipt } from "@/components/restaurant-receipt";
 import { Dialog } from "@radix-ui/react-dialog";
 import { CashCalculatorDialog } from "@/components/cash-calculator-dialog";
 import { MixedPaymentDialog } from "@/components/mixed-payment-dialog";
+import { DeliveryPlatformDialog } from "@/components/delivery-platform-dialog";
 import { useEventDiscountStore } from "@/hooks/use-event-discount";
 import { ParkOrderDialog } from "@/components/park-order-dialog";
 import { ParkedOrdersPanel } from "@/components/parked-orders-panel";
@@ -84,9 +86,16 @@ export function CartPanel({ className }: CartPanelProps) {
   // Parked orders hook to get count for notification badge
   const { parkedOrders } = useParkedOrders();
 
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "mixed">(
+  const [paymentMethod, setPaymentMethod] = useState<
+    "cash" | "card" | "mixed" | "delivery"
+  >(
     "card" // Default to card instead of cash
   );
+
+  // Delivery platform state (for delivery orders)
+  const [deliveryPlatform, setDeliveryPlatform] = useState<
+    "keeta" | "hunger_station" | "jahez"
+  >("keeta");
 
   // Customer form states
   const [customerPhone, setCustomerPhone] = useState("");
@@ -114,6 +123,9 @@ export function CartPanel({ className }: CartPanelProps) {
   const [showMixedPayment, setShowMixedPayment] = useState(false);
   const [mixedCashAmount, setMixedCashAmount] = useState<number>(0);
   const [mixedCardAmount, setMixedCardAmount] = useState<number>(0);
+
+  // Delivery platform dialog state
+  const [showDeliveryPlatform, setShowDeliveryPlatform] = useState(false);
 
   const createOrder = useCreateOrder();
   const updateCustomerPurchases = useUpdateCustomerPurchases();
@@ -258,6 +270,12 @@ export function CartPanel({ className }: CartPanelProps) {
       return;
     }
 
+    // If payment method is delivery, show delivery platform dialog first
+    if (paymentMethod === "delivery") {
+      setShowDeliveryPlatform(true);
+      return;
+    }
+
     // For card payments, proceed directly
     await processOrder();
   };
@@ -266,7 +284,8 @@ export function CartPanel({ className }: CartPanelProps) {
     overrideCashAmount?: number,
     overrideCardAmount?: number,
     overrideCashReceived?: number,
-    overrideChangeAmount?: number
+    overrideChangeAmount?: number,
+    overrideDeliveryPlatform?: "keeta" | "hunger_station" | "jahez"
   ) => {
     if (!currentUser) {
       toast.error("Please log in to create an order");
@@ -300,6 +319,10 @@ export function CartPanel({ className }: CartPanelProps) {
       items: cart.items, // Send cart items directly
       totalAmount: finalTotal, // Use final total after discount
       paymentMethod,
+      deliveryPlatform:
+        paymentMethod === "delivery"
+          ? overrideDeliveryPlatform || deliveryPlatform
+          : undefined,
       createdBy: currentUser.id, // Use the actual authenticated user's ID
       customerName: customerName.trim() || undefined, // Add customer name
       discountType: discountAmount > 0 ? discountType : undefined,
@@ -357,6 +380,13 @@ export function CartPanel({ className }: CartPanelProps) {
             } created! Mixed Payment - Cash: ${mixedCashAmount.toFixed(
               2
             )} SAR | Card: ${mixedCardAmount.toFixed(2)} SAR`,
+            { duration: 8000 }
+          );
+        } else if (paymentMethod === "delivery") {
+          toast.success(
+            `Order #${
+              data.orderNumber
+            } created! 🚚 Delivery Order - Total: ${finalTotal.toFixed(2)} SAR`,
             { duration: 8000 }
           );
         } else {
@@ -424,6 +454,7 @@ export function CartPanel({ className }: CartPanelProps) {
               ? parseFloat(data.totalAmount)
               : data.totalAmount,
           paymentMethod: data.paymentMethod,
+          deliveryPlatform: data.deliveryPlatform,
           status: data.status,
           discountType: data.discountType,
           discountValue: data.discountValue,
@@ -1070,9 +1101,11 @@ export function CartPanel({ className }: CartPanelProps) {
               <RadioGroup
                 value={paymentMethod}
                 onValueChange={(value) =>
-                  setPaymentMethod(value as "cash" | "card" | "mixed")
+                  setPaymentMethod(
+                    value as "cash" | "card" | "mixed" | "delivery"
+                  )
                 }
-                className="grid grid-cols-3 gap-2"
+                className="grid grid-cols-2 gap-2"
               >
                 <div className="flex flex-col">
                   <Label
@@ -1131,6 +1164,25 @@ export function CartPanel({ className }: CartPanelProps) {
                     </div>
                   </Label>
                 </div>
+                <div className="flex flex-col">
+                  <Label
+                    htmlFor="delivery"
+                    className={cn(
+                      "flex items-center space-x-2 p-3 border rounded-lg",
+                      "hover:bg-muted/50 transition-colors cursor-pointer",
+                      "touch-manipulation select-none active:scale-95",
+                      "min-h-[56px] w-full",
+                      paymentMethod === "delivery" &&
+                        "border-yellow-500 bg-yellow-50 ring-1 ring-yellow-200 text-yellow-700"
+                    )}
+                  >
+                    <RadioGroupItem value="delivery" id="delivery" />
+                    <div className="flex items-center gap-2 flex-1">
+                      <Truck className="h-4 w-4" />
+                      <span className="text-xs font-medium">Delivery</span>
+                    </div>
+                  </Label>
+                </div>
               </RadioGroup>
             </div>
 
@@ -1164,6 +1216,19 @@ export function CartPanel({ className }: CartPanelProps) {
         onOpenChange={setShowMixedPayment}
         totalAmount={finalTotal}
         onConfirmPayment={handleMixedPayment}
+      />
+
+      {/* Delivery Platform Dialog */}
+      <DeliveryPlatformDialog
+        open={showDeliveryPlatform}
+        onOpenChange={setShowDeliveryPlatform}
+        selectedPlatform={deliveryPlatform}
+        onConfirm={(platform) => {
+          setDeliveryPlatform(platform);
+          // After selecting platform, proceed with order creation
+          // Pass the platform directly to avoid state timing issues
+          processOrder(undefined, undefined, undefined, undefined, platform);
+        }}
       />
     </>
   );

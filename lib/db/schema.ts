@@ -270,7 +270,10 @@ export type NewOrderItemModifier = typeof orderItemModifiers.$inferInsert;
 export type ModifierType = typeof modifierTypeEnum.enumValues[number];
 
 // Define payment method enum for EOD reports
-export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'mixed']);
+export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'mixed', 'delivery']);
+
+// Define delivery platform enum
+export const deliveryPlatformEnum = pgEnum('delivery_platform', ['keeta', 'hunger_station', 'jahez']);
 
 // Define order status enum for EOD reports
 export const eodOrderStatusEnum = pgEnum('eod_order_status', ['confirmed', 'preparing', 'ready', 'completed', 'cancelled']);
@@ -315,6 +318,7 @@ export const eodReports = pgTable('eod_reports', {
 
   // Complex data stored as JSON
   paymentBreakdown: jsonb('payment_breakdown'), // PaymentBreakdown[]
+  deliveryPlatformBreakdown: jsonb('delivery_platform_breakdown').default([]).notNull(), // DeliveryPlatformBreakdown[]
   bestSellingItems: jsonb('best_selling_items'), // BestSellingItem[]
   hourlySales: jsonb('hourly_sales'), // HourlySales[]
 
