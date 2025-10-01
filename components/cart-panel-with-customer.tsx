@@ -9,6 +9,7 @@ import {
   Minus,
   Plus,
   ChevronDown,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -31,10 +32,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DeliveryPlatformDialog } from "@/components/delivery-platform-dialog";
 
 export function CartPanelWithCustomer() {
   const { cart, updateQuantity, removeItem, clearCart } = useCart();
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "mixed">(
+  const [paymentMethod, setPaymentMethod] = useState<
+    "cash" | "card" | "mixed" | "delivery"
+  >(
     "card" // Default to card instead of cash
   );
 
@@ -54,6 +58,12 @@ export function CartPanelWithCustomer() {
   const [discountValue, setDiscountValue] = useState<string>("");
   const [isDiscountSectionCollapsed, setIsDiscountSectionCollapsed] =
     useState(true); // Start collapsed
+
+  // Delivery platform state
+  const [deliveryPlatform, setDeliveryPlatform] = useState<
+    "keeta" | "hunger_station" | "jahez"
+  >("keeta");
+  const [showDeliveryPlatform, setShowDeliveryPlatform] = useState(false);
 
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const createOrder = useCreateOrder();
@@ -125,10 +135,32 @@ export function CartPanelWithCustomer() {
       return;
     }
 
+    // If payment method is delivery, show delivery platform dialog first
+    if (paymentMethod === "delivery") {
+      setShowDeliveryPlatform(true);
+      return;
+    }
+
+    // For other payment methods, proceed directly
+    await processOrder();
+  };
+
+  const processOrder = async (
+    overrideDeliveryPlatform?: "keeta" | "hunger_station" | "jahez"
+  ) => {
+    if (!currentUser) {
+      toast.error("Please log in to create an order");
+      return;
+    }
+
     const orderData = {
       items: cart.items,
       totalAmount: finalTotal, // Use final total after discount
       paymentMethod,
+      deliveryPlatform:
+        paymentMethod === "delivery"
+          ? overrideDeliveryPlatform || deliveryPlatform
+          : undefined,
       createdBy: currentUser.id,
       customerName: customerName.trim() || undefined,
       discountType: discountAmount > 0 ? discountType : undefined,
@@ -666,17 +698,52 @@ export function CartPanelWithCustomer() {
             <Label className="text-sm font-medium mb-2 block">
               Payment Method
             </Label>
-            <div className="flex gap-2 justify-center">
+            <div className="grid grid-cols-2 gap-2">
+              {/* First row: Card, Cash */}
               {[
+                {
+                  value: "card",
+                  label: "Card",
+                  icon: <CreditCard className="h-4 w-4" />,
+                },
                 {
                   value: "cash",
                   label: "Cash",
                   icon: <Banknote className="h-4 w-4" />,
                 },
+              ].map((method) => (
+                <Button
+                  key={method.value}
+                  type="button"
+                  variant={
+                    paymentMethod === method.value ? "default" : "outline"
+                  }
+                  size="sm"
+                  onClick={() =>
+                    setPaymentMethod(
+                      method.value as "cash" | "card" | "mixed" | "delivery"
+                    )
+                  }
+                  className={`flex flex-col items-center gap-1 h-auto py-3 px-2 rounded-lg border transition-all duration-200
+                    ${
+                      paymentMethod === method.value
+                        ? "bg-primary text-primary-foreground border-primary shadow-md"
+                        : "bg-card text-card-foreground border-border hover:bg-accent hover:text-accent-foreground"
+                    }
+                    hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+                  `}
+                >
+                  {method.icon}
+                  <span className="text-xs font-medium">{method.label}</span>
+                </Button>
+              ))}
+
+              {/* Second row: Delivery, Mixed */}
+              {[
                 {
-                  value: "card",
-                  label: "Card",
-                  icon: <CreditCard className="h-4 w-4" />,
+                  value: "delivery",
+                  label: "Delivery",
+                  icon: <Truck className="h-4 w-4" />,
                 },
                 {
                   value: "mixed",
@@ -692,9 +759,11 @@ export function CartPanelWithCustomer() {
                   }
                   size="sm"
                   onClick={() =>
-                    setPaymentMethod(method.value as "cash" | "card" | "mixed")
+                    setPaymentMethod(
+                      method.value as "cash" | "card" | "mixed" | "delivery"
+                    )
                   }
-                  className={`flex-1 flex flex-col items-center gap-1 h-auto py-3 px-2 rounded-lg border transition-all duration-200
+                  className={`flex flex-col items-center gap-1 h-auto py-3 px-2 rounded-lg border transition-all duration-200
                     ${
                       paymentMethod === method.value
                         ? "bg-primary text-primary-foreground border-primary shadow-md"
@@ -726,6 +795,17 @@ export function CartPanelWithCustomer() {
           </Button>
         </div>
       )}
+
+      {/* Delivery Platform Dialog */}
+      <DeliveryPlatformDialog
+        open={showDeliveryPlatform}
+        onOpenChange={setShowDeliveryPlatform}
+        onConfirm={(platform: "keeta" | "hunger_station" | "jahez") => {
+          setDeliveryPlatform(platform);
+          processOrder(platform);
+        }}
+        selectedPlatform={deliveryPlatform}
+      />
     </div>
   );
 }
