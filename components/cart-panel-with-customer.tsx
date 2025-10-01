@@ -9,8 +9,6 @@ import {
   Minus,
   Plus,
   ChevronDown,
-  ParkingCircle,
-  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -33,31 +31,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CashCalculatorDialog } from "@/components/cash-calculator-dialog";
-import { MixedPaymentDialog } from "@/components/mixed-payment-dialog";
-import { DeliveryPlatformDialog } from "@/components/delivery-platform-dialog";
-import { useEventDiscountStore } from "@/hooks/use-event-discount";
-import { ParkOrderDialog } from "@/components/park-order-dialog";
-import { ParkedOrdersPanel } from "@/components/parked-orders-panel";
-import { ParkedOrder, useParkedOrders } from "@/hooks/use-parked-orders";
 
 export function CartPanelWithCustomer() {
-  const { cart, updateQuantity, removeItem, clearCart, addItem, openCart } =
-    useCart();
-
-  // Parked orders hook to get count for notification badge
-  const { parkedOrders } = useParkedOrders();
-
-  const [paymentMethod, setPaymentMethod] = useState<
-    "cash" | "card" | "mixed" | "delivery"
-  >(
+  const { cart, updateQuantity, removeItem, clearCart } = useCart();
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "mixed">(
     "card" // Default to card instead of cash
   );
-
-  // Delivery platform state (for delivery orders)
-  const [deliveryPlatform, setDeliveryPlatform] = useState<
-    "keeta" | "hunger_station" | "jahez"
-  >("keeta");
 
   // Customer form states
   const [customerPhone, setCustomerPhone] = useState("");
@@ -76,67 +55,10 @@ export function CartPanelWithCustomer() {
   const [isDiscountSectionCollapsed, setIsDiscountSectionCollapsed] =
     useState(true); // Start collapsed
 
-  // Cash calculator state
-  const [showCashCalculator, setShowCashCalculator] = useState(false);
-  const [cashReceived, setCashReceived] = useState<number>(0);
-  const [changeAmount, setChangeAmount] = useState<number>(0);
-
-  // Mixed payment state
-  const [showMixedPayment, setShowMixedPayment] = useState(false);
-  const [mixedCashAmount, setMixedCashAmount] = useState<number>(0);
-  const [mixedCardAmount, setMixedCardAmount] = useState<number>(0);
-
-  // Delivery platform dialog state
-  const [showDeliveryPlatform, setShowDeliveryPlatform] = useState(false);
-
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const createOrder = useCreateOrder();
   const updateCustomerPurchases = useUpdateCustomerPurchases();
   const customerService = useMemo(() => new CustomerClientService(), []);
-
-  // Event discount store
-  const eventDiscount = useEventDiscountStore();
-
-  // Park order functionality
-  const handleParkOrder = () => {
-    clearCart();
-    clearCustomerData();
-    setDiscountValue("");
-  };
-
-  const handleRestoreParkedOrder = (order: ParkedOrder) => {
-    // Clear current cart first
-    clearCart();
-
-    // Restore cart items
-    order.cartData.items.forEach((item) => {
-      addItem(item);
-    });
-
-    // Restore customer data
-    if (order.customerName) setCustomerName(order.customerName);
-    if (order.customerPhone) setCustomerPhone(order.customerPhone);
-    if (order.customerAddress) setCustomerAddress(order.customerAddress);
-
-    // Restore payment method
-    setPaymentMethod(order.paymentMethod);
-
-    // Restore discount
-    if (order.discountData) {
-      setDiscountType(order.discountData.type);
-      setDiscountValue(order.discountData.value);
-    }
-
-    // Open cart to show restored order
-    openCart();
-
-    toast.success(
-      `Order restored${order.customerName ? ` for ${order.customerName}` : ""}`,
-      {
-        description: "All items and settings have been restored to your cart.",
-      }
-    );
-  };
 
   // Search for customer when phone changes
   useEffect(() => {
@@ -194,22 +116,8 @@ export function CartPanelWithCustomer() {
     }
   };
 
-  // Calculate event discount amount
-  const calculateEventDiscount = () => {
-    if (!eventDiscount.isActive || eventDiscount.discountPercentage <= 0) {
-      return 0;
-    }
-
-    const subtotal = cart.total;
-    const eventDiscountAmount =
-      (subtotal * eventDiscount.discountPercentage) / 100;
-    return Math.min(eventDiscountAmount, subtotal);
-  };
-
   const discountAmount = calculateDiscount();
-  const eventDiscountAmount = calculateEventDiscount();
-  const totalDiscountAmount = discountAmount + eventDiscountAmount;
-  const finalTotal = Math.max(0, cart.total - totalDiscountAmount);
+  const finalTotal = cart.total - discountAmount;
 
   const handleProceedToCheckout = async () => {
     if (!currentUser) {
@@ -217,136 +125,20 @@ export function CartPanelWithCustomer() {
       return;
     }
 
-    // If payment method is cash, show cash calculator first
-    if (paymentMethod === "cash") {
-      setShowCashCalculator(true);
-      return;
-    }
-
-    // If payment method is mixed, show mixed payment dialog first
-    if (paymentMethod === "mixed") {
-      setShowMixedPayment(true);
-      return;
-    }
-
-    // If payment method is delivery, show delivery platform dialog first
-    if (paymentMethod === "delivery") {
-      setShowDeliveryPlatform(true);
-      return;
-    }
-
-    // For card payments, proceed directly
-    await processOrder();
-  };
-
-  const processOrder = async (
-    overrideCashAmount?: number,
-    overrideCardAmount?: number,
-    overrideCashReceived?: number,
-    overrideChangeAmount?: number,
-    overrideDeliveryPlatform?: "keeta" | "hunger_station" | "jahez"
-  ) => {
-    if (!currentUser) {
-      toast.error("Please log in to create an order");
-      return;
-    }
-
-    // Use provided amounts if available, otherwise use state
-    const effectiveCashAmount = overrideCashAmount ?? mixedCashAmount;
-    const effectiveCardAmount = overrideCardAmount ?? mixedCardAmount;
-    const effectiveCashReceived = overrideCashReceived ?? cashReceived;
-    const effectiveChangeAmount = overrideChangeAmount ?? changeAmount;
-
     const orderData = {
       items: cart.items,
-      totalAmount: finalTotal, // Use final total after all discounts
+      totalAmount: finalTotal, // Use final total after discount
       paymentMethod,
-      deliveryPlatform:
-        paymentMethod === "delivery"
-          ? overrideDeliveryPlatform || deliveryPlatform
-          : undefined,
       createdBy: currentUser.id,
       customerName: customerName.trim() || undefined,
       discountType: discountAmount > 0 ? discountType : undefined,
       discountValue: discountAmount > 0 ? parseFloat(discountValue) : undefined,
       discountAmount: discountAmount > 0 ? discountAmount : undefined,
-      // Add event discount info for order history and receipts
-      eventDiscountName:
-        eventDiscountAmount > 0 ? eventDiscount.eventName : undefined,
-      eventDiscountPercentage:
-        eventDiscountAmount > 0 ? eventDiscount.discountPercentage : undefined,
-      eventDiscountAmount:
-        eventDiscountAmount > 0 ? eventDiscountAmount : undefined,
-      // Payment tracking fields
-      cashAmount:
-        paymentMethod === "cash"
-          ? finalTotal
-          : paymentMethod === "mixed"
-          ? effectiveCashAmount
-          : undefined,
-      cardAmount:
-        paymentMethod === "card"
-          ? finalTotal
-          : paymentMethod === "mixed"
-          ? effectiveCardAmount
-          : undefined,
-      cashReceived:
-        paymentMethod === "cash" || paymentMethod === "mixed"
-          ? effectiveCashReceived
-          : undefined,
-      changeAmount:
-        paymentMethod === "cash" || paymentMethod === "mixed"
-          ? effectiveChangeAmount
-          : undefined,
     };
-
-    // Debug log to check payment data
-    console.log("🔍 Creating order with payment data:", {
-      paymentMethod,
-      finalTotal,
-      effectiveCashAmount,
-      effectiveCardAmount,
-      effectiveCashReceived,
-      effectiveChangeAmount,
-      orderData: {
-        cashAmount: orderData.cashAmount,
-        cardAmount: orderData.cardAmount,
-        cashReceived: orderData.cashReceived,
-        changeAmount: orderData.changeAmount,
-      },
-    });
 
     createOrder.mutate(orderData, {
       onSuccess: async (data) => {
-        // Show payment-specific notifications
-        if (paymentMethod === "cash" && changeAmount > 0) {
-          toast.success(
-            `Order #${
-              data.orderNumber
-            } created! Cash received: ${cashReceived.toFixed(
-              2
-            )} SAR | Change: ${changeAmount.toFixed(2)} SAR`,
-            { duration: 8000 }
-          );
-        } else if (paymentMethod === "mixed") {
-          toast.success(
-            `Order #${
-              data.orderNumber
-            } created! Mixed Payment - Cash: ${mixedCashAmount.toFixed(
-              2
-            )} SAR | Card: ${mixedCardAmount.toFixed(2)} SAR`,
-            { duration: 8000 }
-          );
-        } else if (paymentMethod === "delivery") {
-          toast.success(
-            `Order #${
-              data.orderNumber
-            } created! 🚚 Delivery Order - Total: ${finalTotal.toFixed(2)} SAR`,
-            { duration: 8000 }
-          );
-        } else {
-          toast.success(`Order #${data.orderNumber} created successfully!`);
-        }
+        toast.success(`Order #${data.orderNumber} created successfully!`);
 
         // Update customer purchase totals if customer is selected
         if (customerPhone.trim() && customerName.trim()) {
@@ -390,26 +182,11 @@ export function CartPanelWithCustomer() {
         clearCart();
         clearCustomerData();
         setDiscountValue(""); // Clear discount
-        // Reset payment state
-        setCashReceived(0);
-        setChangeAmount(0);
-        setMixedCashAmount(0);
-        setMixedCardAmount(0);
-
-        // Debug: log the order data returned from server
-        console.log("🔍 Order data returned from server:", {
-          paymentMethod: data.paymentMethod,
-          cashAmount: data.cashAmount,
-          cardAmount: data.cardAmount,
-          cashReceived: data.cashReceived,
-          changeAmount: data.changeAmount,
-        });
 
         // Generate receipt
         const apiOrder = {
           id: data.id,
           orderNumber: data.orderNumber,
-          dailySerial: data.dailySerial, // Add the daily serial field
           customerName: data.customerName,
           items: data.items,
           totalAmount:
@@ -417,30 +194,18 @@ export function CartPanelWithCustomer() {
               ? parseFloat(data.totalAmount)
               : data.totalAmount,
           paymentMethod: data.paymentMethod,
-          deliveryPlatform: data.deliveryPlatform,
           status: data.status,
           discountType: data.discountType,
           discountValue: data.discountValue,
           discountAmount: data.discountAmount,
-          // Add event discount fields for receipt display
-          eventDiscountName: data.eventDiscountName,
-          eventDiscountPercentage: data.eventDiscountPercentage,
-          eventDiscountAmount: data.eventDiscountAmount,
-          // Add payment tracking fields for receipt display
-          cashAmount: data.cashAmount,
-          cardAmount: data.cardAmount,
-          cashReceived: data.cashReceived,
-          changeAmount: data.changeAmount,
           createdAt:
             typeof data.createdAt === "string"
               ? data.createdAt
-              : new Date(data.createdAt).toISOString(),
+              : data.createdAt,
           updatedAt:
             typeof data.updatedAt === "string"
               ? data.updatedAt
-              : data.updatedAt
-              ? new Date(data.updatedAt).toISOString()
-              : new Date().toISOString(),
+              : data.updatedAt,
           createdBy: data.createdBy,
         };
 
@@ -461,22 +226,12 @@ export function CartPanelWithCustomer() {
             }))
           : [];
 
-        // Debug: log the final order object being sent to PDF
-        const finalOrderForPDF = {
+        await downloadReceiptPDF({
           ...apiOrder,
           items: mappedItems,
           customerName:
             apiOrder.customerName === null ? undefined : apiOrder.customerName,
-        };
-        console.log("🔍 Final order object for PDF:", {
-          paymentMethod: finalOrderForPDF.paymentMethod,
-          cashAmount: finalOrderForPDF.cashAmount,
-          cardAmount: finalOrderForPDF.cardAmount,
-          cashReceived: finalOrderForPDF.cashReceived,
-          changeAmount: finalOrderForPDF.changeAmount,
         });
-
-        await downloadReceiptPDF(finalOrderForPDF);
       },
       onError: (error) => {
         toast.error(`Failed to create order: ${error.message}`);
@@ -484,98 +239,8 @@ export function CartPanelWithCustomer() {
     });
   };
 
-  const handleCashCalculation = (cashReceived: number, change: number) => {
-    setCashReceived(cashReceived);
-    setChangeAmount(change);
-    // Show change information toast
-    toast.info(
-      `Cash: ${cashReceived.toFixed(2)} SAR | Change: ${change.toFixed(2)} SAR`
-    );
-    // Process the order after cash calculation with direct values
-    processOrder(undefined, undefined, cashReceived, change);
-  };
-
-  const handleMixedPayment = (cashAmount: number, cardAmount: number) => {
-    setMixedCashAmount(cashAmount);
-    setMixedCardAmount(cardAmount);
-
-    // For mixed payment, if there's a cash portion, calculate received and change
-    // For now, assume exact cash (could be enhanced with cash calculator)
-    const mixedCashReceived = cashAmount;
-    const mixedChangeAmount = 0; // For mixed, we assume exact cash for the cash portion
-
-    setCashReceived(mixedCashReceived);
-    setChangeAmount(mixedChangeAmount);
-
-    // Show mixed payment information toast
-    toast.info(
-      `Mixed Payment - Cash: ${cashAmount.toFixed(
-        2
-      )} SAR | Card: ${cardAmount.toFixed(2)} SAR`
-    );
-    // Process the order after mixed payment calculation with direct amounts
-    processOrder(cashAmount, cardAmount, mixedCashReceived, mixedChangeAmount);
-  };
-
   return (
-    <div className="h-full w-full bg-background border-l shadow-2xl flex flex-col">
-      {/* Header */}
-      <div className="border-b">
-        {/* Park Order and Parked Orders Section - Always Visible */}
-        <div className="p-6 pb-3">
-          <div className="flex gap-2">
-            <ParkOrderDialog
-              cartData={{
-                items: cart.items,
-                total: finalTotal,
-                itemCount: cart.itemCount,
-              }}
-              customerName={customerName}
-              customerPhone={customerPhone}
-              customerAddress={customerAddress}
-              paymentMethod={paymentMethod}
-              discountData={
-                discountAmount > 0
-                  ? {
-                      type: discountType,
-                      value: discountValue,
-                      amount: discountAmount,
-                    }
-                  : undefined
-              }
-              onParkSuccess={handleParkOrder}
-              trigger={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  disabled={cart.items.length === 0}
-                >
-                  <ParkingCircle className="h-4 w-4 mr-2" />
-                  Park Order
-                </Button>
-              }
-            />
-            <ParkedOrdersPanel
-              onRestoreOrder={handleRestoreParkedOrder}
-              trigger={
-                <div className="relative flex-1">
-                  <Button variant="outline" size="sm" className="w-full">
-                    <ParkingCircle className="h-4 w-4 mr-2" />
-                    Parked
-                  </Button>
-                  {parkedOrders.length > 0 && (
-                    <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium animate-pulse">
-                      {parkedOrders.length}
-                    </div>
-                  )}
-                </div>
-              }
-            />
-          </div>
-        </div>
-      </div>
-
+    <div className="h-full w-full bg-background shadow-2xl flex flex-col">
       {/* Cart Items */}
       <div className="flex-1 overflow-y-auto p-6">
         {cart.items.length === 0 ? (
@@ -722,11 +387,16 @@ export function CartPanelWithCustomer() {
       {cart.items.length > 0 && (
         <div className="p-6 space-y-4">
           {/* Customer Section - Minimalistic Design */}
-          <div className="bg-muted/20 rounded-lg p-3 space-y-2.5 transition-all duration-200 ease-in-out hover:bg-muted/30">
-            <div className="flex items-center justify-between">
+          <div className="bg-muted/20 rounded-lg p-2 space-y-2 transition-all duration-200 ease-in-out hover:bg-muted/30">
+            <div
+              className="flex items-center justify-between cursor-pointer group"
+              onClick={() =>
+                setIsCustomerSectionCollapsed(!isCustomerSectionCollapsed)
+              }
+            >
               <div className="flex items-center gap-2">
                 <User className="h-3.5 w-3.5 text-primary" />
-                <Label className="text-xs font-medium text-foreground">
+                <Label className="text-xs font-medium text-foreground cursor-pointer">
                   Customer Info
                 </Label>
                 {customerName && (
@@ -735,22 +405,13 @@ export function CartPanelWithCustomer() {
                   </span>
                 )}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  setIsCustomerSectionCollapsed(!isCustomerSectionCollapsed)
-                }
-                className="h-6 w-6 p-0 transition-transform duration-200 ease-in-out"
+              <div
+                className={`transition-transform duration-200 ease-in-out group-hover:text-primary ${
+                  isCustomerSectionCollapsed ? "rotate-180" : "rotate-0"
+                }`}
               >
-                <div
-                  className={`transition-transform duration-200 ease-in-out ${
-                    isCustomerSectionCollapsed ? "rotate-180" : "rotate-0"
-                  }`}
-                >
-                  <ChevronDown className="h-3 w-3" />
-                </div>
-              </Button>
+                <ChevronDown className="h-3 w-3" />
+              </div>
             </div>
 
             <div
@@ -844,11 +505,16 @@ export function CartPanelWithCustomer() {
           </div>
 
           {/* Discount Section */}
-          <div className="bg-muted/20 rounded-lg p-3 space-y-2.5 transition-all duration-200 ease-in-out hover:bg-muted/30">
-            <div className="flex items-center justify-between">
+          <div className="bg-muted/20 rounded-lg p-2 space-y-2 transition-all duration-200 ease-in-out hover:bg-muted/30">
+            <div
+              className="flex items-center justify-between cursor-pointer group"
+              onClick={() =>
+                setIsDiscountSectionCollapsed(!isDiscountSectionCollapsed)
+              }
+            >
               <div className="flex items-center gap-2">
                 <Percent className="h-3.5 w-3.5 text-primary" />
-                <Label className="text-xs font-medium text-foreground">
+                <Label className="text-xs font-medium text-foreground cursor-pointer">
                   Discount
                 </Label>
                 {discountAmount > 0 && (
@@ -860,22 +526,13 @@ export function CartPanelWithCustomer() {
                   </span>
                 )}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  setIsDiscountSectionCollapsed(!isDiscountSectionCollapsed)
-                }
-                className="h-6 w-6 p-0 transition-transform duration-200 ease-in-out"
+              <div
+                className={`transition-transform duration-200 ease-in-out group-hover:text-primary ${
+                  isDiscountSectionCollapsed ? "rotate-180" : "rotate-0"
+                }`}
               >
-                <div
-                  className={`transition-transform duration-200 ease-in-out ${
-                    isDiscountSectionCollapsed ? "rotate-180" : "rotate-0"
-                  }`}
-                >
-                  <ChevronDown className="h-3 w-3" />
-                </div>
-              </Button>
+                <ChevronDown className="h-3 w-3" />
+              </div>
             </div>
 
             <div
@@ -964,11 +621,11 @@ export function CartPanelWithCustomer() {
               <PriceDisplay price={cart.total} symbolSize={14} />
             </div>
 
-            {/* Individual Order Discount Display */}
+            {/* Discount Display */}
             {discountAmount > 0 && (
               <div className="flex justify-between text-sm text-green-600">
                 <span>
-                  Order Discount (
+                  Discount (
                   {discountType === "percentage"
                     ? `${discountValue}%`
                     : "Amount"}
@@ -980,24 +637,6 @@ export function CartPanelWithCustomer() {
                     price={discountAmount}
                     symbolSize={14}
                     className="text-green-600"
-                  />
-                </span>
-              </div>
-            )}
-
-            {/* Event Discount Display */}
-            {eventDiscountAmount > 0 && (
-              <div className="flex justify-between text-sm text-purple-600">
-                <span className="flex items-center gap-1">
-                  🎉 {eventDiscount.eventName} (
-                  {eventDiscount.discountPercentage}%)
-                </span>
-                <span className="flex items-center">
-                  -
-                  <PriceDisplay
-                    price={eventDiscountAmount}
-                    symbolSize={14}
-                    className="text-purple-600"
                   />
                 </span>
               </div>
@@ -1027,89 +666,46 @@ export function CartPanelWithCustomer() {
             <Label className="text-sm font-medium mb-2 block">
               Payment Method
             </Label>
-            <div className="grid grid-cols-2 gap-3">
-              {/* First Row: Cash and Card */}
+            <div className="flex gap-2 justify-center">
               {[
                 {
                   value: "cash",
                   label: "Cash",
-                  icon: <Banknote className="h-5 w-5" />,
-                  color: "bg-green-100 text-green-700 border-green-300",
-                  active: "bg-green-600 text-white border-green-600 shadow-lg",
+                  icon: <Banknote className="h-4 w-4" />,
                 },
                 {
                   value: "card",
                   label: "Card",
-                  icon: <CreditCard className="h-5 w-5" />,
-                  color: "bg-blue-100 text-blue-700 border-blue-300",
-                  active: "bg-blue-600 text-white border-blue-600 shadow-lg",
+                  icon: <CreditCard className="h-4 w-4" />,
                 },
-              ].map((method) => (
-                <button
-                  key={method.value}
-                  type="button"
-                  onClick={() =>
-                    setPaymentMethod(
-                      method.value as "cash" | "card" | "mixed" | "delivery"
-                    )
-                  }
-                  className={`flex flex-col items-center gap-1 py-4 px-2 rounded-xl border font-semibold transition-all duration-200 cursor-pointer
-                    ${
-                      paymentMethod === method.value
-                        ? method.active
-                        : method.color
-                    }
-                    hover:scale-105 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${
-                      method.value === "cash" ? "green" : "blue"
-                    }-400
-                  `}
-                >
-                  {method.icon}
-                  <span className="text-sm">{method.label}</span>
-                </button>
-              ))}
-
-              {/* Second Row: Mixed and Delivery */}
-              {[
                 {
                   value: "mixed",
                   label: "Mixed",
-                  icon: <Split className="h-5 w-5" />,
-                  color: "bg-purple-100 text-purple-700 border-purple-300",
-                  active:
-                    "bg-purple-600 text-white border-purple-600 shadow-lg",
-                },
-                {
-                  value: "delivery",
-                  label: "Delivery",
-                  icon: <Truck className="h-5 w-5" />,
-                  color: "bg-yellow-100 text-yellow-700 border-yellow-300",
-                  active:
-                    "bg-yellow-600 text-white border-yellow-600 shadow-lg",
+                  icon: <Split className="h-4 w-4" />,
                 },
               ].map((method) => (
-                <button
+                <Button
                   key={method.value}
                   type="button"
-                  onClick={() =>
-                    setPaymentMethod(
-                      method.value as "cash" | "card" | "mixed" | "delivery"
-                    )
+                  variant={
+                    paymentMethod === method.value ? "default" : "outline"
                   }
-                  className={`flex flex-col items-center gap-1 py-4 px-2 rounded-xl border font-semibold transition-all duration-200 cursor-pointer
+                  size="sm"
+                  onClick={() =>
+                    setPaymentMethod(method.value as "cash" | "card" | "mixed")
+                  }
+                  className={`flex-1 flex flex-col items-center gap-1 h-auto py-3 px-2 rounded-lg border transition-all duration-200
                     ${
                       paymentMethod === method.value
-                        ? method.active
-                        : method.color
+                        ? "bg-primary text-primary-foreground border-primary shadow-md"
+                        : "bg-card text-card-foreground border-border hover:bg-accent hover:text-accent-foreground"
                     }
-                    hover:scale-105 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${
-                      method.value === "mixed" ? "purple" : "yellow"
-                    }-400
+                    hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
                   `}
                 >
                   {method.icon}
-                  <span className="text-sm">{method.label}</span>
-                </button>
+                  <span className="text-xs font-medium">{method.label}</span>
+                </Button>
               ))}
             </div>
           </div>
@@ -1130,35 +726,6 @@ export function CartPanelWithCustomer() {
           </Button>
         </div>
       )}
-
-      {/* Cash Calculator Dialog */}
-      <CashCalculatorDialog
-        open={showCashCalculator}
-        onOpenChange={setShowCashCalculator}
-        totalAmount={finalTotal}
-        onCalculateChange={handleCashCalculation}
-      />
-
-      {/* Mixed Payment Dialog */}
-      <MixedPaymentDialog
-        open={showMixedPayment}
-        onOpenChange={setShowMixedPayment}
-        totalAmount={finalTotal}
-        onConfirmPayment={handleMixedPayment}
-      />
-
-      {/* Delivery Platform Dialog */}
-      <DeliveryPlatformDialog
-        open={showDeliveryPlatform}
-        onOpenChange={setShowDeliveryPlatform}
-        selectedPlatform={deliveryPlatform}
-        onConfirm={(platform) => {
-          setDeliveryPlatform(platform);
-          // After selecting platform, proceed with order creation
-          // Pass the platform directly to avoid state timing issues
-          processOrder(undefined, undefined, undefined, undefined, platform);
-        }}
-      />
     </div>
   );
 }
