@@ -1,3 +1,6 @@
+Need to install the following packages:
+supabase@2.47.2
+Ok to proceed? (y) 
 export type Json =
   | string
   | number
@@ -263,6 +266,7 @@ export type Database = {
           cash_orders_count: number
           completed_orders: number
           created_at: string
+          delivery_platform_breakdown: Json | null
           end_date_time: string
           generated_at: string
           generated_by: string
@@ -296,6 +300,7 @@ export type Database = {
           cash_orders_count?: number
           completed_orders?: number
           created_at?: string
+          delivery_platform_breakdown?: Json | null
           end_date_time: string
           generated_at?: string
           generated_by: string
@@ -329,6 +334,7 @@ export type Database = {
           cash_orders_count?: number
           completed_orders?: number
           created_at?: string
+          delivery_platform_breakdown?: Json | null
           end_date_time?: string
           generated_at?: string
           generated_by?: string
@@ -458,6 +464,9 @@ export type Database = {
           created_by: string
           customer_name: string | null
           daily_serial: string | null
+          delivery_platform:
+            | Database["public"]["Enums"]["delivery_platform"]
+            | null
           discount_amount: number | null
           discount_type: string | null
           discount_value: number | null
@@ -482,6 +491,9 @@ export type Database = {
           created_by: string
           customer_name?: string | null
           daily_serial?: string | null
+          delivery_platform?:
+            | Database["public"]["Enums"]["delivery_platform"]
+            | null
           discount_amount?: number | null
           discount_type?: string | null
           discount_value?: number | null
@@ -506,6 +518,9 @@ export type Database = {
           created_by?: string
           customer_name?: string | null
           daily_serial?: string | null
+          delivery_platform?:
+            | Database["public"]["Enums"]["delivery_platform"]
+            | null
           discount_amount?: number | null
           discount_type?: string | null
           discount_value?: number | null
@@ -798,6 +813,7 @@ export type Database = {
       }
     }
     Enums: {
+      delivery_platform: "keeta" | "hunger_station" | "jahez"
       eod_order_status:
         | "pending"
         | "confirmed"
@@ -822,7 +838,7 @@ export type Database = {
         | "item_replaced"
         | "multiple_changes"
       orders_status: "pending" | "completed" | "canceled" | "modified"
-      payment_method: "cash" | "card" | "mixed"
+      payment_method: "cash" | "card" | "mixed" | "delivery"
       pie_size: "small" | "medium" | "large"
       pie_type:
         | "Akkawi Cheese"
@@ -984,6 +1000,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      delivery_platform: ["keeta", "hunger_station", "jahez"],
       eod_order_status: [
         "pending",
         "confirmed",
@@ -1011,7 +1028,7 @@ export const Constants = {
         "multiple_changes",
       ],
       orders_status: ["pending", "completed", "canceled", "modified"],
-      payment_method: ["cash", "card", "mixed"],
+      payment_method: ["cash", "card", "mixed", "delivery"],
       pie_size: ["small", "medium", "large"],
       pie_type: [
         "Akkawi Cheese",
