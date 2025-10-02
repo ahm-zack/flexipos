@@ -1,0 +1,254 @@
+project_id = "flexipos-dynamic"
+
+[api]
+enabled = true
+port = 54421
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54424
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+enable_email_confirmations = false
+enable_email_change_confirmations = true
+enable_phone_confirmations = false
+enable_phone_change_confirmations = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+# Allow/disallow new user signups via email to your project.
+enable_signup = true
+
+[auth.sms]
+enable_signup = true
+enable_confirmations = false
+template = "Your code is {{ .Code }} ."
+
+# Use pre-defined map of phone number to short code for testing.
+[auth.sms.test_otp]
+# 4152127777 = "123456"
+
+[auth.external.apple]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.azure]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.bitbucket]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.discord]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.facebook]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.github]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.gitlab]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.google]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.keycloak]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.linkedin_oidc]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.notion]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.twitch]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.twitter]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.slack]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.spotify]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.workos]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[auth.external.zoom]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectURL, defaults to the first URL in the redirectURLs array
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure AD,
+# or any other third-party OIDC providers.
+url = ""
+
+[db]
+# Port to use for the local database URL
+port = 54422
+# Port used by db diff command
+shadow_port = 54420
+# The database major version to use
+major_version = 15
+
+[realtime]
+enabled = true
+port = 54423
+max_header_length = 4096
+
+[studio]
+enabled = true
+port = 54425
+# Overrides the default Studio redirectURL, defaults to the first URL in the redirectURLs array
+api_url = "http://127.0.0.1:54421"
+
+# Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
+# are monitored, and you can view the emails that would have been sent from the web interface.
+[inbucket]
+enabled = true
+port = 54426
+# Uncomment to expose additional ports for testing user applications that send emails.
+# smtp_port = 54325
+# pop3_port = 54326
+
+[storage]
+enabled = true
+port = 54325
+file_size_limit = "50MiB"
+
+[edge_runtime]
+enabled = true
+port = 54326
+
+# If you are using multitenancy, this flag will enable read/write access to the postgres logs via the API and Studio.
+[analytics]
+enabled = false
+port = 54327
+vector_port = 54328
+# Configure one of the supported backends: `postgres`, `bigquery`.
+backend = "postgres"

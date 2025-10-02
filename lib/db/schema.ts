@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, pgEnum, decimal, integer, jsonb, date } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, pgEnum, decimal, integer, jsonb, date, boolean } from 'drizzle-orm/pg-core';
 
 // Define role enum
 export const roleEnum = pgEnum('role', ['superadmin', 'admin', 'manager', 'cashier', 'kitchen']);
@@ -363,3 +363,212 @@ export type {
   OrderWithItems,
   OrderResponse
 } from '../orders/db-schema';
+
+// ================================
+// DYNAMIC POS SYSTEM TABLES
+// ================================
+
+// Business type enum
+export const businessTypeEnum = pgEnum('business_type', [
+  'restaurant',
+  'retail',
+  'service',
+  'cafe',
+  'bakery',
+  'pharmacy',
+  'grocery'
+]);
+
+// Business role enum
+export const businessRoleEnum = pgEnum('business_role', [
+  'owner',
+  'manager',
+  'employee',
+  'cashier'
+]);
+
+// Modifier group type enum (different from existing modifier_type for extra/without)
+export const modifierGroupTypeEnum = pgEnum('modifier_group_type', [
+  'single',
+  'multiple',
+  'quantity'
+]);
+
+// Business entity - core business information
+export const businesses = pgTable('businesses', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  type: businessTypeEnum('type').notNull().default('restaurant'),
+  settings: jsonb('settings').default('{}').notNull(),
+  branding: jsonb('branding').default('{}').notNull(),
+  address: jsonb('address').default('{}').notNull(),
+  contact: jsonb('contact').default('{}').notNull(),
+  vatSettings: jsonb('vat_settings').default('{}').notNull(),
+  timezone: text('timezone').default('Asia/Riyadh'),
+  currency: text('currency').default('SAR'),
+  language: text('language').default('ar'),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Multi-tenant user access
+export const businessUsers = pgTable('business_users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  businessId: uuid('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  role: businessRoleEnum('role').notNull().default('cashier'),
+  permissions: jsonb('permissions').default('{}').notNull(),
+  isActive: boolean('is_active').default(true),
+  invitedAt: timestamp('invited_at', { withTimezone: true }).defaultNow(),
+  joinedAt: timestamp('joined_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Business-specific settings
+export const businessSettings = pgTable('business_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  businessId: uuid('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  category: text('category').notNull(),
+  settings: jsonb('settings').default('{}').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedBy: uuid('updated_by').references(() => users.id),
+});
+
+// Dynamic categories - replaces hardcoded menu categories
+export const categories = pgTable('categories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  businessId: uuid('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  nameAr: text('name_ar'),
+  slug: text('slug').notNull(),
+  description: text('description'),
+  icon: text('icon').default('📋'),
+  color: text('color'),
+  displayOrder: integer('display_order').default(0),
+  isActive: boolean('is_active').default(true),
+  parentCategoryId: uuid('parent_category_id'),
+  metadata: jsonb('metadata').default('{}').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Universal menu items - replaces separate tables (pizzas, burgers, etc.)
+export const menuItems = pgTable('menu_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  businessId: uuid('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  categoryId: uuid('category_id').notNull().references(() => categories.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  nameAr: text('name_ar'),
+  description: text('description'),
+  shortDescription: text('short_description'),
+  sku: text('sku'),
+  barcode: text('barcode'),
+  price: decimal('price', { precision: 10, scale: 2 }).notNull(),
+  costPrice: decimal('cost_price', { precision: 10, scale: 2 }),
+  images: jsonb('images').default('[]').notNull(),
+  variants: jsonb('variants').default('[]').notNull(),
+  modifiers: jsonb('modifiers').default('[]').notNull(),
+  tags: jsonb('tags').default('[]').notNull(),
+  isActive: boolean('is_active').default(true),
+  isFeatured: boolean('is_featured').default(false),
+  stockQuantity: integer('stock_quantity'),
+  lowStockThreshold: integer('low_stock_threshold'),
+  metadata: jsonb('metadata').default('{}').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Item variants (sizes, types, etc.)
+export const itemVariants = pgTable('item_variants', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  menuItemId: uuid('menu_item_id').notNull().references(() => menuItems.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  nameAr: text('name_ar'),
+  price: decimal('price', { precision: 10, scale: 2 }).notNull(),
+  sku: text('sku'),
+  barcode: text('barcode'),
+  stockQuantity: integer('stock_quantity'),
+  isDefault: boolean('is_default').default(false),
+  displayOrder: integer('display_order').default(0),
+  metadata: jsonb('metadata').default('{}').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Enhanced modifier groups
+export const modifierGroups = pgTable('modifier_groups', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  businessId: uuid('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  nameAr: text('name_ar'),
+  type: modifierGroupTypeEnum('type').notNull().default('multiple'),
+  required: boolean('required').default(false),
+  maxSelections: integer('max_selections'),
+  minSelections: integer('min_selections').default(0),
+  displayOrder: integer('display_order').default(0),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Enhanced modifiers
+export const dynamicModifiers = pgTable('modifiers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  modifierGroupId: uuid('modifier_group_id').notNull().references(() => modifierGroups.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  nameAr: text('name_ar'),
+  price: decimal('price', { precision: 10, scale: 2 }).default('0'),
+  isDefault: boolean('is_default').default(false),
+  stockQuantity: integer('stock_quantity'),
+  displayOrder: integer('display_order').default(0),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Link modifiers to menu items
+export const itemModifierGroups = pgTable('item_modifier_groups', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  menuItemId: uuid('menu_item_id').notNull().references(() => menuItems.id, { onDelete: 'cascade' }),
+  modifierGroupId: uuid('modifier_group_id').notNull().references(() => modifierGroups.id, { onDelete: 'cascade' }),
+  isRequired: boolean('is_required').default(false),
+  displayOrder: integer('display_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ================================
+// DYNAMIC SYSTEM TYPE DEFINITIONS
+// ================================
+
+export type Business = typeof businesses.$inferSelect;
+export type NewBusiness = typeof businesses.$inferInsert;
+export type BusinessType = typeof businessTypeEnum.enumValues[number];
+
+export type BusinessUser = typeof businessUsers.$inferSelect;
+export type NewBusinessUser = typeof businessUsers.$inferInsert;
+export type BusinessRole = typeof businessRoleEnum.enumValues[number];
+
+export type BusinessSettings = typeof businessSettings.$inferSelect;
+export type NewBusinessSettings = typeof businessSettings.$inferInsert;
+
+export type Category = typeof categories.$inferSelect;
+export type NewCategory = typeof categories.$inferInsert;
+
+export type MenuItem = typeof menuItems.$inferSelect;
+export type NewMenuItem = typeof menuItems.$inferInsert;
+
+export type ItemVariant = typeof itemVariants.$inferSelect;
+export type NewItemVariant = typeof itemVariants.$inferInsert;
+
+export type ModifierGroup = typeof modifierGroups.$inferSelect;
+export type NewModifierGroup = typeof modifierGroups.$inferInsert;
+export type ModifierGroupType = typeof modifierGroupTypeEnum.enumValues[number];
+
+export type DynamicModifier = typeof dynamicModifiers.$inferSelect;
+export type NewDynamicModifier = typeof dynamicModifiers.$inferInsert;
+
+export type ItemModifierGroup = typeof itemModifierGroups.$inferSelect;
+export type NewItemModifierGroup = typeof itemModifierGroups.$inferInsert;

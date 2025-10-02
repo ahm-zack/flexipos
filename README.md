@@ -1,184 +1,183 @@
-# Next.js & Supabase Dashboard Template
+# Supabase CLI
 
-A modern, production-ready dashboard template built with Next.js 15, TypeScript, Tailwind CSS, and Supabase authentication. This template provides a solid foundation for building systems, retail management applications, or any business dashboard.
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
+](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
 
-## ✨ Features
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-- 🔐 **Authentication System** - Complete login/logout with Supabase
-- 🎨 **Modern UI Components** - Built with shadcn/ui and Tailwind CSS
-- 📱 **Responsive Design** - Mobile-first approach with elegant navbar
-- 🔒 **Protected Routes** - Middleware-based route protection
-- 🎭 **Theme Support** - Dark/light mode with next-themes
-- ⚡ **Performance Optimized** - Next.js 15 with App Router
-- 🛠️ **TypeScript** - Full type safety throughout the application
-- 🎯 **Clean Architecture** - Well-organized folder structure
+This repository contains all the functionality for Supabase CLI.
 
-## 🚀 Quick Start
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Creating and deploying Supabase Functions
+- [x] Generating types directly from your database schema
+- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
 
-### Prerequisites
+## Getting started
 
-- Node.js 18+
-- npm, yarn, pnpm, or bun
-- Supabase account (for authentication)
+### Install the CLI
 
-### 1. Use This Template
-
-Click the "Use this template" button on GitHub or clone the repository:
+Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 
 ```bash
-git clone https://github.com/yourusername/pos-dashboard.git
-cd pos-dashboard
+npm i supabase --save-dev
 ```
 
-### 2. Install Dependencies
+To install the beta release channel:
 
 ```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
-# or
-bun install
+npm i supabase@beta --save-dev
 ```
 
-### 3. Set Up Supabase
+When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
 
-1. Create a new project on [Supabase](https://supabase.com)
-2. Go to Settings > API to get your credentials
-3. Create a `.env.local` file in the root directory:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+NODE_OPTIONS=--no-experimental-fetch yarn add supabase
 ```
 
-### 4. Run the Development Server
+> **Note**
+For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
+
+<details>
+  <summary><b>macOS</b></summary>
+
+  Available via [Homebrew](https://brew.sh). To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To install the beta release channel:
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Windows</b></summary>
+
+  Available via [Scoop](https://scoop.sh). To install:
+
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
+
+  To upgrade:
+
+  ```powershell
+  scoop update supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Linux</b></summary>
+
+  Available via [Homebrew](https://brew.sh) and Linux packages.
+
+  #### via Homebrew
+
+  To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+
+  #### via Linux packages
+
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+supabase bootstrap
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see your application.
+Or using npx:
 
-## 📁 Project Structure
-
-```
-├── app/                    # Next.js App Router
-│   ├── login/             # Authentication pages
-│   ├── private/           # Protected routes
-│   └── layout.tsx         # Root layout with providers
-├── components/            # Reusable UI components
-│   ├── ui/               # shadcn/ui components
-│   └── navbar.tsx        # Navigation component
-├── modules/              # Feature modules
-│   ├── auth/             # Authentication components
-│   └── providers/        # App providers (theme, etc.)
-├── utils/                # Utility functions
-│   └── supabase/         # Supabase client configuration
-└── middleware.ts         # Route protection middleware
+```bash
+npx supabase bootstrap
 ```
 
-## 🔐 Authentication Flow
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
 
-The template includes a complete authentication system:
+## Docs
 
-1. **Login Page** (`/login`) - Server-side form handling
-2. **Protected Routes** - Middleware redirects unauthenticated users
-3. **Session Management** - Supabase handles user sessions
-4. **Logout Functionality** - Clean session termination
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
 
-## 🎨 Customization
+## Breaking changes
 
-### Styling
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
 
-- Modify `app/globals.css` for global styles
-- Update `tailwind.config.js` for theme customization
-- Components use Tailwind CSS classes for easy styling
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
 
-### Branding
+## Developing
 
-- Update navbar title in `components/navbar.tsx`
-- Replace favicon and add your logo
-- Modify metadata in `app/layout.tsx`
+To run from source:
 
-### Adding Features
-
-- Create new pages in the `app/` directory
-- Add components to `components/` or `modules/`
-- Extend the database schema in Supabase
-
-## 🛡️ Environment Variables
-
-Required environment variables:
-
-```env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```sh
+# Go >= 1.22
+go run . help
 ```
-
-## 📦 Built With
-
-- **[Next.js 15](https://nextjs.org)** - React framework with App Router
-- **[TypeScript](https://typescriptlang.org)** - Type safety
-- **[Tailwind CSS](https://tailwindcss.com)** - Utility-first CSS
-- **[shadcn/ui](https://ui.shadcn.com)** - Beautiful UI components
-- **[Supabase](https://supabase.com)** - Backend as a Service
-- **[next-themes](https://github.com/pacocoursey/next-themes)** - Theme management
-- **[Lucide React](https://lucide.dev)** - Beautiful icons
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Connect your repository to [Vercel](https://vercel.com)
-3. Add your environment variables in the Vercel dashboard
-4. Deploy!
-
-### Other Platforms
-
-This template can be deployed on any platform that supports Next.js:
-
-- Netlify
-- Railway
-- Render
-- AWS Amplify
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 💡 Use Cases
-
-This template is perfect for:
-
-- 🏪 Point of Sale (POS) systems
-- 📊 Business dashboards
-- 🛒 E-commerce admin panels
-- 📈 Analytics dashboards
-- 👥 Customer management systems
-- 📦 Inventory management
-- 💰 Financial tracking applications
-
-## 🔗 Links
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Supabase Documentation](https://supabase.com/docs)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [shadcn/ui Documentation](https://ui.shadcn.com)
-
----
-
-**Happy coding!** 🎉 If you find this template helpful, please give it a ⭐ on GitHub!
