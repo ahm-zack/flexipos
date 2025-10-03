@@ -1,6 +1,6 @@
 "use client";
 
-import { DesktopAdminNavbar } from "@/components/desktop-admin-navbar";
+import { DynamicDesktopAdminNavbar } from "@/components/dynamic-desktop-admin-navbar";
 import { MobileAdminNavbar } from "@/components/mobile-admin-navbar";
 import { CartPanelWithCustomer } from "@/components/cart-panel-with-customer";
 import { useCurrentUserOptimized } from "@/hooks/use-current-user-optimized";
@@ -53,7 +53,7 @@ export function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
           <div className="w-full p-6">
             {/* Navbar positioned over left card area */}
             <div className="fixed top-0 left-6 right-6 z-50">
-              <DesktopAdminNavbar user={user} />
+              <DynamicDesktopAdminNavbar user={user} />
             </div>
             <div className="h-full pt-24">
               <div className="h-full rounded-2xl shadow-lg overflow-hidden">
@@ -67,7 +67,7 @@ export function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
             <div className="flex-1 p-4 pr-2">
               {/* Navbar positioned only over left card */}
               <div className="fixed top-0 left-4 right-[34rem] z-50">
-                <DesktopAdminNavbar user={user} />
+                <DynamicDesktopAdminNavbar user={user} />
               </div>
 
               {/* Left Card - Menu Items */}

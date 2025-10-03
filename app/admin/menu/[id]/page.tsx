@@ -1,25 +1,31 @@
-// Generate static paths for all menu categories at build time
-export async function generateStaticParams() {
-  // Return all the menu category IDs that should be pre-generated
-  return [
-    { id: "appetizers" },
-    { id: "beverages" },
-    { id: "burgers" },
-    { id: "shawerma" },
-    { id: "sandwich" },
-    { id: "mini-pie" },
-    { id: "pie" },
-    { id: "side-order" },
-    { id: "pizza" },
-  ];
-}
+import { categoryClientService } from "@/modules/product-feature";
+import type { Category } from "@/modules/product-feature/services/category-client-service";
+import DynamicMenuClientPage from "./simple-client-page";
 
-import MenuItemClientPage from "./client-page";
+// Generate static paths for all dynamic categories at build time
+export async function generateStaticParams() {
+  try {
+    const businessId = "default-business-id"; // In real app, get from auth context
+    const categories = await categoryClientService.getCategories(businessId);
+
+    // Return all category slugs for static generation
+    return categories.map((category: Category) => ({
+      id: category.slug,
+    }));
+  } catch (error) {
+    console.error(
+      "Failed to generate static params for menu categories:",
+      error
+    );
+    // Fallback to empty array - pages will be generated on-demand
+    return [];
+  }
+}
 
 export default function MenuItemPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  return <MenuItemClientPage params={params} />;
+  return <DynamicMenuClientPage params={params} />;
 }
