@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ThemeProvider } from "./components/theme-provider";
 import { QueryProvider } from "./components/query-provider";
+import { BusinessProvider } from "./components/business-provider";
 import { CartProvider } from "../cart";
 import { useMenuCacheWarming } from "@/hooks/use-menu-prefetch";
 
@@ -25,9 +26,11 @@ export function Providers({ children }: ProvidersProps) {
         enableSystem
         disableTransitionOnChange
       >
-        <CartProvider>
-          <AppInitializer>{children}</AppInitializer>
-        </CartProvider>
+        <BusinessProvider>
+          <CartProvider>
+            <AppInitializer>{children}</AppInitializer>
+          </CartProvider>
+        </BusinessProvider>
       </ThemeProvider>
     </QueryProvider>
   );

@@ -15,13 +15,13 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus } from "lucide-react";
-import type { NewProduct } from "../services/product-client-service";
-import type { Category } from "../services/category-client-service";
+import type { NewProduct } from "../services/product-supabase-service";
+import type { Category } from "../services/category-supabase-service";
 
 interface CreateProductFormProps {
   categories: Category[];
   selectedCategoryId?: string;
-  onSubmit: (productData: NewProduct) => void;
+  onSubmit: (productData: Omit<NewProduct, "businessId">) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
@@ -33,8 +33,7 @@ export function CreateProductForm({
   onCancel,
   isSubmitting = false,
 }: CreateProductFormProps) {
-  const [formData, setFormData] = useState<NewProduct>({
-    businessId: "default-business-id", // This should come from auth context
+  const [formData, setFormData] = useState<Omit<NewProduct, "businessId">>({
     categoryId: selectedCategoryId || "",
     name: "",
     nameAr: "",

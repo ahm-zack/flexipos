@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
 export default function MenuPage() {
-  redirect("/admin/menu/pizza");
+  // Redirect to new inventory system
+  redirect("/admin/inventory");
 }

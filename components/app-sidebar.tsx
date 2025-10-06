@@ -3,19 +3,12 @@
 import * as React from "react";
 import {
   Command,
-  Frame,
   UtensilsCrossed,
   Pizza,
-  Cookie,
-  Beef,
-  Sandwich,
-  Coffee,
   Users,
   UserCheck,
   BarChart3,
-  ChefHat,
   Package,
-  Zap,
   ShoppingBag,
   Calendar,
 } from "lucide-react";
@@ -37,54 +30,14 @@ import Link from "next/link";
 const data = {
   navMain: [
     {
-      title: "Menu",
+      title: "Inventory",
       icon: UtensilsCrossed,
       isActive: true,
       items: [
         {
-          title: "🍕 Pizza",
-          url: "/admin/menu/pizza",
+          title: "📦 Categories",
+          url: "/admin/inventory",
           icon: Pizza,
-        },
-        {
-          title: "🥧 Pie",
-          url: "/admin/menu/pie",
-          icon: Cookie,
-        },
-        {
-          title: "🥪 Sandwich",
-          url: "/admin/menu/sandwich",
-          icon: Sandwich,
-        },
-        {
-          title: "🥧 Mini Pie",
-          url: "/admin/menu/mini-pie",
-          icon: Cookie,
-        },
-        {
-          title: "🍔 Burger",
-          url: "/admin/menu/burger",
-          icon: Beef,
-        },
-        {
-          title: "🥗 Appetizers",
-          url: "/admin/menu/appetizers",
-          icon: ChefHat,
-        },
-        {
-          title: "🌯 Shawerma",
-          url: "/admin/menu/shawerma",
-          icon: Zap,
-        },
-        {
-          title: "🍟 Side Order",
-          url: "/admin/menu/side-order",
-          icon: Frame,
-        },
-        {
-          title: "☕ Beverages",
-          url: "/admin/menu/beverages",
-          icon: Coffee,
         },
       ],
     },

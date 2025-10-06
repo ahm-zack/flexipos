@@ -27,40 +27,8 @@ import { CartPanelWithCustomer } from "@/components/cart-panel-with-customer";
 
 const menuItems = [
   {
-    title: "Pizza",
-    url: "/admin/menu/pizza",
-  },
-  {
-    title: "Pie",
-    url: "/admin/menu/pie",
-  },
-  {
-    title: "Sandwich",
-    url: "/admin/menu/sandwich",
-  },
-  {
-    title: "Mini Pie",
-    url: "/admin/menu/mini-pie",
-  },
-  {
-    title: "Burger",
-    url: "/admin/menu/burger",
-  },
-  {
-    title: "Appetizers",
-    url: "/admin/menu/appetizers",
-  },
-  {
-    title: "Shawerma",
-    url: "/admin/menu/shawerma",
-  },
-  {
-    title: "Side Order",
-    url: "/admin/menu/side-order",
-  },
-  {
-    title: "Beverages",
-    url: "/admin/menu/beverages",
+    title: "Inventory",
+    url: "/admin/inventory",
   },
 ];
 
@@ -229,9 +197,9 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                   </Link>
 
                   <Link
-                    href="/admin/items"
+                    href="/admin/inventory"
                     className={`flex items-center gap-3 p-3 rounded-lg transition-colors w-full ${
-                      pathname?.startsWith("/admin/items")
+                      pathname?.startsWith("/admin/inventory")
                         ? "bg-primary/10 text-primary"
                         : "hover:bg-primary/10 hover:text-primary"
                     }`}

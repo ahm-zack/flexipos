@@ -3,12 +3,14 @@ import { usePathname } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSearchStore } from "@/hooks/useSearchStore";
-import {
-  useMenuPrefetch,
-  useAdjacentMenuPrefetch,
-} from "@/hooks/use-menu-prefetch";
-import React, { useEffect } from "react";
-import { useMenu } from "@/modules/menu/hooks/useMenu";
+import React from "react";
+
+// Disabled old menu hooks to prevent pizza/pie API calls
+// import {
+//   useMenuPrefetch,
+//   useAdjacentMenuPrefetch,
+// } from "@/hooks/use-menu-prefetch";
+// import { useMenu } from "@/modules/menu/hooks/useMenu";
 
 const MENU_CONFIG: Record<
   string,
@@ -68,11 +70,11 @@ export default function MenuProductLayout({
 }) {
   const pathname = usePathname();
   const { setSearchTerm, searchTerm } = useSearchStore();
-  const { prefetchAllMenus } = useMenuPrefetch();
 
-  // Extract category from pathname for adjacent prefetching
-  const currentCategory = pathname.split("/").pop() || "";
-  useAdjacentMenuPrefetch(currentCategory);
+  // Disabled old menu hooks to prevent pizza/pie API calls
+  // const { prefetchAllMenus } = useMenuPrefetch();
+  // const currentCategory = pathname.split("/").pop() || "";
+  // useAdjacentMenuPrefetch(currentCategory);
 
   const config = MENU_CONFIG[pathname] || {
     header: "Menu",
@@ -80,12 +82,11 @@ export default function MenuProductLayout({
     placeholder: "Search...",
   };
 
-  // Prefetch all menu data when entering menu section
-  useEffect(() => {
-    prefetchAllMenus();
-  }, [prefetchAllMenus]);
-
-  useMenu();
+  // Disabled old menu prefetching
+  // useEffect(() => {
+  //   prefetchAllMenus();
+  // }, [prefetchAllMenus]);
+  // useMenu();
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">

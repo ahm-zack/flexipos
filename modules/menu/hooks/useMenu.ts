@@ -1,23 +1,32 @@
-import { useAppetizers } from "@/modules/appetizers-feature/hooks/use-appetizers";
-import { useBeverages } from "@/modules/beverages-feature/hooks/use-beverages";
-import { useBurgers } from "@/modules/burgers-feature/hooks/use-burgers";
-import { useMiniPies } from "@/modules/mini-pie-feature/hooks/use-mini-pies-new";
-import { usePies } from "@/modules/pie-feature";
-import { usePizzas } from "@/modules/pizza-feature";
-import { useSandwiches } from "@/modules/sandwich-feature";
-import { useShawarmas } from "@/modules/shawerma-feature/hooks/use-shawermas";
-import { useSides } from "@/modules/sides-feature/hooks/use-sides";
+import { useQuery } from '@tanstack/react-query';
+import { categorySupabaseService } from '@/modules/product-feature/services/category-supabase-service';
+import { useProducts } from '@/modules/product-feature/hooks/useProducts';
+import type { Product } from '@/modules/product-feature/services/product-supabase-service';
 
-export function useMenu() {
+// New dynamic menu hook that uses categories and products
+export function useMenu(businessId: string) {
+    // Get all categories for this business
+    const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+        queryKey: ['categories', businessId],
+        queryFn: () => categorySupabaseService.getCategories(businessId),
+        enabled: !!businessId,
+    });
+
+    // Get all products for this business
+    const { data: products = [], isLoading: productsLoading } = useProducts(businessId);
+
+    // Group products by category
+    const menuByCategory = categories.reduce((acc, category) => {
+        acc[category.slug || category.name.toLowerCase()] = products.filter(
+            product => product.categoryId === category.id
+        );
+        return acc;
+    }, {} as Record<string, Product[]>);
+
     return {
-        miniPies: useMiniPies('cashier'),
-        pizzas: usePizzas('cashier'),
-        pies: usePies('cashier'),
-        sandwiches: useSandwiches('cashier'),
-        appetizers: useAppetizers('cashier'),
-        beverages: useBeverages('cashier'),
-        burgers: useBurgers('cashier'),
-        shawarmas: useShawarmas('cashier'),
-        sides: useSides('cashier'),
-    }
+        categories,
+        products,
+        menuByCategory,
+        isLoading: categoriesLoading || productsLoading,
+    };
 }

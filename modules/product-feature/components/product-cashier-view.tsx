@@ -1,7 +1,7 @@
 "use client";
 
 import { ProductCashierCard } from "./product-cashier-card";
-import type { Product } from "../services/product-client-service";
+import type { Product } from "../services/product-supabase-service";
 
 interface ProductCashierViewProps {
   products: Product[];

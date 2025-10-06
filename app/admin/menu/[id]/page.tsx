@@ -1,12 +1,18 @@
-import { categoryClientService } from "@/modules/product-feature";
-import type { Category } from "@/modules/product-feature/services/category-client-service";
+import { categorySupabaseService } from "@/modules/product-feature";
+import type { Category } from "@/modules/product-feature/services/category-supabase-service";
 import DynamicMenuClientPage from "./simple-client-page";
 
 // Generate static paths for all dynamic categories at build time
 export async function generateStaticParams() {
   try {
-    const businessId = "default-business-id"; // In real app, get from auth context
-    const categories = await categoryClientService.getCategories(businessId);
+    // During build time, localStorage is not available, so we return empty array
+    // This will enable dynamic generation for all category pages
+    if (typeof window === "undefined") {
+      return [];
+    }
+
+    const businessId = "b1234567-89ab-cdef-0123-456789abcdef"; // In real app, get from auth context
+    const categories = await categorySupabaseService.getCategories(businessId);
 
     // Return all category slugs for static generation
     return categories.map((category: Category) => ({

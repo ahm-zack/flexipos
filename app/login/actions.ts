@@ -18,14 +18,14 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
-    return { 
-      success: false, 
-      error: error.message 
+    return {
+      success: false,
+      error: error.message
     }
   }
 
   revalidatePath('/', 'layout')
-  redirect('/admin/menu/pizza')
+  redirect('/')
 }
 
 export async function signup(formData: FormData) {

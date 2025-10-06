@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { ProductCashierView } from "./product-cashier-view";
-import { useProductsByCategorySlug } from "../hooks/use-products";
-import { useCategories } from "../hooks/use-categories";
+import { useProductsByCategorySlug } from "@/hooks/useProducts";
+import { useCategories } from "@/hooks/useCategories";
 import { Package, Loader2 } from "lucide-react";
-import type { Product } from "../services/product-client-service";
-import type { Category } from "../services/category-client-service";
+import type { Product } from "../services/product-supabase-service";
+import type { Category } from "../services/category-supabase-service";
 
-const DEFAULT_BUSINESS_ID = "default-business-id";
+const DEFAULT_BUSINESS_ID = "b1234567-89ab-cdef-0123-456789abcdef";
 
 interface ProductCashierPageProps {
   categorySlug: string;
@@ -18,18 +18,15 @@ export function ProductCashierPage({ categorySlug }: ProductCashierPageProps) {
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
 
   // Fetch categories and products for the specific category
-  const { data: categories = [], isLoading: categoriesLoading } = useCategories(
-    DEFAULT_BUSINESS_ID,
-    "cashier"
-  );
-  const { data: categoryData, isLoading: productsLoading } =
-    useProductsByCategorySlug(DEFAULT_BUSINESS_ID, categorySlug, "cashier");
+  const { data: categories = [], isLoading: categoriesLoading } =
+    useCategories(DEFAULT_BUSINESS_ID);
+  const { data: categoryProducts = [], isLoading: productsLoading } =
+    useProductsByCategorySlug(categorySlug, DEFAULT_BUSINESS_ID);
 
-  // Extract products and category from the response
-  const categoryProducts = categoryData?.products || [];
-  const currentCategory =
-    categoryData?.category ||
-    categories.find((cat: Category) => cat.slug === categorySlug);
+  // Find the current category
+  const currentCategory = categories.find(
+    (cat: Category) => cat.slug === categorySlug
+  );
 
   // Cart functionality
   const handleAddToCart = (product: Product, quantity: number) => {

@@ -8,10 +8,14 @@ export type AppRole = z.infer<typeof AppRoleEnum>;
 export const UserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
-  name: z.string().min(1),
-  role: AppRoleEnum,
-  created_at: z.string(),
-  updated_at: z.string(),
+  fullName: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+  phone: z.string().nullable(),
+  role: z.string().default('user'),
+  isActive: z.boolean().default(true),
+  metadata: z.record(z.any()).default({}),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 export type User = z.infer<typeof UserSchema>;
@@ -20,8 +24,10 @@ export type User = z.infer<typeof UserSchema>;
 export const CreateUserSchema = z.object({
   id: z.string().uuid().optional(),
   email: z.string().email(),
-  name: z.string().min(1, 'Name is required'),
-  role: AppRoleEnum,
+  fullName: z.string().min(1, 'Full name is required'),
+  role: z.string().default('user'),
+  phone: z.string().optional(),
+  avatarUrl: z.string().optional(),
 });
 
 export type CreateUser = z.infer<typeof CreateUserSchema>;
@@ -29,8 +35,11 @@ export type CreateUser = z.infer<typeof CreateUserSchema>;
 // Update user schema
 export const UpdateUserSchema = z.object({
   email: z.string().email().optional(),
-  name: z.string().min(1).optional(),
-  role: AppRoleEnum.optional(),
+  fullName: z.string().min(1).optional(),
+  role: z.string().optional(),
+  phone: z.string().optional(),
+  avatarUrl: z.string().optional(),
+  isActive: z.boolean().optional(),
 });
 
 export type UpdateUser = z.infer<typeof UpdateUserSchema>;

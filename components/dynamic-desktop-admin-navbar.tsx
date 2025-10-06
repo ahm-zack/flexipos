@@ -24,7 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
-import { useCategories } from "@/modules/product-feature/hooks/use-categories";
+import { useCategories } from "@/hooks/useCategories";
 
 interface ModernAdminNavbarProps {
   user?: {
@@ -43,14 +43,19 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
     data: categories = [],
     isLoading,
     error,
-  } = useCategories("default-business-id");
+  } = useCategories("b1234567-89ab-cdef-0123-456789abcdef");
 
   // Generate dynamic menu items from categories
   const dynamicMenuItems = React.useMemo(() => {
     if (isLoading || error || !categories.length) {
       // Fallback items while loading or if no categories
       return [
-        { title: "Items", url: "/admin/items", icon: "📦", color: "#4ECDC4" },
+        {
+          title: "Items",
+          url: "/admin/inventory",
+          icon: "📦",
+          color: "#4ECDC4",
+        },
       ];
     }
 
@@ -98,7 +103,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
 
             {error && (
               <Link
-                href="/admin/items"
+                href="/admin/inventory"
                 className="group relative flex items-center justify-center px-4 py-3 rounded-lg hover:bg-primary/10 hover:shadow-sm transition-all duration-300"
               >
                 <span className="relative text-sm font-medium text-red-600 dark:text-red-400">
@@ -191,9 +196,9 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
 
               <DropdownMenuItem asChild>
                 <Link
-                  href="/admin/items"
+                  href="/admin/inventory"
                   className={`flex items-center gap-2 ${
-                    pathname?.startsWith("/admin/items")
+                    pathname?.startsWith("/admin/inventory")
                       ? "bg-primary/10 text-primary"
                       : "hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
                   }`}

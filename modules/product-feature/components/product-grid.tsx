@@ -1,7 +1,7 @@
 "use client";
 
 import { ProductManagementCard } from "./product-management-card";
-import type { Product } from "../services/product-client-service";
+import type { Product } from "../services/product-supabase-service";
 
 interface ProductGridProps {
   products: Product[];

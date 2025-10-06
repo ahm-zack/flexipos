@@ -137,10 +137,14 @@ export const modifierTypeEnum = pgEnum('modifier_type', ['extra', 'without']);
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
   email: text('email').notNull().unique(),
-  name: text('name').notNull(),
-  role: roleEnum('role').notNull().default('cashier'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  fullName: text('full_name'),
+  avatarUrl: text('avatar_url'),
+  phone: text('phone'),
+  role: text('role').default('user'),
+  isActive: boolean('is_active').default(true),
+  metadata: jsonb('metadata').default('{}'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 // Export types

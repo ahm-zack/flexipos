@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus } from "lucide-react";
-import type { Product, NewProduct } from "../services/product-client-service";
-import type { Category } from "../services/category-client-service";
+import type { Product, NewProduct } from "../services/product-supabase-service";
+import type { Category } from "../services/category-supabase-service";
 
 interface EditProductFormProps {
   product: Product;

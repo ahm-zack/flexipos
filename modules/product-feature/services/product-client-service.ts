@@ -1,5 +1,5 @@
 import { createClient } from '@/utils/supabase/client';
-import { categoryClientService } from './category-client-service';
+import { categorySupabaseService, type Category } from './category-supabase-service';
 
 export const supabase = createClient();
 
@@ -69,14 +69,14 @@ export const productClientService = {
   async getProducts(): Promise<Product[]> {
     const stored = localStorage.getItem('flexipos_products');
     const products: Product[] = stored ? JSON.parse(stored) : [];
-    
+
     return products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   },
 
   async getProductById(id: string): Promise<Product | null> {
     const stored = localStorage.getItem('flexipos_products');
     const products: Product[] = stored ? JSON.parse(stored) : [];
-    
+
     const product = products.find(p => p.id === id);
     return product || null;
   },
@@ -86,21 +86,21 @@ export const productClientService = {
     return products.filter(p => p.categoryId === categoryId && p.isActive);
   },
 
-  async getProductsByCategorySlug(businessId: string, categorySlug: string): Promise<{ products: Product[]; category: any }> {
-    const category = await categoryClientService.getCategoryBySlug(businessId, categorySlug);
-    
+  async getProductsByCategorySlug(businessId: string, categorySlug: string): Promise<{ products: Product[]; category: Category }> {
+    const category = await categorySupabaseService.getCategoryBySlug(businessId, categorySlug);
+
     if (!category) {
       throw new Error(`Category with slug "${categorySlug}" not found`);
     }
-    
+
     const products = await this.getProductsByCategory(category.id);
-    
+
     return { products, category };
   },
 
   async createProduct(productData: NewProduct): Promise<Product> {
     // Validate category exists
-    const category = await categoryClientService.getCategoryById(productData.categoryId);
+    const category = await categorySupabaseService.getCategoryById(productData.categoryId);
     if (!category) {
       throw new Error(`Category with ID ${productData.categoryId} not found`);
     }
@@ -130,7 +130,7 @@ export const productClientService = {
   async updateProduct(id: string, updates: Partial<NewProduct>): Promise<Product> {
     // Validate category if provided
     if (updates.categoryId) {
-      const category = await categoryClientService.getCategoryById(updates.categoryId);
+      const category = await categorySupabaseService.getCategoryById(updates.categoryId);
       if (!category) {
         throw new Error(`Category with ID ${updates.categoryId} not found`);
       }
@@ -138,7 +138,7 @@ export const productClientService = {
 
     const stored = localStorage.getItem('flexipos_products');
     const products: Product[] = stored ? JSON.parse(stored) : [];
-    
+
     const productIndex = products.findIndex(p => p.id === id);
     if (productIndex === -1) {
       throw new Error(`Product with ID ${id} not found`);
@@ -159,7 +159,7 @@ export const productClientService = {
   async deleteProduct(id: string): Promise<void> {
     const stored = localStorage.getItem('flexipos_products');
     const products: Product[] = stored ? JSON.parse(stored) : [];
-    
+
     const filteredProducts = products.filter(p => p.id !== id);
     localStorage.setItem('flexipos_products', JSON.stringify(filteredProducts));
   },
@@ -167,8 +167,8 @@ export const productClientService = {
   async searchProducts(query: string): Promise<Product[]> {
     const products = await this.getProducts();
     const lowercaseQuery = query.toLowerCase();
-    
-    return products.filter(product => 
+
+    return products.filter(product =>
       product.name.toLowerCase().includes(lowercaseQuery) ||
       product.nameAr?.toLowerCase().includes(lowercaseQuery) ||
       product.description?.toLowerCase().includes(lowercaseQuery) ||

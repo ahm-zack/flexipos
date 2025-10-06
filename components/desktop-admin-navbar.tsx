@@ -27,40 +27,8 @@ import { useTheme } from "next-themes";
 
 const menuItems = [
   {
-    title: "Pizza",
-    url: "/admin/menu/pizza",
-  },
-  {
-    title: "Pie",
-    url: "/admin/menu/pie",
-  },
-  {
-    title: "Sandwich",
-    url: "/admin/menu/sandwich",
-  },
-  {
-    title: "Mini Pie",
-    url: "/admin/menu/mini-pie",
-  },
-  {
-    title: "Burger",
-    url: "/admin/menu/burger",
-  },
-  {
-    title: "Appetizers",
-    url: "/admin/menu/appetizers",
-  },
-  {
-    title: "Shawerma",
-    url: "/admin/menu/shawerma",
-  },
-  {
-    title: "Side Order",
-    url: "/admin/menu/side-order",
-  },
-  {
-    title: "Beverages",
-    url: "/admin/menu/beverages",
+    title: "Inventory",
+    url: "/admin/inventory",
   },
 ];
 

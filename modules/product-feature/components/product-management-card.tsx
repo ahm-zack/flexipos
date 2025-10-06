@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Eye } from "lucide-react";
 import Image from "next/image";
-import type { Product } from "../services/product-client-service";
+import type { Product } from "../services/product-supabase-service";
 
 interface ProductManagementCardProps {
   product: Product;

@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Minus, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import type { Product } from "../services/product-client-service";
+import type { Product } from "../services/product-supabase-service";
 
 interface ProductCashierCardProps {
   product: Product;

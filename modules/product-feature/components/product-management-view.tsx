@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, Filter } from "lucide-react";
 import { ProductGrid } from "./product-grid";
-import type { Product } from "../services/product-client-service";
+import type { Product } from "../services/product-supabase-service";
 
 interface ProductManagementViewProps {
   products: Product[];
