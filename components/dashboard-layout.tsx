@@ -35,7 +35,7 @@ export async function DashboardLayout({ children }: DashboardLayoutProps) {
         user={
           fullUserData
             ? {
-                name: fullUserData.name,
+                name: fullUserData.fullName || fullUserData.email,
                 email: fullUserData.email,
                 avatar: undefined, // No avatar field in the current user schema
               }

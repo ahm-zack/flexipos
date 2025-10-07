@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { ProductCashierView } from "./product-cashier-view";
 import { useProductsByCategorySlug } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { Package, Loader2 } from "lucide-react";
-import type { Product } from "../services/product-supabase-service";
 import type { Category } from "../services/category-supabase-service";
 
 const DEFAULT_BUSINESS_ID = "b1234567-89ab-cdef-0123-456789abcdef";
@@ -15,8 +13,6 @@ interface ProductCashierPageProps {
 }
 
 export function ProductCashierPage({ categorySlug }: ProductCashierPageProps) {
-  const [cartItems, setCartItems] = useState<Record<string, number>>({});
-
   // Fetch categories and products for the specific category
   const { data: categories = [], isLoading: categoriesLoading } =
     useCategories(DEFAULT_BUSINESS_ID);
@@ -27,29 +23,6 @@ export function ProductCashierPage({ categorySlug }: ProductCashierPageProps) {
   const currentCategory = categories.find(
     (cat: Category) => cat.slug === categorySlug
   );
-
-  // Cart functionality
-  const handleAddToCart = (product: Product, quantity: number) => {
-    setCartItems((prev) => ({
-      ...prev,
-      [product.id]: (prev[product.id] || 0) + quantity,
-    }));
-  };
-
-  const handleQuantityChange = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      setCartItems((prev) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { [productId]: removed, ...rest } = prev;
-        return rest;
-      });
-    } else {
-      setCartItems((prev) => ({
-        ...prev,
-        [productId]: quantity,
-      }));
-    }
-  };
 
   // Loading state
   if (categoriesLoading || productsLoading) {
@@ -93,13 +66,10 @@ export function ProductCashierPage({ categorySlug }: ProductCashierPageProps) {
   }
 
   return (
-    <div className="p-6">
-      <ProductCashierView
-        products={categoryProducts}
-        onAddToCart={handleAddToCart}
-        cartItems={cartItems}
-        onQuantityChange={handleQuantityChange}
-      />
-    </div>
+    <ProductCashierView
+      products={categoryProducts}
+      isLoading={productsLoading}
+      categoryName={currentCategory?.name || categorySlug}
+    />
   );
 }

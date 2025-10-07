@@ -20,9 +20,9 @@ import { PriceDisplay, SaudiRiyalSymbol } from "@/components/currency";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useCreateOrder } from "@/modules/orders-feature";
 import { useUpdateCustomerPurchases } from "@/modules/customer-feature";
-import { CustomerClientService } from "@/lib/supabase-queries/customer-client-service";
+import { customerService } from "@/lib/supabase-queries/customer-client-service";
 import { toast } from "sonner";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { User, Percent } from "lucide-react";
 import {
@@ -68,7 +68,7 @@ export function CartPanelWithCustomer() {
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const createOrder = useCreateOrder();
   const updateCustomerPurchases = useUpdateCustomerPurchases();
-  const customerService = useMemo(() => new CustomerClientService(), []);
+  // Using imported customerService singleton
 
   // Search for customer when phone changes
   useEffect(() => {
@@ -104,7 +104,7 @@ export function CartPanelWithCustomer() {
 
     const timeoutId = setTimeout(searchCustomer, 500); // Debounce
     return () => clearTimeout(timeoutId);
-  }, [customerPhone, customerService]);
+  }, [customerPhone]);
 
   const clearCustomerData = () => {
     setCustomerPhone("");
@@ -170,6 +170,10 @@ export function CartPanelWithCustomer() {
 
     createOrder.mutate(orderData, {
       onSuccess: async (data) => {
+        if (!data) {
+          toast.error("Order created but no data returned");
+          return;
+        }
         toast.success(`Order #${data.orderNumber} created successfully!`);
 
         // Update customer purchase totals if customer is selected

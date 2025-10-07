@@ -2,7 +2,7 @@ import { db } from './db';
 import { orders, canceledOrders, eodReports, type NewEODReport } from './db/schema';
 import { and, between, eq, sql, desc, asc } from 'drizzle-orm';
 import { generateEODReportNumber } from './eod-report/server-utils';
-import { createClient } from '@/utils/supabase/client';
+// import { createClient } from '@/utils/supabase/client'; // Temporarily disabled
 import {
   EODReportDataSchema,
   EODReportRequestSchema,
@@ -503,10 +503,11 @@ export const saveEODReportToDatabase = async (
   const result = await db.insert(eodReports).values(reportToSave).returning({ id: eodReports.id });
 
   // Reset daily serial sequence after EOD report is generated
+  // NOTE: Temporarily disabled as function doesn't exist in current schema
   try {
-    const supabase = createClient();
-    await supabase.rpc('reset_daily_serial_sequence');
-    console.log(`Daily serial reset after EOD report: ${reportNumber}`);
+    // const supabase = createClient();
+    // await supabase.rpc('reset_daily_serial_sequence');
+    console.log(`Daily serial reset skipped for EOD report: ${reportNumber} (function not available)`);
   } catch (error) {
     console.error('Failed to reset daily serial:', error);
     // Don't throw error - EOD report was saved successfully

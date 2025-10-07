@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { orderClientService } from '@/lib/order-client-service';
+import { orderClientService } from '@/lib/supabase-queries/order-client-service';
 
 export function useOrderForReceipt(orderId: string) {
   return useQuery({

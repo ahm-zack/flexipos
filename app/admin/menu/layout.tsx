@@ -12,55 +12,18 @@ import React from "react";
 // } from "@/hooks/use-menu-prefetch";
 // import { useMenu } from "@/modules/menu/hooks/useMenu";
 
-const MENU_CONFIG: Record<
-  string,
-  { header: string; desc: string; placeholder: string; icon?: React.ReactNode }
-> = {
-  "/admin/menu/appetizers": {
-    header: "Appetizers",
-    desc: "Start your meal with our appetizers",
-    placeholder: "Search appetizers...",
-  },
-  "/admin/menu/beverages": {
-    header: "Beverages",
-    desc: "Refresh yourself with our drinks",
-    placeholder: "Search beverages...",
-  },
-  "/admin/menu/burger": {
-    header: "Burgers",
-    desc: "Juicy burgers made to perfection",
-    placeholder: "Search burgers...",
-  },
-  "/admin/menu/sandwich": {
-    header: "Sandwiches",
-    desc: "Discover our delicious sandwich selection",
-    placeholder: "Search sandwiches...",
-  },
-  "/admin/menu/shawerma": {
-    header: "Shawermas",
-    desc: "Authentic shawerma varieties",
-    placeholder: "Search shawermas...",
-  },
-  "/admin/menu/pizza": {
-    header: "pizzas",
-    desc: "Explore our pizza varieties",
-    placeholder: "Search pizzas...",
-  },
-  "/admin/menu/pie": {
-    header: "Pies",
-    desc: "Try our fresh pies",
-    placeholder: "Search pies...",
-  },
-  "/admin/menu/mini-pie": {
-    header: "Mini Pies",
-    desc: "Mini pies for every taste",
-    placeholder: "Search mini pies...",
-  },
-  "/admin/menu/side-order": {
-    header: "Side Orders",
-    desc: "Complete your meal with our sides",
-    placeholder: "Search side orders...",
-  },
+// Helper function to generate dynamic menu config
+const generateDynamicConfig = (categorySlug: string) => {
+  const formattedName = categorySlug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+  return {
+    header: formattedName,
+    desc: `Browse our ${formattedName.toLowerCase()} selection`,
+    placeholder: `Search ${formattedName.toLowerCase()}...`,
+  };
 };
 
 export default function MenuProductLayout({
@@ -69,18 +32,18 @@ export default function MenuProductLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { setSearchTerm, searchTerm } = useSearchStore();
+  const { setSearchTerm, searchTerm, setCurrentCategory } = useSearchStore();
 
-  // Disabled old menu hooks to prevent pizza/pie API calls
-  // const { prefetchAllMenus } = useMenuPrefetch();
-  // const currentCategory = pathname.split("/").pop() || "";
-  // useAdjacentMenuPrefetch(currentCategory);
+  // Extract category from pathname dynamically
+  const categorySlug = pathname.split("/").pop() || "";
 
-  const config = MENU_CONFIG[pathname] || {
-    header: "Menu",
-    desc: "Browse our menu",
-    placeholder: "Search...",
-  };
+  // Set current category when pathname changes
+  React.useEffect(() => {
+    setCurrentCategory(categorySlug);
+  }, [categorySlug, setCurrentCategory]);
+
+  // Generate dynamic config based on category slug
+  const config = generateDynamicConfig(categorySlug);
 
   // Disabled old menu prefetching
   // useEffect(() => {

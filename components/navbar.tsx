@@ -46,7 +46,7 @@ export function Navbar({ logoutAction, currentUser }: NavbarProps) {
 
         <div>
           <span className="font-bold">Welcome: </span>
-          {currentUser?.name}
+          {currentUser?.fullName}
         </div>
 
         <div className="flex items-center space-x-2">

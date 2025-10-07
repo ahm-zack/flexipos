@@ -6,16 +6,10 @@ import type { Product } from "../services/product-supabase-service";
 interface ProductGridProps {
   products: Product[];
   onEdit?: (product: Product) => void;
-  onDelete?: (productId: string) => void;
-  onView?: (product: Product) => void;
+  onDelete?: (product: Product) => void;
 }
 
-export function ProductGrid({
-  products,
-  onEdit,
-  onDelete,
-  onView,
-}: ProductGridProps) {
+export function ProductGrid({ products, onEdit, onDelete }: ProductGridProps) {
   if (products.length === 0) {
     return (
       <div className="text-center py-12">
@@ -37,7 +31,6 @@ export function ProductGrid({
           product={product}
           onEdit={onEdit}
           onDelete={onDelete}
-          onView={onView}
         />
       ))}
     </div>

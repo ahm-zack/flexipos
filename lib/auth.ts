@@ -23,22 +23,22 @@ export async function getCurrentUser(): Promise<{ user: AuthUser | null; error?:
 
     // Get role from JWT custom claims (Supabase recommended approach)
     const userRole = authUser.app_metadata?.user_role as AppRole;
-    
+
     if (!userRole) {
       // AUTO-FIX: If no custom claim exists, try to sync from database
       console.warn('⚠️ User has no role in custom claims, attempting auto-sync:', authUser.id);
-      
+
       try {
         // Get user role from database
         const userResult = await getUserByEmail(authUser.email || '');
-        
+
         if (userResult.success && userResult.data?.role) {
           // CRITICAL: Directly sync to Supabase Auth admin API
           console.log('🔄 Auto-syncing role to custom claims...');
-          
+
           const { createAdminClient } = await import('@/utils/supabase/admin');
           const adminClient = createAdminClient();
-          
+
           const { error: syncError } = await adminClient.auth.admin.updateUserById(authUser.id, {
             app_metadata: {
               user_role: userResult.data.role,
@@ -50,23 +50,23 @@ export async function getCurrentUser(): Promise<{ user: AuthUser | null; error?:
             console.error('❌ Failed to sync role to JWT:', syncError);
             throw syncError;
           }
-          
+
           console.log('✅ Role synced successfully to JWT. User needs to refresh session.');
-          
+
           // Return the user with the role from database
           // Note: The JWT will have the updated role after refresh/re-authentication
           return {
             user: {
               id: authUser.id,
               email: authUser.email || '',
-              role: userResult.data.role,
+              role: userResult.data.role as 'superadmin' | 'admin' | 'manager' | 'cashier' | 'kitchen',
             }
           };
         }
       } catch (syncError) {
         console.error('❌ Failed to auto-sync user role:', syncError);
       }
-      
+
       // If auto-sync fails, return error
       return { user: null, error: 'User role not found in JWT claims. Please log out and log back in.' };
     }
@@ -107,10 +107,10 @@ export async function requireRole(requiredRole: AppRole): Promise<{ authorized: 
   const requiredLevel = roleHierarchy[requiredRole];
 
   if (userLevel < requiredLevel) {
-    return { 
-      authorized: false, 
-      user, 
-      error: `Insufficient permissions. Required: ${requiredRole}, Current: ${user.role}` 
+    return {
+      authorized: false,
+      user,
+      error: `Insufficient permissions. Required: ${requiredRole}, Current: ${user.role}`
     };
   }
 

@@ -100,7 +100,7 @@ export const productClientService = {
 
   async createProduct(productData: NewProduct): Promise<Product> {
     // Validate category exists
-    const category = await categorySupabaseService.getCategoryById(productData.categoryId);
+    const category = await categorySupabaseService.getCategory(productData.categoryId);
     if (!category) {
       throw new Error(`Category with ID ${productData.categoryId} not found`);
     }
@@ -130,7 +130,7 @@ export const productClientService = {
   async updateProduct(id: string, updates: Partial<NewProduct>): Promise<Product> {
     // Validate category if provided
     if (updates.categoryId) {
-      const category = await categorySupabaseService.getCategoryById(updates.categoryId);
+      const category = await categorySupabaseService.getCategory(updates.categoryId);
       if (!category) {
         throw new Error(`Category with ID ${updates.categoryId} not found`);
       }

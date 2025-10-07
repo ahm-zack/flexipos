@@ -254,7 +254,7 @@ export const orderService = {
       const ordersWithUsers = await db
         .select({
           order: orders,
-          cashierName: users.name,
+          cashierName: users.fullName,
         })
         .from(orders)
         .leftJoin(users, eq(orders.createdBy, users.id))
@@ -303,7 +303,7 @@ export const orderService = {
       const orderWithUser = await db
         .select({
           order: orders,
-          cashierName: users.name,
+          cashierName: users.fullName,
         })
         .from(orders)
         .leftJoin(users, eq(orders.createdBy, users.id))

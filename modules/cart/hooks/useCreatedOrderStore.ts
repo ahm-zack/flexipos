@@ -1,4 +1,4 @@
-import { ApiOrder } from "@/lib/order-service";
+import { ApiOrder } from "@/modules/orders-feature";
 import { create } from "zustand";
 
 interface CreatedOrderStore {

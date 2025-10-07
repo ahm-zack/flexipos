@@ -1,12 +1,21 @@
-// Export components
-export { CustomerSearch } from './components/customer-search';
-export { CreateCustomerForm } from './components/create-customer-form';
+// Minimal customer feature module for cart functionality
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-// Export hooks
-export * from './hooks/use-customers';
+// Minimal customer update hook - just returns success for now
+export function useUpdateCustomerPurchases() {
+    const queryClient = useQueryClient();
 
-// Export query keys
-export { customerKeys } from './queries/customer-keys';
+    return useMutation({
+        mutationFn: async (customerData: { customerId?: string; orderTotal: number; orderNumber?: string }) => {
+            // TODO: Implement customer purchase tracking
+            console.log('Updating customer purchases:', customerData);
+            return { success: true };
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['customers'] });
+        },
+    });
+}
 
-// Export types
-export * from './types';
+const customerFeature = {};
+export default customerFeature;

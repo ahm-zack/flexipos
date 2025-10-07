@@ -8,7 +8,7 @@ export async function GET() {
   try {
     // Check if user is authorized (super admin only)
     const { authorized, error: authCheckError } = await requireSuperAdmin();
-    
+
     if (!authorized) {
       console.error('Unauthorized API access attempt:', authCheckError);
       return NextResponse.json(
@@ -18,7 +18,7 @@ export async function GET() {
     }
 
     const result = await getUsers();
-    
+
     if (!result.success) {
       return NextResponse.json(result, { status: 500 });
     }
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
   try {
     // Check if user is authorized (super admin only)
     const { authorized, error: authCheckError } = await requireSuperAdmin();
-    
+
     if (!authorized) {
       console.error('Unauthorized user creation attempt:', authCheckError);
       return NextResponse.json(
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     // Validate the data
     const validatedData = CreateUserSchema.parse({
       email: body.email,
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     const dbResult = await createUser({
       id: authData.user.id,
       email: validatedData.email,
-      name: validatedData.name,
+      fullName: validatedData.fullName,
       role: validatedData.role,
     });
 
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       // If database creation fails, cleanup the auth user
       console.error('Database user creation failed, cleaning up auth user');
       await adminClient.auth.admin.deleteUser(authData.user.id);
-      
+
       return NextResponse.json(
         { success: false, error: dbResult.error },
         { status: 500 }

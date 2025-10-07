@@ -30,10 +30,7 @@ export function useCategoryBySlug(slug: string, overrideBusinessId?: string) {
 
     return useQuery({
         queryKey: [...categoryKeys.list(businessId), 'slug', slug],
-        queryFn: async () => {
-            const categories = await categorySupabaseService.getCategories(businessId);
-            return categories.find(cat => cat.slug === slug) || null;
-        },
+        queryFn: () => categorySupabaseService.getCategoryBySlug(businessId, slug),
         staleTime: 5 * 60 * 1000, // 5 minutes
         refetchOnWindowFocus: false,
         enabled: !!slug && !!businessId,

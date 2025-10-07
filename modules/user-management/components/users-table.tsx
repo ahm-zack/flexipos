@@ -10,6 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -20,12 +21,31 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import {
   MoreHorizontal,
   Trash2,
   Edit,
   Mail,
   Calendar,
   Clock,
+  Plus,
+  Search,
+  Filter,
+  UserCheck,
+  Shield,
+  Crown,
+  ChefHat,
+  CreditCard,
 } from "lucide-react";
 import { User } from "@/lib/db";
 import { useDeleteUser } from "../hooks/use-users";
@@ -36,6 +56,7 @@ import { formatDistanceToNow } from "date-fns";
 interface UsersTableProps {
   users: User[];
   currentUserId: string;
+  onAddUser?: () => void;
 }
 
 const roleColors = {
@@ -46,13 +67,23 @@ const roleColors = {
   cashier: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   kitchen:
     "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-};
+} as const;
+
+const roleIcons = {
+  superadmin: Crown,
+  admin: Shield,
+  manager: UserCheck,
+  cashier: CreditCard,
+  kitchen: ChefHat,
+} as const;
 
 export function UsersCards({ users, currentUserId }: UsersTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const deleteUserMutation = useDeleteUser();
 
   const handleDeleteClick = (user: User) => {
@@ -70,7 +101,7 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
 
     try {
       await deleteUserMutation.mutateAsync(userToDelete.id);
-      toast.success(`User ${userToDelete.name} deleted successfully`);
+      toast.success(`User ${userToDelete.fullName} deleted successfully`);
       setDeleteDialogOpen(false);
       setUserToDelete(null);
     } catch (error) {
@@ -82,7 +113,8 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
 
   const isCurrentUser = (userId: string) => userId === currentUserId;
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | null) => {
+    if (!name) return "??";
     return name
       .split(" ")
       .map((n) => n[0])
@@ -90,6 +122,74 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  const getRoleColor = (role: string | null) => {
+    if (!role || !(role in roleColors))
+      return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+    return roleColors[role as keyof typeof roleColors];
+  };
+
+  const formatRoleName = (role: string | null) => {
+    if (!role) return "Unknown";
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  };
+
+  const formatDate = (date: Date | null) => {
+    if (!date) return "Unknown";
+    try {
+      return formatDistanceToNow(new Date(date), { addSuffix: true });
+    } catch {
+      return "Unknown";
+    }
+  };
+
+  // Bulk operations handlers
+  const handleSelectUser = (userId: string) => {
+    const newSelection = new Set(selectedUsers);
+    if (newSelection.has(userId)) {
+      newSelection.delete(userId);
+    } else {
+      newSelection.add(userId);
+    }
+    setSelectedUsers(newSelection);
+  };
+
+  const handleSelectAll = () => {
+    const selectableUsers = users.filter((user) => !isCurrentUser(user.id));
+    if (selectedUsers.size === selectableUsers.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(selectableUsers.map((user) => user.id)));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedUsers.size === 0) return;
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    if (selectedUsers.size === 0) return;
+
+    try {
+      // Delete users one by one (could be optimized with a bulk API endpoint)
+      const deletePromises = Array.from(selectedUsers).map((userId) =>
+        deleteUserMutation.mutateAsync(userId)
+      );
+      await Promise.all(deletePromises);
+
+      toast.success(`${selectedUsers.size} user(s) deleted successfully`);
+      setSelectedUsers(new Set());
+      setBulkDeleteDialogOpen(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete users"
+      );
+    }
+  };
+
+  const canSelect = (user: User) => !isCurrentUser(user.id);
+  const selectableUsersCount = users.filter(canSelect).length;
 
   if (users.length === 0) {
     return (
@@ -107,6 +207,55 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
 
   return (
     <>
+      {/* Bulk Operations Bar */}
+      {selectableUsersCount > 0 && (
+        <Card className="mb-4">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedUsers.size === selectableUsersCount &&
+                      selectableUsersCount > 0
+                    }
+                    onChange={handleSelectAll}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {selectedUsers.size === 0
+                      ? "Select all"
+                      : `${selectedUsers.size} of ${selectableUsersCount} selected`}
+                  </span>
+                </div>
+              </div>
+
+              {selectedUsers.size > 0 && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    disabled={deleteUserMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Selected ({selectedUsers.size})
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedUsers(new Set())}
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {users.map((user) => (
           <Card
@@ -116,15 +265,24 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
+                  {canSelect(user) && (
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.has(user.id)}
+                      onChange={() => handleSelectUser(user.id)}
+                      className="rounded border-gray-300 mt-1"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-primary text-white">
-                      {getInitials(user.name)}
+                      {getInitials(user.fullName)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-sm truncate">
-                        {user.name}
+                        {user.fullName}
                       </h3>
                       {isCurrentUser(user.id) && (
                         <Badge
@@ -135,8 +293,8 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
                         </Badge>
                       )}
                     </div>
-                    <Badge className={`${roleColors[user.role]} text-xs`}>
-                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    <Badge className={`${getRoleColor(user.role)} text-xs`}>
+                      {formatRoleName(user.role)}
                     </Badge>
                   </div>
                 </div>
@@ -173,21 +331,11 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>
-                    Created{" "}
-                    {formatDistanceToNow(new Date(user.createdAt), {
-                      addSuffix: true,
-                    })}
-                  </span>
+                  <span>Created {formatDate(user.createdAt)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  <span>
-                    Updated{" "}
-                    {formatDistanceToNow(new Date(user.updatedAt), {
-                      addSuffix: true,
-                    })}
-                  </span>
+                  <span>Updated {formatDate(user.updatedAt)}</span>
                 </div>
               </div>
             </CardContent>
@@ -200,7 +348,8 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
           <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete user &quot;{userToDelete?.name}
+              Are you sure you want to delete user &quot;
+              {userToDelete?.fullName}
               &quot;? This action cannot be undone and will remove the user from
               both the database and authentication system.
             </DialogDescription>
@@ -229,6 +378,55 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
       />
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Multiple Users</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedUsers.size} user(s)? This
+              action cannot be undone and will remove the users from both the
+              database and authentication system.
+              <br />
+              <br />
+              <strong>Users to be deleted:</strong>
+              <ul className="mt-2 list-disc list-inside">
+                {Array.from(selectedUsers).map((userId) => {
+                  const user = users.find((u) => u.id === userId);
+                  return (
+                    <li key={userId} className="text-sm">
+                      {user?.fullName || user?.email || userId}
+                    </li>
+                  );
+                })}
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteUserMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDeleteConfirm}
+              disabled={deleteUserMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteUserMutation.isPending ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full border-2 border-t-transparent border-white h-4 w-4" />
+                  Deleting...
+                </div>
+              ) : (
+                `Delete ${selectedUsers.size} Users`
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

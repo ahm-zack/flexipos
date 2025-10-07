@@ -18,7 +18,7 @@ async function syncRoleToCustomClaims(userId: string, role: string): Promise<voi
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const adminClient = createAdminClient();
-      
+
       const { error } = await adminClient.auth.admin.updateUserById(userId, {
         app_metadata: {
           user_role: role,
@@ -29,7 +29,7 @@ async function syncRoleToCustomClaims(userId: string, role: string): Promise<voi
       if (error) {
         lastError = error;
         console.error(`Attempt ${attempt}: Error syncing role to custom claims:`, error);
-        
+
         if (attempt < maxRetries) {
           // Wait before retry (exponential backoff)
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
@@ -43,7 +43,7 @@ async function syncRoleToCustomClaims(userId: string, role: string): Promise<voi
     } catch (error) {
       lastError = error;
       console.error(`Attempt ${attempt}: Failed to sync role to custom claims:`, error);
-      
+
       if (attempt < maxRetries) {
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
       }
@@ -52,7 +52,7 @@ async function syncRoleToCustomClaims(userId: string, role: string): Promise<voi
 
   // Log the final failure but don't throw - we don't want to break user operations
   console.error(`❌ CRITICAL: Failed to sync role to custom claims after ${maxRetries} attempts for user ${userId}:`, lastError);
-  
+
   // In production, you might want to add this to a retry queue or send an alert
   // For now, we'll just log it as a critical error
 }
@@ -76,7 +76,7 @@ export async function getUsers(): Promise<ApiResponse<User[]>> {
 export async function getUserById(id: string): Promise<ApiResponse<User>> {
   try {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    
+
     if (!user) {
       return { success: false, error: 'User not found' };
     }
@@ -112,12 +112,12 @@ export async function getUserByEmail(email: string): Promise<ApiResponse<User>> 
 export async function createUser(userData: NewUser): Promise<ApiResponse<User>> {
   try {
     const [newUser] = await db.insert(users).values(userData).returning();
-    
+
     // IMPORTANT: Always sync role to custom claims when creating a user
     if (newUser && newUser.role) {
       await syncRoleToCustomClaims(newUser.id, newUser.role);
     }
-    
+
     return { success: true, data: newUser };
   } catch (error) {
     console.error('Error creating user:', error);
@@ -141,7 +141,7 @@ export async function updateUser(id: string, userData: Partial<NewUser>): Promis
     }
 
     // If role was updated, sync to custom claims
-    if (userData.role) {
+    if (userData.role && updatedUser.role) {
       await syncRoleToCustomClaims(updatedUser.id, updatedUser.role);
     }
 
@@ -170,9 +170,9 @@ export async function deleteUser(id: string): Promise<ApiResponse<void>> {
 
     if (authError) {
       console.error('Error deleting user from auth:', authError);
-      return { 
-        success: false, 
-        error: `User deleted from database but failed to delete from authentication: ${authError.message}` 
+      return {
+        success: false,
+        error: `User deleted from database but failed to delete from authentication: ${authError.message}`
       };
     }
 
@@ -193,20 +193,22 @@ export async function initializeCustomClaims(): Promise<ApiResponse<{ synced: nu
     const allUsers = await db.select({ id: users.id, role: users.role }).from(users);
 
     let syncedCount = 0;
-    
+
     // Sync each user's role to custom claims
     for (const user of allUsers) {
       try {
-        await syncRoleToCustomClaims(user.id, user.role);
+        if (user.role) {
+          await syncRoleToCustomClaims(user.id, user.role);
+        }
         syncedCount++;
       } catch (error) {
         console.error(`Failed to sync user ${user.id}:`, error);
       }
     }
 
-    return { 
-      success: true, 
-      data: { synced: syncedCount } 
+    return {
+      success: true,
+      data: { synced: syncedCount }
     };
   } catch (error) {
     console.error('Error initializing custom claims:', error);

@@ -1,174 +1,288 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import Image from "next/image";
+import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { X, Plus } from "lucide-react";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { Upload, X } from "lucide-react";
+import { useCreateProduct } from "../hooks/useProducts";
+import { uploadMenuImage } from "@/lib/image-upload";
 import type { NewProduct } from "../services/product-supabase-service";
-import type { Category } from "../services/category-supabase-service";
+import { ModifierManager } from "@/components/modifier-manager";
 
 interface CreateProductFormProps {
-  categories: Category[];
-  selectedCategoryId?: string;
-  onSubmit: (productData: Omit<NewProduct, "businessId">) => void;
-  onCancel: () => void;
-  isSubmitting?: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  businessId: string;
+  categoryId?: string;
 }
 
 export function CreateProductForm({
-  categories,
-  selectedCategoryId,
-  onSubmit,
-  onCancel,
-  isSubmitting = false,
+  open,
+  onOpenChange,
+  businessId,
+  categoryId,
 }: CreateProductFormProps) {
   const [formData, setFormData] = useState<Omit<NewProduct, "businessId">>({
-    categoryId: selectedCategoryId || "",
+    categoryId: categoryId || "",
     name: "",
     nameAr: "",
     description: "",
+    price: 0,
     sku: "",
     barcode: "",
-    price: 0,
     images: [],
+    variants: [],
+    modifiers: [],
     tags: [],
     isActive: true,
     isFeatured: false,
-    stockQuantity: undefined,
+    stockQuantity: 0,
     metadata: {},
   });
 
-  const [newTag, setNewTag] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  const createProductMutation = useCreateProduct();
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Product name is required";
-    }
-
-    if (!formData.categoryId) {
-      newErrors.categoryId = "Category is required";
-    }
-
-    if (formData.price <= 0) {
-      newErrors.price = "Price must be greater than 0";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (validateForm()) {
-      onSubmit(formData);
+    if (!formData.name || !formData.nameAr || !formData.price) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      let imageUrl = "";
+
+      // Upload image if selected
+      if (selectedFile) {
+        setIsUploading(true);
+        try {
+          const uploadedUrl = await uploadMenuImage(selectedFile, "products");
+          imageUrl = uploadedUrl || "";
+        } catch (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          toast.error("Failed to upload image");
+          setIsUploading(false);
+          return;
+        }
+        setIsUploading(false);
+      }
+
+      const productData = {
+        ...formData,
+        businessId,
+        price: Number(formData.price),
+        stockQuantity: Number(formData.stockQuantity),
+        images: imageUrl ? [imageUrl] : [],
+      };
+
+      await createProductMutation.mutateAsync(productData);
+
+      toast.success("Product created successfully! 🎉", {
+        description: "The product will appear in the list automatically",
+      });
+
+      // Reset form
+      setFormData({
+        categoryId: categoryId || "",
+        name: "",
+        nameAr: "",
+        description: "",
+        price: 0,
+        sku: "",
+        barcode: "",
+        images: [],
+        variants: [],
+        modifiers: [],
+        tags: [],
+        isActive: true,
+        isFeatured: false,
+        stockQuantity: 0,
+        metadata: {},
+      });
+      setSelectedFile(null);
+      setPreviewUrl("");
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error creating product:", error);
+      toast.error("Failed to create product");
     }
   };
 
-  const handleAddTag = () => {
-    if (newTag.trim() && !formData.tags?.includes(newTag.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        tags: [...(prev.tags || []), newTag.trim()],
-      }));
-      setNewTag("");
-    }
-  };
+  const handleImageUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        // Validate file type
+        if (!file.type.startsWith("image/")) {
+          toast.error("Please select an image file");
+          return;
+        }
 
-  const handleRemoveTag = (tagToRemove: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      tags: prev.tags?.filter((tag) => tag !== tagToRemove) || [],
-    }));
-  };
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error("Image size should be less than 5MB");
+          return;
+        }
+
+        setSelectedFile(file);
+
+        // Create preview URL
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPreviewUrl(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+    []
+  );
+
+  const removeImage = useCallback(() => {
+    setSelectedFile(null);
+    setPreviewUrl("");
+    setFormData((prev) => ({ ...prev, images: [] }));
+
+    // Reset file input
+    const fileInput = document.getElementById(
+      "createProductImageFile"
+    ) as HTMLInputElement;
+    if (fileInput) fileInput.value = "";
+  }, []);
 
   return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>Create New Product</CardTitle>
-      </CardHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create New Product</DialogTitle>
+          <DialogDescription>
+            Add a new product to your inventory.
+          </DialogDescription>
+        </DialogHeader>
 
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-6">
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Basic Information</h3>
-
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            {/* English Name */}
             <div className="space-y-2">
-              <Label htmlFor="name">Product Name *</Label>
+              <Label htmlFor="name">English Name *</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                placeholder="Enter product name"
-                className={errors.name ? "border-destructive" : ""}
+                placeholder="e.g., Premium Coffee"
+                required
               />
-              {errors.name && (
-                <p className="text-sm text-destructive">{errors.name}</p>
-              )}
             </div>
 
+            {/* Arabic Name */}
             <div className="space-y-2">
-              <Label htmlFor="nameAr">Product Name (Arabic)</Label>
+              <Label htmlFor="nameAr">Arabic Name *</Label>
               <Input
                 id="nameAr"
-                value={formData.nameAr || ""}
+                value={formData.nameAr}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, nameAr: e.target.value }))
                 }
-                placeholder="Enter Arabic name"
+                placeholder="e.g., قهوة فاخرة"
                 dir="rtl"
+                required
               />
             </div>
 
+            {/* Image Upload */}
             <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
-              <select
-                id="category"
-                value={formData.categoryId}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    categoryId: e.target.value,
-                  }))
-                }
-                className={`w-full px-3 py-2 border rounded-md bg-background ${
-                  errors.categoryId ? "border-destructive" : ""
-                }`}
-              >
-                <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-              {errors.categoryId && (
-                <p className="text-sm text-destructive">{errors.categoryId}</p>
-              )}
+              <Label htmlFor="createProductImageFile">
+                Product Image (Optional)
+              </Label>
+              <div className="space-y-3">
+                <Input
+                  id="createProductImageFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="cursor-pointer"
+                />
+
+                {/* Image Preview */}
+                {(previewUrl ||
+                  (formData.images && formData.images.length > 0)) && (
+                  <div className="relative w-full h-48 border-2 border-dashed border-gray-200 rounded-lg overflow-hidden">
+                    <Image
+                      src={
+                        previewUrl ||
+                        getReliableImageUrl(
+                          (formData.images || [])[0],
+                          "product"
+                        )
+                      }
+                      alt="Product preview"
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute top-2 right-2">
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
+                        title="Remove image"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {/* Indicator for new image */}
+                    {selectedFile && (
+                      <div className="absolute bottom-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                        New Image
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Upload Instructions */}
+                {!previewUrl &&
+                  !(formData.images && formData.images.length > 0) && (
+                    <div className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg">
+                      <div className="text-center">
+                        <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">
+                          Click to upload or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          PNG, JPG up to 5MB
+                        </p>
+                      </div>
+                    </div>
+                  )}
+              </div>
             </div>
 
+            {/* Description */}
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <textarea
+              <Textarea
                 id="description"
-                value={formData.description || ""}
+                value={formData.description}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
@@ -177,64 +291,40 @@ export function CreateProductForm({
                 }
                 placeholder="Enter product description"
                 rows={3}
-                className="w-full px-3 py-2 border rounded-md bg-background resize-none"
               />
             </div>
-          </div>
 
-          {/* Pricing and Inventory */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Pricing & Inventory</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="price">Price *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      price: parseFloat(e.target.value) || 0,
-                    }))
-                  }
-                  placeholder="0.00"
-                  className={errors.price ? "border-destructive" : ""}
-                />
-                {errors.price && (
-                  <p className="text-sm text-destructive">{errors.price}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="stockQuantity">Stock Quantity</Label>
-                <Input
-                  id="stockQuantity"
-                  type="number"
-                  min="0"
-                  value={formData.stockQuantity || ""}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      stockQuantity: e.target.value
-                        ? parseInt(e.target.value)
-                        : undefined,
-                    }))
-                  }
-                  placeholder="Unlimited"
-                />
-              </div>
+            {/* Price */}
+            <div className="space-y-2">
+              <Label htmlFor="price">Price (SAR) *</Label>
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.price}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    price: parseFloat(e.target.value) || 0,
+                  }))
+                }
+                placeholder="0.00"
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Note: Modifier prices are separate and will be added to this
+                base price during checkout.
+              </p>
             </div>
 
+            {/* SKU and Barcode */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="sku">SKU</Label>
                 <Input
                   id="sku"
-                  value={formData.sku || ""}
+                  value={formData.sku}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, sku: e.target.value }))
                   }
@@ -243,104 +333,131 @@ export function CreateProductForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="barcode">Barcode</Label>
+                <Label htmlFor="stockQuantity">Stock Quantity</Label>
                 <Input
-                  id="barcode"
-                  value={formData.barcode || ""}
+                  id="stockQuantity"
+                  type="number"
+                  min="0"
+                  value={formData.stockQuantity}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      barcode: e.target.value,
+                      stockQuantity: parseInt(e.target.value) || 0,
                     }))
                   }
-                  placeholder="Product barcode"
+                  placeholder="0"
                 />
               </div>
             </div>
-          </div>
 
-          {/* Tags */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Tags</h3>
-
-            <div className="flex gap-2">
+            {/* Additional Fields */}
+            <div className="space-y-2">
+              <Label htmlFor="barcode">Barcode</Label>
               <Input
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Add a tag"
-                onKeyPress={(e) =>
-                  e.key === "Enter" && (e.preventDefault(), handleAddTag())
+                id="barcode"
+                value={formData.barcode}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, barcode: e.target.value }))
                 }
+                placeholder="Product barcode"
               />
-              <Button type="button" onClick={handleAddTag} size="sm">
-                <Plus className="w-4 h-4" />
-              </Button>
             </div>
 
-            {formData.tags && formData.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {formData.tags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    {tag}
-                    <X
-                      className="w-3 h-3 cursor-pointer"
-                      onClick={() => handleRemoveTag(tag)}
-                    />
-                  </Badge>
-                ))}
+            {/* Modifiers */}
+            <div className="space-y-2">
+              <Label>Modifiers</Label>
+              <ModifierManager
+                modifiers={(formData.modifiers || []).map((mod) => ({
+                  id: mod.id,
+                  name: mod.name,
+                  type: mod.type === "single" ? "extra" : "without",
+                  price: mod.options?.[0]?.price || 0,
+                }))}
+                onModifiersChange={(modifiers) => {
+                  const productModifiers = modifiers.map((mod) => ({
+                    id: mod.id,
+                    name: mod.name,
+                    nameAr: mod.name,
+                    type: "single" as const,
+                    isRequired: false,
+                    maxSelections: 1,
+                    minSelections: 0,
+                    options: [
+                      {
+                        id: mod.id + "_option",
+                        name: mod.name,
+                        nameAr: mod.name,
+                        price: mod.price,
+                        isDefault: false,
+                        isActive: true,
+                        metadata: {},
+                      },
+                    ],
+                    displayOrder: 0,
+                    isActive: true,
+                    metadata: {},
+                  }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    modifiers: productModifiers,
+                  }));
+                }}
+              />
+            </div>
+
+            {/* Active/Featured Switches */}
+            <div className="flex gap-6">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isActive"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, isActive: checked }))
+                  }
+                />
+                <Label htmlFor="isActive">Active</Label>
               </div>
-            )}
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isFeatured"
+                  checked={formData.isFeatured}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, isFeatured: checked }))
+                  }
+                />
+                <Label htmlFor="isFeatured">Featured</Label>
+              </div>
+            </div>
           </div>
 
-          {/* Settings */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Settings</h3>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Active</Label>
-                <p className="text-sm text-muted-foreground">
-                  Product is available for sale
-                </p>
-              </div>
-              <Switch
-                checked={formData.isActive}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, isActive: checked }))
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Featured</Label>
-                <p className="text-sm text-muted-foreground">
-                  Highlight this product
-                </p>
-              </div>
-              <Switch
-                checked={formData.isFeatured}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, isFeatured: checked }))
-                }
-              />
-            </div>
-          </div>
-        </CardContent>
-
-        <CardFooter className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Product"}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={createProductMutation.isPending || isUploading}
+              className="min-w-[120px]"
+            >
+              {isUploading ? (
+                <>
+                  <Upload className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : createProductMutation.isPending ? (
+                "Creating..."
+              ) : (
+                "Create Product"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

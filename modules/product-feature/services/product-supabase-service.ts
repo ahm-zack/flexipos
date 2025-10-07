@@ -228,12 +228,12 @@ class ProductSupabaseService {
     }
 
     /**
-     * Delete a product (soft delete)
+     * Delete a product (hard delete)
      */
     async deleteProduct(id: string): Promise<void> {
         const { error } = await this.supabase
             .from('products')
-            .update({ is_active: false, updated_at: new Date().toISOString() })
+            .delete()
             .eq('id', id);
 
         if (error) {

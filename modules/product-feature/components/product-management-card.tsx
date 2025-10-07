@@ -1,139 +1,108 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Eye } from "lucide-react";
 import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { getReliableImageUrl } from "@/lib/image-utils";
+import { Edit, Trash2 } from "lucide-react";
 import type { Product } from "../services/product-supabase-service";
 
 interface ProductManagementCardProps {
   product: Product;
   onEdit?: (product: Product) => void;
-  onDelete?: (productId: string) => void;
-  onView?: (product: Product) => void;
+  onDelete?: (product: Product) => void;
 }
 
 export function ProductManagementCard({
   product,
   onEdit,
   onDelete,
-  onView,
 }: ProductManagementCardProps) {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
-
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-lg line-clamp-2">{product.name}</CardTitle>
-          <Badge variant={product.isActive ? "default" : "secondary"}>
-            {product.isActive ? "Active" : "Inactive"}
-          </Badge>
-        </div>
-        {product.nameAr && (
-          <p className="text-sm text-muted-foreground" dir="rtl">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow duration-200">
+      {/* Product Image */}
+      <div className="relative h-48 bg-gray-100 dark:bg-gray-700">
+        {product.images && product.images.length > 0 ? (
+          <Image
+            src={getReliableImageUrl(product.images[0], "product")}
+            alt={product.name}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="h-full flex items-center justify-center">
+            <span className="text-gray-400 text-sm">No Image</span>
+          </div>
+        )}
+      </div>
+
+      {/* Product Details */}
+      <div className="p-4 space-y-3">
+        {/* Product Names */}
+        <div>
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-white line-clamp-1">
+            {product.name}
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-1">
             {product.nameAr}
           </p>
-        )}
-      </CardHeader>
+        </div>
 
-      <CardContent className="flex-1 pb-3">
-        {product.images && product.images.length > 0 && (
-          <div className="aspect-video mb-3 rounded-md overflow-hidden bg-muted">
-            <Image
-              src={product.images[0]}
-              alt={product.name}
-              width={400}
-              height={300}
-              className="w-full h-full object-cover"
+        {/* Category Badge */}
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="secondary"
+            className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-blue-200 dark:border-blue-800"
+          >
+            {product.categoryId}
+          </Badge>
+        </div>
+
+        {/* Price */}
+        <div className="flex items-center justify-between">
+          <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+            ${product.price.toFixed(2)}
+          </span>
+
+          {/* Status Indicator */}
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                product.isActive ? "bg-green-500" : "bg-gray-400"
+              }`}
             />
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-lg font-semibold">
-              {formatPrice(product.price)}
+            <span className="text-sm text-gray-600 dark:text-gray-300">
+              {product.isActive ? "Active" : "Inactive"}
             </span>
           </div>
+        </div>
 
-          {product.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {product.description}
-            </p>
+        {/* Action Buttons */}
+        <div className="flex gap-2 pt-2">
+          {onEdit && (
+            <Button
+              onClick={() => onEdit(product)}
+              variant="outline"
+              size="sm"
+              className="flex-1 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-900/20"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
           )}
-
-          <div className="flex flex-wrap gap-1">
-            {product.tags?.map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-
-          {product.variants && product.variants.length > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {product.variants.length} variant
-              {product.variants.length > 1 ? "s" : ""}
-            </p>
-          )}
-
-          {product.modifiers && product.modifiers.length > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {product.modifiers.length} modifier
-              {product.modifiers.length > 1 ? "s" : ""}
-            </p>
+          {onDelete && (
+            <Button
+              onClick={() => onDelete(product)}
+              variant="outline"
+              size="sm"
+              className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-300 dark:hover:bg-red-900/20"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
           )}
         </div>
-      </CardContent>
-
-      <CardFooter className="pt-3 flex gap-2">
-        {onView && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => onView(product)}
-          >
-            <Eye className="w-4 h-4 mr-1" />
-            View
-          </Button>
-        )}
-        {onEdit && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => onEdit(product)}
-          >
-            <Edit className="w-4 h-4 mr-1" />
-            Edit
-          </Button>
-        )}
-        {onDelete && (
-          <Button
-            variant="destructive"
-            size="sm"
-            className="flex-1"
-            onClick={() => onDelete(product.id)}
-          >
-            <Trash2 className="w-4 h-4 mr-1" />
-            Delete
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

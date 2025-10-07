@@ -3,24 +3,22 @@ import { create } from "zustand";
 
 interface MenuSearchStore {
     searchTerm: string;
+    currentCategory: string;
     setSearchTerm: (term: string) => void;
+    setCurrentCategory: (category: string) => void;
+    clearSearch: () => void;
     filterItems: <T extends { nameEn?: string; nameAr?: string; type?: string; size?: string | null; crust?: string | null }>(items: T[]) => T[];
-    filterSandwiches: <T extends { nameEn?: string; nameAr?: string; type?: string; size?: string }>(sandwiches: T[]) => T[];
-    filterPizzas: <T extends { nameEn?: string; nameAr?: string; type?: string; crust?: string | null }>(pizzas: T[]) => T[];
-    filterPies: <T extends { nameEn?: string; nameAr?: string; type?: string; size?: string }>(pies: T[]) => T[];
-    filterMiniPies: <T extends { nameEn?: string; nameAr?: string; type?: string; size?: string }>(miniPies: T[]) => T[];
-    filterAppetizers: <T extends { nameEn?: string; nameAr?: string }>(appetizers: T[]) => T[];
-    filterBurgers: <T extends { nameEn?: string; nameAr?: string }>(burgers: T[]) => T[];
-    filterBeverages: <T extends { nameEn?: string; nameAr?: string }>(beverages: T[]) => T[];
-    filterSideOrders: <T extends { nameEn?: string; nameAr?: string }>(sideOrders: T[]) => T[];
-    filterShawarma: <T extends { nameEn?: string; nameAr?: string }>(shawarma: T[]) => T[];
+    filterProducts: <T extends { name?: string; nameAr?: string; description?: string }>(products: T[]) => T[];
 }
 
 export const useSearchStore = create<MenuSearchStore>((set, get) => ({
     searchTerm: "",
+    currentCategory: "",
     setSearchTerm: (term) => set({ searchTerm: term }),
+    setCurrentCategory: (category) => set({ currentCategory: category }),
+    clearSearch: () => set({ searchTerm: "", currentCategory: "" }),
 
-    // Generic filter function
+    // Generic filter function for legacy items (pizzas, pies, etc.)
     filterItems: (items) => {
         const { searchTerm } = get();
         const filtered = items?.filter((item) =>
@@ -33,93 +31,14 @@ export const useSearchStore = create<MenuSearchStore>((set, get) => ({
         return filtered || [];
     },
 
-
-
-    // Product-specific filter functions for backward compatibility
-    filterSandwiches: (items) => {
+    // Product filter function for dynamic categories
+    filterProducts: (products) => {
         const { searchTerm } = get();
-        const filtered = items?.filter((item) =>
-            item.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.nameAr?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.size?.toLowerCase().includes(searchTerm.toLowerCase())
+        const filtered = products?.filter((product) =>
+            product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            product.nameAr?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            product.description?.toLowerCase().includes(searchTerm.toLowerCase())
         )
-        return filtered || [];
-    },
-
-    filterPizzas: (items) => {
-        const { searchTerm } = get();
-        const filtered = items?.filter((item) =>
-            item.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.nameAr?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.crust && item.crust.toLowerCase().includes(searchTerm.toLowerCase()))
-        )
-        return filtered || [];
-    },
-
-    filterPies: (items) => {
-        const { searchTerm } = get();
-        const filtered = items?.filter((item) =>
-            item.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.nameAr?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.size?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-        return filtered || [];
-    },
-
-    filterMiniPies: (items) => {
-        const { searchTerm } = get();
-        const filtered = items?.filter((item) =>
-            item.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.nameAr?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.size?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-        return filtered || [];
-    },
-    filterBeverages: (items) => {
-        const { searchTerm } = get();
-        const filtered = items?.filter((item) =>
-            item.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.nameAr?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        return filtered || [];
-    },
-
-    // Newest 5 items filters
-    filterAppetizers: <T extends { nameEn?: string; nameAr?: string }>(items: T[]) => {
-        const { searchTerm } = get();
-        const filtered = items?.filter((item) =>
-            item.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.nameAr?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        return filtered || [];
-    },
-    filterBurgers: <T extends { nameEn?: string; nameAr?: string }>(items: T[]) => {
-        const { searchTerm } = get();
-        const filtered = items?.filter((item) =>
-            item.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.nameAr?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        return filtered || [];
-    },
-
-    filterSideOrders: <T extends { nameEn?: string; nameAr?: string }>(items: T[]) => {
-        const { searchTerm } = get();
-        const filtered = items?.filter((item) =>
-            item.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.nameAr?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        return filtered || [];
-    },
-    filterShawarma: <T extends { nameEn?: string; nameAr?: string }>(items: T[]) => {
-        const { searchTerm } = get();
-        const filtered = items?.filter((item) =>
-            item.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.nameAr?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
         return filtered || [];
     },
 }));

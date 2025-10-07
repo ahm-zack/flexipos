@@ -1,5 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { orderClientService, type OrdersListResult, type OrderHistoryResult } from '@/lib/supabase-queries/order-client-service';
+import { orderClientService } from '@/lib/order-client-service';
+// TODO: Define these types properly based on API response
+type OrdersListResult = {
+  orders: Array<{
+    id: string;
+    orderNumber: string;
+    dailySerial?: string;
+    status: string;
+    totalAmount: string | number;
+    customerName?: string;
+    cashierName?: string;
+    paymentMethod: string;
+    deliveryPlatform?: string;
+    createdAt: string;
+    discountAmount?: number;
+    discountType?: string;
+    discountValue?: number;
+    items?: Array<Record<string, unknown>>;
+  }>;
+  total: number;
+  totalPages: number;
+  currentPage: number;
+  totalCount: number;
+};
+type OrderHistoryResult = Array<Record<string, unknown>>;
 import type {
   Order,
   CanceledOrder,

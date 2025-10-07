@@ -33,10 +33,10 @@ import { PriceDisplay, SaudiRiyalSymbol } from "@/components/currency";
 import { cn } from "@/lib/utils";
 import { ApiOrder, useCreateOrder } from "@/modules/orders-feature";
 import { useUpdateCustomerPurchases } from "@/modules/customer-feature";
-import { CustomerClientService } from "@/lib/supabase-queries/customer-client-service";
+import { customerService } from "@/lib/supabase-queries/customer-client-service";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { RestaurantReceipt } from "@/components/restaurant-receipt";
 import { Dialog } from "@radix-ui/react-dialog";
 import { CashCalculatorDialog } from "@/components/cash-calculator-dialog";
@@ -130,7 +130,7 @@ export function CartPanel({ className }: CartPanelProps) {
   const createOrder = useCreateOrder();
   const updateCustomerPurchases = useUpdateCustomerPurchases();
   const { user: currentUser, loading: userLoading } = useCurrentUser();
-  const customerService = useMemo(() => new CustomerClientService(), []);
+  // Using imported customerService singleton
 
   // Event discount store
   const eventDiscount = useEventDiscountStore();
@@ -211,7 +211,7 @@ export function CartPanel({ className }: CartPanelProps) {
 
     const timeoutId = setTimeout(searchCustomer, 500); // Debounce
     return () => clearTimeout(timeoutId);
-  }, [customerPhone, customerService]);
+  }, [customerPhone]);
 
   const clearCustomerData = () => {
     setCustomerPhone("");
@@ -363,6 +363,10 @@ export function CartPanel({ className }: CartPanelProps) {
 
     createOrder.mutate(orderData, {
       onSuccess: async (data) => {
+        if (!data) {
+          toast.error("Order created but no data returned");
+          return;
+        }
         // Show payment-specific notifications
         if (paymentMethod === "cash" && changeAmount > 0) {
           toast.success(

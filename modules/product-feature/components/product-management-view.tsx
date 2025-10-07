@@ -1,162 +1,172 @@
 "use client";
 
 import { useState } from "react";
+import { Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Filter } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { ProductGrid } from "./product-grid";
+import { EditProductForm } from "./edit-product-form";
+import { CreateProductForm } from "./create-product-form";
+import { useDeleteProduct } from "../hooks/useProducts";
 import type { Product } from "../services/product-supabase-service";
 
 interface ProductManagementViewProps {
   products: Product[];
-  onEdit?: (product: Product) => void;
-  onDelete?: (productId: string) => void;
-  onView?: (product: Product) => void;
-  onCreateNew?: () => void;
   isLoading?: boolean;
   categoryName?: string;
+  businessId: string;
+  categoryId?: string;
 }
 
 export function ProductManagementView({
   products,
-  onEdit,
-  onDelete,
-  onView,
-  onCreateNew,
   isLoading = false,
   categoryName,
+  businessId,
+  categoryId,
 }: ProductManagementViewProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "active" | "inactive"
-  >("all");
+  const deleteProductMutation = useDeleteProduct();
 
-  // Filter products based on search and status
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.nameAr?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  const [searchTerm, setSearchTerm] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [productToEdit, setProductToEdit] = useState<Product | null>(null);
 
-    const matchesStatus =
-      statusFilter === "all"
-        ? true
-        : statusFilter === "active"
-        ? product.isActive
-        : !product.isActive;
+  // Filter products based on search term
+  const filteredProducts =
+    products?.filter(
+      (product) =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.nameAr?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
-    return matchesSearch && matchesStatus;
-  });
+  const handleEdit = (product: Product) => {
+    setProductToEdit(product);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
+
+    try {
+      await deleteProductMutation.mutateAsync(productToDelete.id);
+      toast.success(`${productToDelete.name} deleted successfully`);
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error("Failed to delete product");
+    }
+  };
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-          <div className="h-10 w-32 bg-muted animate-pulse rounded" />
-        </div>
-        <div className="h-10 w-full bg-muted animate-pulse rounded" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-80 bg-muted animate-pulse rounded-lg"
-            />
-          ))}
-        </div>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-lg">Loading products...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">
-            {categoryName ? `${categoryName} Products` : "Product Management"}
-          </h2>
-          <p className="text-muted-foreground">
-            Manage your products, prices, and availability
-          </p>
-        </div>
-        {onCreateNew && (
-          <Button onClick={onCreateNew} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">{categoryName} Products</h1>
+            <p className="text-muted-foreground">
+              Manage your products, add new items, and update details.
+            </p>
+          </div>
+
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
             Add Product
           </Button>
-        )}
-      </div>
+        </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="Search products by name, description, or tags..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+        <div className="mt-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <ProductGrid
+            products={filteredProducts}
+            onEdit={handleEdit}
+            onDelete={handleDeleteClick}
           />
         </div>
 
-        <div className="flex gap-2">
-          <Button
-            variant={showFilters ? "default" : "outline"}
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2"
-          >
-            <Filter className="w-4 h-4" />
-            Filters
-          </Button>
-        </div>
-      </div>
-
-      {/* Filters Panel */}
-      {showFilters && (
-        <div className="p-4 border rounded-lg bg-muted/50">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Status</label>
-              <select
-                value={statusFilter}
-                onChange={(e) =>
-                  setStatusFilter(
-                    e.target.value as "all" | "active" | "inactive"
-                  )
-                }
-                className="px-3 py-2 border rounded-md bg-background"
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Product</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete &quot;{productToDelete?.name}
+                &quot;? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
               >
-                <option value="all">All Products</option>
-                <option value="active">Active Only</option>
-                <option value="inactive">Inactive Only</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteConfirm}
+                disabled={deleteProductMutation.isPending}
+              >
+                {deleteProductMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {/* Results Summary */}
-      <div className="flex justify-between items-center text-sm text-muted-foreground">
-        <span>
-          Showing {filteredProducts.length} of {products.length} products
-        </span>
-        {searchQuery && (
-          <span>Search results for &ldquo;{searchQuery}&rdquo;</span>
-        )}
+        {/* Create Product Form */}
+        <CreateProductForm
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          businessId={businessId}
+          categoryId={categoryId || products[0]?.categoryId || ""}
+        />
+
+        {/* Edit Product Form */}
+        <EditProductForm
+          product={productToEdit}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+        />
       </div>
-
-      {/* Product Grid */}
-      <ProductGrid
-        products={filteredProducts}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onView={onView}
-      />
     </div>
   );
 }

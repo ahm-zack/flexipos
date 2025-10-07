@@ -22,6 +22,7 @@ export function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
     pathname?.includes("/customers") ||
     pathname?.includes("/users") ||
     pathname?.includes("/reports") ||
+    pathname?.includes("/inventory") ||
     pathname === "/admin";
 
   const user = fullUserData

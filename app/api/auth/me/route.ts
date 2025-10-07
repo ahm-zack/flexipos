@@ -22,7 +22,7 @@ export async function GET() {
             success: true,
             data: {
                 id: userResult.data.id,
-                name: userResult.data.name,
+                name: userResult.data.fullName,
                 email: userResult.data.email,
                 role: currentUser.role,
             }
