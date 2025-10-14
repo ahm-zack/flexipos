@@ -142,6 +142,48 @@ export type Database = {
         }
         Relationships: []
       }
+      canceled_orders: {
+        Row: {
+          canceled_at: string
+          canceled_by: string
+          id: string
+          order_data: Json
+          original_order_id: string
+          reason: string | null
+        }
+        Insert: {
+          canceled_at?: string
+          canceled_by: string
+          id?: string
+          order_data: Json
+          original_order_id: string
+          reason?: string | null
+        }
+        Update: {
+          canceled_at?: string
+          canceled_by?: string
+          id?: string
+          order_data?: Json
+          original_order_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canceled_orders_canceled_by_fkey"
+            columns: ["canceled_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canceled_orders_original_order_id_fkey"
+            columns: ["original_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           business_id: string
@@ -194,6 +236,143 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modified_orders: {
+        Row: {
+          id: string
+          modification_type: Database["public"]["Enums"]["modification_type"]
+          modified_at: string
+          modified_by: string
+          new_data: Json
+          original_data: Json
+          original_order_id: string
+        }
+        Insert: {
+          id?: string
+          modification_type: Database["public"]["Enums"]["modification_type"]
+          modified_at?: string
+          modified_by: string
+          new_data: Json
+          original_data: Json
+          original_order_id: string
+        }
+        Update: {
+          id?: string
+          modification_type?: Database["public"]["Enums"]["modification_type"]
+          modified_at?: string
+          modified_by?: string
+          new_data?: Json
+          original_data?: Json
+          original_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modified_orders_modified_by_fkey"
+            columns: ["modified_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "modified_orders_original_order_id_fkey"
+            columns: ["original_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          card_amount: number | null
+          cash_amount: number | null
+          cash_received: number | null
+          change_amount: number | null
+          created_at: string
+          created_by: string
+          customer_name: string | null
+          daily_serial: string | null
+          delivery_platform:
+            | Database["public"]["Enums"]["delivery_platform"]
+            | null
+          discount_amount: number | null
+          discount_type: string | null
+          discount_value: number | null
+          event_discount_amount: number | null
+          event_discount_name: string | null
+          event_discount_percentage: number | null
+          id: string
+          items: Json
+          order_number: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          serial_date: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          card_amount?: number | null
+          cash_amount?: number | null
+          cash_received?: number | null
+          change_amount?: number | null
+          created_at?: string
+          created_by: string
+          customer_name?: string | null
+          daily_serial?: string | null
+          delivery_platform?:
+            | Database["public"]["Enums"]["delivery_platform"]
+            | null
+          discount_amount?: number | null
+          discount_type?: string | null
+          discount_value?: number | null
+          event_discount_amount?: number | null
+          event_discount_name?: string | null
+          event_discount_percentage?: number | null
+          id?: string
+          items: Json
+          order_number: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          serial_date?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          card_amount?: number | null
+          cash_amount?: number | null
+          cash_received?: number | null
+          change_amount?: number | null
+          created_at?: string
+          created_by?: string
+          customer_name?: string | null
+          daily_serial?: string | null
+          delivery_platform?:
+            | Database["public"]["Enums"]["delivery_platform"]
+            | null
+          discount_amount?: number | null
+          discount_type?: string | null
+          discount_value?: number | null
+          event_discount_amount?: number | null
+          event_discount_name?: string | null
+          event_discount_percentage?: number | null
+          id?: string
+          items?: Json
+          order_number?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          serial_date?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -332,7 +511,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      delivery_platform: "keeta" | "hunger_station" | "jahez"
+      modification_type:
+        | "item_added"
+        | "item_removed"
+        | "quantity_changed"
+        | "item_replaced"
+        | "multiple_changes"
+      order_status: "completed" | "canceled" | "modified"
+      payment_method: "cash" | "card" | "mixed" | "delivery"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -462,7 +649,18 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      delivery_platform: ["keeta", "hunger_station", "jahez"],
+      modification_type: [
+        "item_added",
+        "item_removed",
+        "quantity_changed",
+        "item_replaced",
+        "multiple_changes",
+      ],
+      order_status: ["completed", "canceled", "modified"],
+      payment_method: ["cash", "card", "mixed", "delivery"],
+    },
   },
 } as const
 

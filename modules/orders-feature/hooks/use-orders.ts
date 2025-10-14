@@ -1,37 +1,31 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orderClientService } from '@/lib/order-client-service';
-// TODO: Define these types properly based on API response
+import type { Database } from '@/database.types';
+import type { OrderFilters } from '@/lib/order-service';
+
+// Database types
+type Order = Database['public']['Tables']['orders']['Row'];
+type CanceledOrder = Database['public']['Tables']['canceled_orders']['Row'];
+type ModifiedOrder = Database['public']['Tables']['modified_orders']['Row'];
+type CreateOrder = Database['public']['Tables']['orders']['Insert'];
+type OrderItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  modifiers?: Array<{ name: string; price: number }>;
+};
+
+// API response types
 type OrdersListResult = {
-  orders: Array<{
-    id: string;
-    orderNumber: string;
-    dailySerial?: string;
-    status: string;
-    totalAmount: string | number;
-    customerName?: string;
-    cashierName?: string;
-    paymentMethod: string;
-    deliveryPlatform?: string;
-    createdAt: string;
-    discountAmount?: number;
-    discountType?: string;
-    discountValue?: number;
-    items?: Array<Record<string, unknown>>;
-  }>;
+  orders: Order[];
   total: number;
   totalPages: number;
   currentPage: number;
   totalCount: number;
 };
-type OrderHistoryResult = Array<Record<string, unknown>>;
-import type {
-  Order,
-  CanceledOrder,
-  ModifiedOrder,
-  CreateOrder,
-  OrderItem
-} from '@/lib/orders';
-import type { OrderFilters } from '@/lib/order-service';
+
+
 
 // Query keys
 export const orderKeys = {
@@ -58,8 +52,51 @@ const fetchOrderById = async (id: string): Promise<Order & { cashierName?: strin
   return await orderClientService.getOrderById(id);
 };
 
-const createOrder = async (orderData: CreateOrder): Promise<Order> => {
-  return await orderClientService.createOrder(orderData);
+// Client-side order creation data (using camelCase for better UX)
+type ClientOrderData = {
+  customerName?: string;
+  items: OrderItem[];
+  totalAmount: number;
+  paymentMethod: Database['public']['Enums']['payment_method'];
+  deliveryPlatform?: Database['public']['Enums']['delivery_platform'];
+  discountType?: string;
+  discountValue?: number;
+  discountAmount?: number;
+  eventDiscountName?: string;
+  eventDiscountPercentage?: number;
+  cashAmount?: number;
+  cardAmount?: number;
+  cashReceived?: number;
+  changeAmount?: number;
+  createdBy: string;
+  orderNumber: string;
+};
+
+// Convert client data to database format
+const mapClientOrderToDatabase = (clientData: ClientOrderData): CreateOrder => {
+  return {
+    customer_name: clientData.customerName || null,
+    items: clientData.items,
+    total_amount: clientData.totalAmount,
+    payment_method: clientData.paymentMethod,
+    delivery_platform: clientData.deliveryPlatform || null,
+    discount_type: clientData.discountType || null,
+    discount_value: clientData.discountValue || null,
+    discount_amount: clientData.discountAmount || null,
+    event_discount_name: clientData.eventDiscountName || null,
+    event_discount_percentage: clientData.eventDiscountPercentage || null,
+    cash_amount: clientData.cashAmount || null,
+    card_amount: clientData.cardAmount || null,
+    cash_received: clientData.cashReceived || null,
+    change_amount: clientData.changeAmount || null,
+    created_by: clientData.createdBy,
+    order_number: clientData.orderNumber,
+  };
+};
+
+const createOrder = async (orderData: ClientOrderData): Promise<Order> => {
+  const dbOrderData = mapClientOrderToDatabase(orderData);
+  return await orderClientService.createOrder(dbOrderData);
 };
 
 const updateOrder = async ({
@@ -71,13 +108,13 @@ const updateOrder = async ({
     customerName?: string;
     items?: OrderItem[];
     totalAmount?: number;
-    status?: 'completed' | 'canceled' | 'modified';
+    status?: Database['public']['Enums']['order_status'];
   }
 }): Promise<Order> => {
   const updateData: Partial<Order> = {};
-  if (data.customerName !== undefined) updateData.customerName = data.customerName;
+  if (data.customerName !== undefined) updateData.customer_name = data.customerName;
   if (data.items !== undefined) updateData.items = data.items;
-  if (data.totalAmount !== undefined) updateData.totalAmount = data.totalAmount;
+  if (data.totalAmount !== undefined) updateData.total_amount = data.totalAmount;
   if (data.status !== undefined) updateData.status = data.status;
 
   return await orderClientService.updateOrder(id, updateData);
@@ -95,35 +132,31 @@ const cancelOrder = async ({
   id: string;
   canceledBy: string;
   reason?: string;
-}): Promise<CanceledOrder> => {
+}) => {
   return await orderClientService.cancelOrder(id, canceledBy, reason);
 };
 
 const modifyOrder = async ({
   id,
-  modifiedBy,
-  modificationType,
   customerName,
   items,
   totalAmount,
 }: {
   id: string;
-  modifiedBy: string;
-  modificationType: 'item_added' | 'item_removed' | 'quantity_changed' | 'item_replaced' | 'multiple_changes';
   customerName?: string;
   items?: OrderItem[];
   totalAmount?: number;
-}): Promise<ModifiedOrder> => {
-  return await orderClientService.modifyOrder(id, {
-    modifiedBy,
-    modificationType,
-    customerName,
-    items,
-    totalAmount,
-  });
+}) => {
+  // Map to database field names
+  const updateData: Record<string, unknown> = {};
+  if (customerName !== undefined) updateData.customer_name = customerName;
+  if (items !== undefined) updateData.items = items;
+  if (totalAmount !== undefined) updateData.total_amount = totalAmount;
+
+  return await orderClientService.modifyOrder(id, updateData);
 };
 
-const fetchOrderHistory = async (id: string): Promise<OrderHistoryResult> => {
+const fetchOrderHistory = async (id: string) => {
   return await orderClientService.getOrderHistory(id);
 };
 

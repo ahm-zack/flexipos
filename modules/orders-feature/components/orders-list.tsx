@@ -28,34 +28,7 @@ import React, { useState, useMemo } from "react";
 import { useOrders } from "../hooks/use-orders";
 import { Dialog } from "@/components/ui/dialog";
 import { RestaurantReceipt } from "@/components/restaurant-receipt";
-import type { ApiOrderResponse } from "@/lib/order-service";
-
-// Helper function to convert new Order type to ApiOrderResponse format
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const convertOrderToApiOrderResponse = (order: any): ApiOrderResponse => {
-  return {
-    id: order.id,
-    orderNumber: order.orderNumber,
-    customerName: order.customerName || null,
-    items: order.items,
-    totalAmount:
-      typeof order.totalAmount === "string"
-        ? parseFloat(order.totalAmount)
-        : order.totalAmount,
-    paymentMethod: order.paymentMethod,
-    deliveryPlatform: order.deliveryPlatform,
-    status: order.status,
-    createdAt:
-      order.createdAt instanceof Date
-        ? order.createdAt.toISOString()
-        : order.createdAt,
-    updatedAt:
-      order.updatedAt instanceof Date
-        ? order.updatedAt.toISOString()
-        : order.updatedAt,
-    createdBy: order.createdBy,
-  };
-};
+// Using database types directly with snake_case field names
 
 // Type for saved modifiers in order items
 interface SavedModifier {
@@ -288,18 +261,18 @@ export function OrdersList() {
                   <div className="flex items-start justify-between">
                     <div className="flex flex-col items-start gap-2">
                       <div className="flex flex-col">
-                        {order.dailySerial ? (
+                        {order.daily_serial ? (
                           <>
                             <CardTitle className="text-lg font-semibold">
-                              Daily: {order.dailySerial}
+                              Daily: {order.daily_serial}
                             </CardTitle>
                             <span className="text-xs text-muted-foreground">
-                              #{order.orderNumber}
+                              #{order.order_number}
                             </span>
                           </>
                         ) : (
                           <CardTitle className="text-lg font-semibold">
-                            #{order.orderNumber}
+                            #{order.order_number}
                           </CardTitle>
                         )}
                       </div>
@@ -331,9 +304,7 @@ export function OrdersList() {
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleEditOrder(
-                                convertOrderToApiOrderResponse(order)
-                              );
+                              handleEditOrder(order);
                             }}
                             className="cursor-pointer"
                           >
@@ -363,28 +334,26 @@ export function OrdersList() {
                     <span className="text-lg font-bold flex items-center gap-1 transition-transform duration-200 group-hover:scale-105">
                       <SaudiRiyalSymbol size={16} />
                       <span className="text-green-600">
-                        {typeof order.totalAmount === "number"
-                          ? order.totalAmount.toFixed(2)
-                          : parseFloat(order.totalAmount).toFixed(2)}
+                        {order.total_amount.toFixed(2)}
                       </span>
                     </span>
                   </div>
 
                   {/* Discount Information */}
-                  {order.discountAmount && order.discountAmount > 0 && (
+                  {order.discount_amount && order.discount_amount > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Discount</span>
                       <div className="flex items-center gap-1">
                         <span className="text-red-600 font-medium">
-                          -{order.discountAmount.toFixed(2)}
+                          -{order.discount_amount.toFixed(2)}
                         </span>
                         <SaudiRiyalSymbol size={12} />
-                        {order.discountType && order.discountValue && (
+                        {order.discount_type && order.discount_value && (
                           <span className="text-xs text-muted-foreground ml-1">
                             (
-                            {order.discountType === "percentage"
-                              ? `${order.discountValue}%`
-                              : `${order.discountValue} SAR`}
+                            {order.discount_type === "percentage"
+                              ? `${order.discount_value}%`
+                              : `${order.discount_value} SAR`}
                             )
                           </span>
                         )}
@@ -395,37 +364,30 @@ export function OrdersList() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Date</span>
                     <span className="text-foreground">
-                      {new Date(order.createdAt).toLocaleDateString()}
+                      {new Date(order.created_at).toLocaleDateString()}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Time</span>
                     <span className="text-foreground">
-                      {new Date(order.createdAt).toLocaleTimeString([], {
+                      {new Date(order.created_at).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </span>
                   </div>
 
-                  {order.customerName && (
+                  {order.customer_name && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Customer</span>
                       <span className="text-foreground truncate max-w-[150px]">
-                        {order.customerName}
+                        {order.customer_name}
                       </span>
                     </div>
                   )}
 
-                  {order.cashierName && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Cashier</span>
-                      <span className="text-foreground truncate max-w-[150px]">
-                        {order.cashierName}
-                      </span>
-                    </div>
-                  )}
+                  {/* Cashier information would need to be joined from users table */}
 
                   {/* Payment Method Display */}
                   <div className="flex items-center justify-between text-sm">
@@ -433,8 +395,8 @@ export function OrdersList() {
                     <div className="flex items-center gap-1">
                       {(() => {
                         const paymentDisplay = getPaymentMethodDisplay(
-                          order.paymentMethod || "cash",
-                          order.deliveryPlatform || undefined
+                          order.payment_method || "cash",
+                          order.delivery_platform || undefined
                         );
                         const IconComponent = paymentDisplay.icon;
                         return (

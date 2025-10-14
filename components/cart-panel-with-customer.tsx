@@ -12,7 +12,7 @@ import {
   Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { useCart } from "@/modules/cart/hooks/use-cart";
@@ -267,6 +267,18 @@ export function CartPanelWithCustomer() {
           items: mappedItems,
           customerName:
             apiOrder.customerName === null ? undefined : apiOrder.customerName,
+          discountType:
+            apiOrder.discountType === null
+              ? undefined
+              : (apiOrder.discountType as "percentage" | "amount"),
+          discountValue:
+            apiOrder.discountValue === null
+              ? undefined
+              : apiOrder.discountValue,
+          discountAmount:
+            apiOrder.discountAmount === null
+              ? undefined
+              : apiOrder.discountAmount,
         });
       },
       onError: (error) => {
@@ -276,7 +288,7 @@ export function CartPanelWithCustomer() {
   };
 
   return (
-    <div className="h-full w-full bg-background shadow-2xl flex flex-col">
+    <div className="h-full w-full flex flex-col">
       {/* Cart Items */}
       <div className="flex-1 overflow-y-auto p-6">
         {cart.items.length === 0 ? (
@@ -290,7 +302,10 @@ export function CartPanelWithCustomer() {
         ) : (
           <div className="space-y-4">
             {cart.items.map((item) => (
-              <Card key={item.id} className="p-4">
+              <div
+                key={item.id}
+                className="p-4 border border-border/50 rounded-2xl bg-background/50"
+              >
                 <div className="flex items-start gap-3">
                   <div className="flex-1">
                     <h3 className="font-medium text-sm">{item.name}</h3>
@@ -398,7 +413,7 @@ export function CartPanelWithCustomer() {
                     <span className="sr-only">Remove {item.name}</span>
                   </Button>
                 </div>
-              </Card>
+              </div>
             ))}
             {/* Clear Cart Button */}
             {cart.items.length > 0 && (

@@ -43,6 +43,13 @@
       "when": 1751864756524,
       "tag": "0005_even_gressill",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1759874236165,
+      "tag": "0006_simple_vargas",
+      "breakpoints": true
     }
   ]
 }

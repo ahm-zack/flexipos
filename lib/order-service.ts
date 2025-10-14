@@ -1,600 +1,213 @@
-import { db } from '@/lib/db';
-import { orders, canceledOrders, modifiedOrders, users } from '@/lib/db/schema';
-import { eq, desc, and, like, sql } from 'drizzle-orm';
-import { generateOrderNumber } from '@/lib/orders/server-utils';
-import type { OrderItem, CartItem } from '@/lib/orders';
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/database.types';
 
-// Re-export OrderFilters interface
+// Initialize Supabase client for server-side operations
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
+
+// Re-export database types for convenience
+export type Order = Database['public']['Tables']['orders']['Row'];
+export type OrderInsert = Database['public']['Tables']['orders']['Insert'];
+export type OrderUpdate = Database['public']['Tables']['orders']['Update'];
+export type PaymentMethod = Database['public']['Enums']['payment_method'];
+export type DeliveryPlatform = Database['public']['Enums']['delivery_platform'];
+export type OrderStatus = Database['public']['Enums']['order_status'];
+
+// Order filters interface
 export interface OrderFilters {
-  status?: 'completed' | 'canceled' | 'modified';
-  paymentMethod?: 'cash' | 'card' | 'mixed' | 'delivery';
+  status?: OrderStatus;
+  paymentMethod?: PaymentMethod;
   customerName?: string;
   orderNumber?: string;
   createdBy?: string;
   dateFrom?: string;
   dateTo?: string;
+  page?: number;
+  limit?: number;
 }
 
-export class OrderService {
-  // Create new order
-  async createOrder(orderData: {
-    customerName?: string;
-    items: CartItem[];
-    totalAmount: number;
-    paymentMethod: 'cash' | 'card' | 'mixed' | 'delivery';
-    deliveryPlatform?: 'keeta' | 'hunger_station' | 'jahez';
-    discountType?: 'percentage' | 'amount';
-    discountValue?: number;
-    discountAmount?: number;
-    eventDiscountName?: string;
-    eventDiscountPercentage?: number;
-    eventDiscountAmount?: number;
-    // Payment tracking fields
-    cashAmount?: number;
-    cardAmount?: number;
-    cashReceived?: number;
-    changeAmount?: number;
-    createdBy: string;
-  }): Promise<OrderServiceResult<ApiOrder>> {
-    // TODO: Implement order creation logic
-    console.log('Creating order with data:', orderData);
-    return { success: false, error: 'Not implemented' };
-  }
-}
-
+// Service result interface
 export interface OrderServiceResult<T> {
   success: boolean;
   data?: T;
   error?: string;
 }
 
-// Database types (what we get from Drizzle)
-export type DatabaseOrder = typeof orders.$inferSelect;
-export type DatabaseCanceledOrder = typeof canceledOrders.$inferSelect;
-export type DatabaseModifiedOrder = typeof modifiedOrders.$inferSelect;
-
-// API types (what we return to frontend)
-export interface ApiOrder {
+// Order item interface for creating orders
+export interface CartItem {
   id: string;
-  orderNumber: string;
-  dailySerial?: string;
-  customerName: string | null;
-  items: OrderItem[];
-  totalAmount: number;
-  paymentMethod: 'cash' | 'card' | 'mixed' | 'delivery';
-  deliveryPlatform?: 'keeta' | 'hunger_station' | 'jahez';
-  status: 'completed' | 'canceled' | 'modified';
-  discountType?: 'percentage' | 'amount';
-  discountValue?: number;
-  discountAmount?: number;
-  eventDiscountName?: string;
-  eventDiscountPercentage?: number;
-  eventDiscountAmount?: number;
-  cashAmount?: number;
-  cardAmount?: number;
-  cashReceived?: number;
-  changeAmount?: number;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
+  name: string;
+  price: number;
+  quantity: number;
+  category: string;
+  description?: string;
+  image?: string;
+  modifiers?: Array<{
+    id: string;
+    name: string;
+    price: number;
+    type: 'extra' | 'without';
+  }>;
+  modifiersTotal?: number;
 }
 
-export interface ApiOrderResponse extends ApiOrder {
-  cashierName?: string;
-}
-
-export interface ApiCanceledOrder {
-  id: string;
-  originalOrderId: string;
-  canceledAt: string;
-  canceledBy: string;
-  reason?: string;
-  orderData: ApiOrder;
-}
-
-export interface ApiModifiedOrder {
-  id: string;
-  originalOrderId: string;
-  modifiedAt: string;
-  modifiedBy: string;
-  modificationType: 'item_added' | 'item_removed' | 'quantity_changed' | 'item_replaced' | 'multiple_changes';
-  originalData: ApiOrder;
-  newData: ApiOrder;
-}
-
-export interface OrdersListResult {
-  orders: ApiOrderResponse[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
-// Helper function to transform database order to API order
-function transformDatabaseOrderToApi(dbOrder: DatabaseOrder): ApiOrder {
-  return {
-    id: dbOrder.id,
-    orderNumber: dbOrder.orderNumber,
-    deliveryPlatform: dbOrder.deliveryPlatform || undefined,
-    dailySerial: dbOrder.dailySerial || undefined,
-    customerName: dbOrder.customerName,
-    items: JSON.parse(JSON.stringify(dbOrder.items)),
-    totalAmount: parseFloat(dbOrder.totalAmount.toString()),
-    paymentMethod: dbOrder.paymentMethod,
-    status: dbOrder.status,
-    discountType: (dbOrder.discountType as 'percentage' | 'amount') || undefined,
-    discountValue: dbOrder.discountValue ? parseFloat(dbOrder.discountValue.toString()) : undefined,
-    discountAmount: dbOrder.discountAmount ? parseFloat(dbOrder.discountAmount.toString()) : undefined,
-    eventDiscountName: dbOrder.eventDiscountName || undefined,
-    eventDiscountPercentage: dbOrder.eventDiscountPercentage ? parseFloat(dbOrder.eventDiscountPercentage.toString()) : undefined,
-    eventDiscountAmount: dbOrder.eventDiscountAmount ? parseFloat(dbOrder.eventDiscountAmount.toString()) : undefined,
-    cashAmount: dbOrder.cashAmount ? parseFloat(dbOrder.cashAmount.toString()) : undefined,
-    cardAmount: dbOrder.cardAmount ? parseFloat(dbOrder.cardAmount.toString()) : undefined,
-    cashReceived: dbOrder.cashReceived ? parseFloat(dbOrder.cashReceived.toString()) : undefined,
-    changeAmount: dbOrder.changeAmount ? parseFloat(dbOrder.changeAmount.toString()) : undefined,
-    createdAt: dbOrder.createdAt.toISOString(),
-    updatedAt: dbOrder.updatedAt.toISOString(),
-    createdBy: dbOrder.createdBy
-  };
-}
-
-// Helper function to transform database canceled order to API canceled order
-function transformDatabaseCanceledOrderToApi(dbCanceledOrder: DatabaseCanceledOrder): ApiCanceledOrder {
-  return {
-    id: dbCanceledOrder.id,
-    originalOrderId: dbCanceledOrder.originalOrderId,
-    canceledAt: dbCanceledOrder.canceledAt.toISOString(),
-    canceledBy: dbCanceledOrder.canceledBy,
-    reason: dbCanceledOrder.reason || undefined,
-    orderData: dbCanceledOrder.orderData as ApiOrder,
-  };
-}
-
-// Helper function to transform database modified order to API modified order
-function transformDatabaseModifiedOrderToApi(dbModifiedOrder: DatabaseModifiedOrder): ApiModifiedOrder {
-  return {
-    id: dbModifiedOrder.id,
-    originalOrderId: dbModifiedOrder.originalOrderId,
-    modifiedAt: dbModifiedOrder.modifiedAt.toISOString(),
-    modifiedBy: dbModifiedOrder.modifiedBy,
-    modificationType: dbModifiedOrder.modificationType,
-    originalData: dbModifiedOrder.originalData as ApiOrder,
-    newData: dbModifiedOrder.newData as ApiOrder,
-  };
-}
-
-// Helper function to convert cart items to order items
-function convertCartItemsToOrderItems(cartItems: CartItem[]): OrderItem[] {
-  return cartItems.map(cartItem => {
-    // Extract item type from category
-    let itemType: 'pizza' | 'pie' | 'sandwich' | 'mini_pie';
-    const category = cartItem.category.toLowerCase();
-
-    if (category.includes('pizza')) {
-      itemType = 'pizza';
-    } else if (category.includes('pie')) {
-      itemType = 'pie';
-    } else if (category.includes('sandwich')) {
-      itemType = 'sandwich';
-    } else if (category.includes('mini')) {
-      itemType = 'mini_pie';
-    } else {
-      // Default fallback
-      itemType = 'pizza';
-    }
-
-    // Calculate total price including modifiers
-    const modifiersTotal = cartItem.modifiersTotal || 0;
-    const totalItemPrice = (cartItem.price + modifiersTotal) * cartItem.quantity;
-
-    return {
-      id: cartItem.id,
-      type: itemType,
-      name: cartItem.name,
-      nameAr: cartItem.description || cartItem.name, // Use description as Arabic name fallback
-      quantity: cartItem.quantity,
-      unitPrice: cartItem.price + modifiersTotal, // Include modifiers in unit price
-      totalPrice: totalItemPrice,
-      details: {
-        basePrice: cartItem.price,
-        modifiersTotal: modifiersTotal,
-        modifiers: cartItem.modifiers || [],
-        description: cartItem.description,
-        image: cartItem.image,
-      }
-    };
-  });
-}
-
-export const orderService = {
-  // Get all orders with optional filters
-  async getOrders(
-    filters: OrderFilters = {},
-    page: number = 1,
-    limit: number = 10
-  ): Promise<OrderServiceResult<OrdersListResult>> {
+export class OrderService {
+  // Get orders with filters and pagination
+  async getOrders(filters?: OrderFilters): Promise<OrderServiceResult<{
+    orders: Order[];
+    total: number;
+    totalPages: number;
+    currentPage: number;
+  }>> {
     try {
+      const page = filters?.page || 1;
+      const limit = filters?.limit || 50;
       const offset = (page - 1) * limit;
 
-      // Build where conditions
-      const whereConditions = [];
+      let query = supabase
+        .from('orders')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
 
-      if (filters.status) {
-        whereConditions.push(eq(orders.status, filters.status));
+      if (filters) {
+        if (filters.status) {
+          query = query.eq('status', filters.status);
+        }
+        if (filters.paymentMethod) {
+          query = query.eq('payment_method', filters.paymentMethod);
+        }
+        if (filters.customerName) {
+          query = query.ilike('customer_name', `%${filters.customerName}%`);
+        }
+        if (filters.orderNumber) {
+          query = query.ilike('order_number', `%${filters.orderNumber}%`);
+        }
+        if (filters.createdBy) {
+          query = query.eq('created_by', filters.createdBy);
+        }
+        if (filters.dateFrom) {
+          query = query.gte('created_at', filters.dateFrom);
+        }
+        if (filters.dateTo) {
+          query = query.lte('created_at', filters.dateTo);
+        }
       }
 
-      if (filters.createdBy) {
-        whereConditions.push(eq(orders.createdBy, filters.createdBy));
+      const { data: orders, error, count } = await query;
+
+      if (error) {
+        console.error('Error fetching orders:', error);
+        return { success: false, error: error.message };
       }
 
-      if (filters.customerName) {
-        whereConditions.push(like(orders.customerName, `%${filters.customerName}%`));
-      }
-      // Add orderNumber filter for partial match
-      if (filters.orderNumber) {
-        whereConditions.push(like(orders.orderNumber, `%${filters.orderNumber}%`));
-      }
-      if (filters.dateFrom) {
-        whereConditions.push(sql`${orders.createdAt} >= ${filters.dateFrom}`);
-      }
-
-      if (filters.dateTo) {
-        whereConditions.push(sql`${orders.createdAt} <= ${filters.dateTo}`);
-      }
-      // Add paymentMethod filter
-      if (filters.paymentMethod) {
-        whereConditions.push(eq(orders.paymentMethod, filters.paymentMethod));
-      }
-
-      // Combine conditions
-      const whereClause = whereConditions.length > 0
-        ? and(...whereConditions)
-        : undefined;
-
-      // Get orders with user information
-      const ordersWithUsers = await db
-        .select({
-          order: orders,
-          cashierName: users.fullName,
-        })
-        .from(orders)
-        .leftJoin(users, eq(orders.createdBy, users.id))
-        .where(whereClause)
-        .orderBy(desc(orders.createdAt))
-        .limit(limit)
-        .offset(offset);
-
-      // Get total count
-      const totalResult = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(orders)
-        .where(whereClause);
-
-      const total = totalResult[0]?.count || 0;
-
-      // Transform results and add modifiers
-      const orderResponses: ApiOrderResponse[] = [];
-      for (const row of ordersWithUsers) {
-        const baseOrder = transformDatabaseOrderToApi(row.order);
-        // Use items as-is; modifiers are already present in the JSONB column
-        orderResponses.push({
-          ...baseOrder,
-          cashierName: row.cashierName || undefined,
-        });
-      }
+      const total = count || 0;
+      const totalPages = Math.ceil(total / limit);
 
       return {
         success: true,
         data: {
-          orders: orderResponses,
+          orders: orders || [],
           total,
-          page,
-          limit,
+          totalPages,
+          currentPage: page,
         },
       };
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error('Error in getOrders:', error);
       return { success: false, error: 'Failed to fetch orders' };
     }
-  },
+  }
 
-  // Get order by ID
-  async getOrderById(id: string): Promise<OrderServiceResult<ApiOrderResponse>> {
+  // Get single order by ID
+  async getOrderById(id: string): Promise<OrderServiceResult<Order>> {
     try {
-      const orderWithUser = await db
-        .select({
-          order: orders,
-          cashierName: users.fullName,
-        })
-        .from(orders)
-        .leftJoin(users, eq(orders.createdBy, users.id))
-        .where(eq(orders.id, id))
-        .limit(1);
+      const { data: order, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-      if (orderWithUser.length === 0) {
-        return { success: false, error: 'Order not found' };
+      if (error) {
+        console.error('Error fetching order:', error);
+        return { success: false, error: error.message };
       }
 
-      const result = orderWithUser[0];
-      const baseOrder = transformDatabaseOrderToApi(result.order);
-
-      // No need to fetch modifiers separately, they are included in the order items
-
-      const orderResponse: ApiOrderResponse = {
-        ...baseOrder,
-        cashierName: result.cashierName || undefined,
-      };
-
-      return { success: true, data: orderResponse };
+      return { success: true, data: order };
     } catch (error) {
-      console.error('Error fetching order by ID:', error);
+      console.error('Error in getOrderById:', error);
       return { success: false, error: 'Failed to fetch order' };
     }
-  },
+  }
 
   // Create new order
   async createOrder(orderData: {
     customerName?: string;
-    items: CartItem[]; // Changed to accept CartItem[] instead of OrderItem[]
+    items: CartItem[];
     totalAmount: number;
-    paymentMethod: 'cash' | 'card' | 'mixed' | 'delivery';
-    discountType?: 'percentage' | 'amount';
+    paymentMethod: PaymentMethod;
+    deliveryPlatform?: DeliveryPlatform;
+    discountType?: string;
     discountValue?: number;
     discountAmount?: number;
     eventDiscountName?: string;
     eventDiscountPercentage?: number;
     eventDiscountAmount?: number;
-    // Payment tracking fields
     cashAmount?: number;
     cardAmount?: number;
     cashReceived?: number;
     changeAmount?: number;
     createdBy: string;
-  }): Promise<OrderServiceResult<ApiOrder>> {
+    orderNumber?: string;
+  }): Promise<OrderServiceResult<Order>> {
     try {
-      const orderNumber = await generateOrderNumber();
-      const now = new Date();
+      // Generate order number if not provided
+      const orderNumber = orderData.orderNumber || `ORD-${Date.now()}`;
 
-      // Convert cart items to order items
-      const orderItems = convertCartItemsToOrderItems(orderData.items);
+      // Convert items to JSON format for storage
+      const itemsJson = orderData.items;
 
-      const newOrder = await db.insert(orders).values({
-        orderNumber,
-        customerName: orderData.customerName || null,
-        items: orderItems,
-        totalAmount: orderData.totalAmount.toString(),
-        paymentMethod: orderData.paymentMethod,
+      const insertData: OrderInsert = {
+        order_number: orderNumber,
+        customer_name: orderData.customerName || null,
+        items: itemsJson as unknown as Database['public']['Tables']['orders']['Insert']['items'],
+        total_amount: orderData.totalAmount,
+        payment_method: orderData.paymentMethod,
+        delivery_platform: orderData.deliveryPlatform || null,
+        discount_type: orderData.discountType || null,
+        discount_value: orderData.discountValue || null,
+        discount_amount: orderData.discountAmount || null,
+        event_discount_name: orderData.eventDiscountName || null,
+        event_discount_percentage: orderData.eventDiscountPercentage || null,
+        event_discount_amount: orderData.eventDiscountAmount || null,
+        cash_amount: orderData.cashAmount || null,
+        card_amount: orderData.cardAmount || null,
+        cash_received: orderData.cashReceived || null,
+        change_amount: orderData.changeAmount || null,
+        created_by: orderData.createdBy,
         status: 'completed',
-        discountType: orderData.discountType || null,
-        discountValue: orderData.discountValue?.toString() || null,
-        discountAmount: orderData.discountAmount?.toString() || '0',
-        eventDiscountName: orderData.eventDiscountName || null,
-        eventDiscountPercentage: orderData.eventDiscountPercentage?.toString() || null,
-        eventDiscountAmount: orderData.eventDiscountAmount?.toString() || '0',
-        // Payment tracking fields
-        cashAmount: orderData.cashAmount?.toString() || null,
-        cardAmount: orderData.cardAmount?.toString() || null,
-        cashReceived: orderData.cashReceived?.toString() || null,
-        changeAmount: orderData.changeAmount?.toString() || null,
-        createdBy: orderData.createdBy,
-        createdAt: now,
-        updatedAt: now,
-      }).returning();
+      };
 
-      const createdOrder = newOrder[0];
+      const { data: order, error } = await supabase
+        .from('orders')
+        .insert(insertData)
+        .select()
+        .single();
 
-      return { success: true, data: transformDatabaseOrderToApi(createdOrder) };
+      if (error) {
+        console.error('Error creating order:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, data: order };
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error('Error in createOrder:', error);
       return { success: false, error: 'Failed to create order' };
-    }
-  },
-
-  // Update order
-  async updateOrder(
-    id: string,
-    updateData: {
-      customerName?: string;
-      items?: OrderItem[];
-      totalAmount?: number;
-      status?: 'completed' | 'canceled' | 'modified';
-      paymentMethod?: 'cash' | 'card' | 'mixed' | 'delivery';
-    }
-  ): Promise<OrderServiceResult<ApiOrder>> {
-    try {
-      const updateFields: Record<string, unknown> = {
-        updatedAt: new Date(),
-      };
-
-      if (updateData.customerName !== undefined) {
-        updateFields.customerName = updateData.customerName;
-      }
-      if (updateData.items !== undefined) {
-        updateFields.items = updateData.items;
-      }
-      if (updateData.totalAmount !== undefined) {
-        updateFields.totalAmount = updateData.totalAmount.toString();
-      }
-      if (updateData.status !== undefined) {
-        updateFields.status = updateData.status;
-      }
-      if (updateData.paymentMethod !== undefined) {
-        updateFields.paymentMethod = updateData.paymentMethod;
-      }
-
-      const updatedOrder = await db.update(orders)
-        .set(updateFields)
-        .where(eq(orders.id, id))
-        .returning();
-
-      if (updatedOrder.length === 0) {
-        return { success: false, error: 'Order not found' };
-      }
-
-      return { success: true, data: transformDatabaseOrderToApi(updatedOrder[0]) };
-    } catch (error) {
-      console.error('Error updating order:', error);
-      return { success: false, error: 'Failed to update order' };
-    }
-  },
-
-  // Delete order (soft delete by updating status)
-  async deleteOrder(id: string): Promise<OrderServiceResult<ApiOrder>> {
-    try {
-      const deletedOrder = await db.update(orders)
-        .set({
-          status: 'canceled',
-          updatedAt: new Date(),
-        })
-        .where(eq(orders.id, id))
-        .returning();
-
-      if (deletedOrder.length === 0) {
-        return { success: false, error: 'Order not found' };
-      }
-
-      return { success: true, data: transformDatabaseOrderToApi(deletedOrder[0]) };
-    } catch (error) {
-      console.error('Error deleting order:', error);
-      return { success: false, error: 'Failed to delete order' };
-    }
-  },
-
-  // Cancel order (creates entry in canceled_orders table)
-  async cancelOrder(
-    orderId: string,
-    canceledBy: string,
-    reason?: string
-  ): Promise<OrderServiceResult<ApiCanceledOrder>> {
-    try {
-      // First, get the original order
-      const originalOrder = await this.getOrderById(orderId);
-      if (!originalOrder.success || !originalOrder.data) {
-        return { success: false, error: 'Order not found' };
-      }
-
-      // Update order status to canceled
-      const updateResult = await this.updateOrder(orderId, { status: 'canceled' });
-      if (!updateResult.success) {
-        return { success: false, error: 'Failed to update order status' };
-      }
-
-      // Create canceled order record
-      const canceledOrder = await db.insert(canceledOrders).values({
-        originalOrderId: orderId,
-        canceledBy,
-        reason,
-        orderData: originalOrder.data,
-      }).returning();
-
-      return { success: true, data: transformDatabaseCanceledOrderToApi(canceledOrder[0]) };
-    } catch (error) {
-      console.error('Error canceling order:', error);
-      return { success: false, error: 'Failed to cancel order' };
-    }
-  },
-
-  // Modify order (creates entry in modified_orders table)
-  async modifyOrder(
-    orderId: string,
-    modifiedBy: string,
-    newOrderData: {
-      customerName?: string;
-      items?: OrderItem[];
-      totalAmount?: number;
-      paymentMethod?: 'cash' | 'card' | 'mixed' | 'delivery';
-    },
-    modificationType: 'item_added' | 'item_removed' | 'quantity_changed' | 'item_replaced' | 'multiple_changes'
-  ): Promise<OrderServiceResult<ApiModifiedOrder>> {
-    try {
-      // Get original order
-      const originalOrder = await this.getOrderById(orderId);
-      if (!originalOrder.success || !originalOrder.data) {
-        return { success: false, error: 'Order not found' };
-      }
-
-      // Update the order
-      const updateResult = await this.updateOrder(orderId, {
-        ...newOrderData,
-        status: 'modified',
-      });
-      if (!updateResult.success) {
-        return { success: false, error: 'Failed to update order' };
-      }
-
-      // Get updated order
-      const updatedOrder = await this.getOrderById(orderId);
-      if (!updatedOrder.success || !updatedOrder.data) {
-        return { success: false, error: 'Failed to get updated order' };
-      }
-
-      // Create modified order record
-      const modifiedOrder = await db.insert(modifiedOrders).values({
-        originalOrderId: orderId,
-        modifiedBy,
-        modificationType,
-        originalData: originalOrder.data,
-        newData: updatedOrder.data,
-      }).returning();
-
-      return { success: true, data: transformDatabaseModifiedOrderToApi(modifiedOrder[0]) };
-    } catch (error) {
-      console.error('Error modifying order:', error);
-      return { success: false, error: 'Failed to modify order' };
-    }
-  },
-
-  // Get canceled orders
-  async getCanceledOrders(): Promise<OrderServiceResult<ApiCanceledOrder[]>> {
-    try {
-      const canceledOrdersList = await db.select().from(canceledOrders).orderBy(desc(canceledOrders.canceledAt));
-      const apiCanceledOrders = canceledOrdersList.map(transformDatabaseCanceledOrderToApi);
-      return { success: true, data: apiCanceledOrders };
-    } catch (error) {
-      console.error('Error fetching canceled orders:', error);
-      return { success: false, error: 'Failed to fetch canceled orders' };
-    }
-  },
-
-  // Get modified orders
-  async getModifiedOrders(): Promise<OrderServiceResult<ApiModifiedOrder[]>> {
-    try {
-      const modifiedOrdersList = await db.select().from(modifiedOrders).orderBy(desc(modifiedOrders.modifiedAt));
-      const apiModifiedOrders = modifiedOrdersList.map(transformDatabaseModifiedOrderToApi);
-      return { success: true, data: apiModifiedOrders };
-    } catch (error) {
-      console.error('Error fetching modified orders:', error);
-      return { success: false, error: 'Failed to fetch modified orders' };
-    }
-  },
-
-  // Get order history (including cancellations and modifications)
-  async getOrderHistory(orderId: string): Promise<OrderServiceResult<{
-    order: ApiOrderResponse;
-    cancellations: ApiCanceledOrder[];
-    modifications: ApiModifiedOrder[];
-  }>> {
-    try {
-      const [orderResult, canceledResult, modifiedResult] = await Promise.all([
-        this.getOrderById(orderId),
-        db.select().from(canceledOrders).where(eq(canceledOrders.originalOrderId, orderId)),
-        db.select().from(modifiedOrders).where(eq(modifiedOrders.originalOrderId, orderId)).orderBy(desc(modifiedOrders.modifiedAt))
-      ]);
-
-      if (!orderResult.success || !orderResult.data) {
-        return { success: false, error: 'Order not found' };
-      }
-
-      return {
-        success: true,
-        data: {
-          order: orderResult.data,
-          cancellations: canceledResult.map(transformDatabaseCanceledOrderToApi),
-          modifications: modifiedResult.map(transformDatabaseModifiedOrderToApi),
-        },
-      };
-    } catch (error) {
-      console.error('Error fetching order history:', error);
-      return { success: false, error: 'Failed to fetch order history' };
     }
   }
 }
+
+// Export singleton instance
+export const orderService = new OrderService();
