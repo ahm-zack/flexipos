@@ -13,7 +13,7 @@ export { CategorySystem } from './components/category-system';
 export { CategoryForm } from './components/category-form';
 
 // Page Components
-export { ProductCashierPage } from './components/product-cashier-page';
+// ProductCashierPage removed - logic moved directly to pages
 
 // Services (Primary: Supabase services)
 export { productSupabaseService } from './services/product-supabase-service';

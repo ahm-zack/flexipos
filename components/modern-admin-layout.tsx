@@ -67,7 +67,7 @@ export function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
             {/* Left Section - Content with Navbar */}
             <div className="flex-1 p-4 pr-2">
               {/* Navbar positioned only over left card */}
-              <div className="fixed top-0 left-4 right-[34rem] z-50">
+              <div className="fixed top-0 left-4 right-[22rem] xl:right-[26rem] 2xl:right-[28rem] z-50">
                 <DynamicDesktopAdminNavbar user={user} />
               </div>
 
@@ -80,7 +80,7 @@ export function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
             </div>
 
             {/* Right Section - Cart Panel */}
-            <div className="w-[32rem] p-2 pl-0">
+            <div className="w-[20rem] xl:w-[24rem] 2xl:w-[26rem] p-2 pl-0 min-w-[18rem]">
               <div className="h-full bg-card shadow-lg overflow-hidden rounded-2xl">
                 <div className="h-full overflow-y-auto">
                   <CartPanelWithCustomer />

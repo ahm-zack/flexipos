@@ -9,14 +9,12 @@ interface ProductCashierViewProps {
   products: Product[];
   isLoading?: boolean;
   error?: Error | null;
-  categoryName?: string;
 }
 
 export function ProductCashierView({
   products,
   isLoading = false,
   error,
-  categoryName = "Products",
 }: ProductCashierViewProps) {
   const { filterProducts } = useSearchStore();
 
@@ -42,18 +40,8 @@ export function ProductCashierView({
     );
   }
   return (
-    <div className="p-6 lg:p-8">
+    <div>
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl lg:text-4xl font-bold mb-2 text-center">
-            🛍️ {categoryName} Menu
-          </h1>
-          <p className="text-muted-foreground text-center mb-6">
-            Discover our amazing product selection
-          </p>
-        </div>
-
         {/* Product Grid - Cashier View (No management actions) */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

@@ -52,24 +52,41 @@ export default function MenuProductLayout({
   // useMenu();
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-0">
       <div className="max-w-full mx-auto">
         {/* Header */}
-        <div className="mb-6 sm:mb-8 flex gap-4 items-center">
-          {/* <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-center">
-            {config.header}
-          </h1> */}
+        <div className="mb-8 space-y-6">
+          {/* Title Section */}
+          <div className="text-center">
+            <h1 className="text-3xl lg:text-4xl font-bold mb-2">
+              {config.header} Menu
+            </h1>
+            {/* <p className="text-muted-foreground text-lg">
+              Discover our amazing {config.header.toLowerCase()} selection
+            </p> */}
+          </div>
 
-          {/* Search Bar */}
-          <div className="flex justify-center w-full max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={config.placeholder}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          {/* Enhanced Search Bar */}
+          <div className="flex justify-center">
+            <div className="relative w-full max-w-lg">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-xl blur-sm"></div>
+              <div className="relative bg-background/80 backdrop-blur-sm border-2 border-border/50 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:border-primary/30">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  placeholder={config.placeholder}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-12 pr-4 h-10 text-lg bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors duration-200 text-xl font-light"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
