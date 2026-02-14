@@ -31,14 +31,9 @@ interface AddUserDialogProps {
 
 const roles: { value: UserRole; label: string; description: string }[] = [
   {
-    value: "cashier",
-    label: "Cashier",
-    description: "Handle orders and payments",
-  },
-  {
-    value: "kitchen",
-    label: "Kitchen Staff",
-    description: "Manage kitchen orders and food preparation",
+    value: "admin",
+    label: "Admin",
+    description: "System administration and full access",
   },
   {
     value: "manager",
@@ -46,14 +41,9 @@ const roles: { value: UserRole; label: string; description: string }[] = [
     description: "Manage staff and oversee operations",
   },
   {
-    value: "admin",
-    label: "Admin",
-    description: "System administration and user management",
-  },
-  {
-    value: "superadmin",
-    label: "Super Admin",
-    description: "Full system access and control",
+    value: "staff",
+    label: "Staff",
+    description: "Handle orders and daily operations",
   },
 ];
 
@@ -142,7 +132,7 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
       handleClose();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create user"
+        error instanceof Error ? error.message : "Failed to create user",
       );
     }
   };

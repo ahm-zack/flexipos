@@ -32,14 +32,9 @@ interface EditUserDialogProps {
 
 const roles: { value: UserRole; label: string; description: string }[] = [
   {
-    value: "cashier",
-    label: "Cashier",
-    description: "Handle orders and payments",
-  },
-  {
-    value: "kitchen",
-    label: "Kitchen Staff",
-    description: "Manage kitchen orders and food preparation",
+    value: "admin",
+    label: "Admin",
+    description: "System administration and full access",
   },
   {
     value: "manager",
@@ -47,14 +42,9 @@ const roles: { value: UserRole; label: string; description: string }[] = [
     description: "Manage staff and oversee operations",
   },
   {
-    value: "admin",
-    label: "Admin",
-    description: "System administration and user management",
-  },
-  {
-    value: "superadmin",
-    label: "Super Admin",
-    description: "Full system access and control",
+    value: "staff",
+    label: "Staff",
+    description: "Handle orders and daily operations",
   },
 ];
 
@@ -84,7 +74,7 @@ export function EditUserDialog({
       const newFormData = {
         name: user.fullName || "",
         email: user.email,
-        role: (user.role || "cashier") as UserRole,
+        role: (user.role || "staff") as UserRole,
       };
       setFormData(newFormData);
       setIsDirty(false);
@@ -125,7 +115,7 @@ export function EditUserDialog({
     return (
       newFormData.name !== (user.fullName || "") ||
       newFormData.email !== user.email ||
-      newFormData.role !== (user.role || "cashier")
+      newFormData.role !== (user.role || "staff")
     );
   };
 
@@ -158,7 +148,7 @@ export function EditUserDialog({
       onOpenChange(false);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update user"
+        error instanceof Error ? error.message : "Failed to update user",
       );
     }
   };

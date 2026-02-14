@@ -1,0 +1,153 @@
+              List of relations
+ Schema |      Name       | Type  |  Owner   
+--------+-----------------+-------+----------
+ public | business_users  | table | postgres
+ public | businesses      | table | postgres
+ public | canceled_orders | table | postgres
+ public | categories      | table | postgres
+ public | modified_orders | table | postgres
+ public | orders          | table | postgres
+ public | products        | table | postgres
+ public | users           | table | postgres
+(8 rows)
+
+     enum_name     |                                  values                                   
+-------------------+---------------------------------------------------------------------------
+ delivery_platform | {keeta,hunger_station,jahez}
+ modification_type | {item_added,item_removed,quantity_changed,item_replaced,multiple_changes}
+ order_status      | {completed,canceled,modified}
+ payment_method    | {cash,card,mixed,delivery}
+(4 rows)
+
+                                                       Table "public.users"
+   Column   |           Type           | Collation | Nullable |   Default    | Storage  | Compression | Stats target | Description 
+------------+--------------------------+-----------+----------+--------------+----------+-------------+--------------+-------------
+ id         | uuid                     |           | not null |              | plain    |             |              | 
+ email      | text                     |           | not null |              | extended |             |              | 
+ full_name  | text                     |           |          |              | extended |             |              | 
+ avatar_url | text                     |           |          |              | extended |             |              | 
+ phone      | text                     |           |          |              | extended |             |              | 
+ role       | text                     |           |          | 'user'::text | extended |             |              | 
+ is_active  | boolean                  |           |          | true         | plain    |             |              | 
+ metadata   | jsonb                    |           |          | '{}'::jsonb  | extended |             |              | 
+ created_at | timestamp with time zone |           |          | now()        | plain    |             |              | 
+ updated_at | timestamp with time zone |           |          | now()        | plain    |             |              | 
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+    "idx_users_active" btree (is_active)
+    "idx_users_email" btree (email)
+    "idx_users_role" btree (role)
+    "users_email_key" UNIQUE CONSTRAINT, btree (email)
+Foreign-key constraints:
+    "users_id_fkey" FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "business_users" CONSTRAINT "business_users_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "canceled_orders" CONSTRAINT "canceled_orders_canceled_by_fkey" FOREIGN KEY (canceled_by) REFERENCES users(id)
+    TABLE "modified_orders" CONSTRAINT "modified_orders_modified_by_fkey" FOREIGN KEY (modified_by) REFERENCES users(id)
+    TABLE "orders" CONSTRAINT "orders_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id)
+Policies:
+    POLICY "Users can update own profile" FOR UPDATE
+      USING ((auth.uid() = id))
+    POLICY "Users can view own profile" FOR SELECT
+      USING ((auth.uid() = id))
+Access method: heap
+
+                                                        Table "public.businesses"
+   Column    |           Type           | Collation | Nullable |      Default      | Storage  | Compression | Stats target | Description 
+-------------+--------------------------+-----------+----------+-------------------+----------+-------------+--------------+-------------
+ id          | uuid                     |           | not null | gen_random_uuid() | plain    |             |              | 
+ name        | text                     |           | not null |                   | extended |             |              | 
+ slug        | text                     |           |          |                   | extended |             |              | 
+ description | text                     |           |          |                   | extended |             |              | 
+ logo_url    | text                     |           |          |                   | extended |             |              | 
+ address     | text                     |           |          |                   | extended |             |              | 
+ phone       | text                     |           |          |                   | extended |             |              | 
+ email       | text                     |           |          |                   | extended |             |              | 
+ website     | text                     |           |          |                   | extended |             |              | 
+ timezone    | text                     |           |          | 'UTC'::text       | extended |             |              | 
+ currency    | text                     |           |          | 'USD'::text       | extended |             |              | 
+ settings    | jsonb                    |           |          | '{}'::jsonb       | extended |             |              | 
+ is_active   | boolean                  |           |          | true              | plain    |             |              | 
+ created_at  | timestamp with time zone |           | not null | now()             | plain    |             |              | 
+ updated_at  | timestamp with time zone |           | not null | now()             | plain    |             |              | 
+Indexes:
+    "businesses_pkey" PRIMARY KEY, btree (id)
+    "businesses_slug_key" UNIQUE CONSTRAINT, btree (slug)
+    "idx_businesses_active" btree (is_active)
+    "idx_businesses_slug" btree (slug)
+Referenced by:
+    TABLE "business_users" CONSTRAINT "business_users_business_id_fkey" FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+    TABLE "categories" CONSTRAINT "categories_business_id_fkey" FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+    TABLE "products" CONSTRAINT "products_business_id_fkey" FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+Policies:
+    POLICY "Users can view businesses they belong to" FOR SELECT
+      USING ((id IN ( SELECT business_users.business_id
+   FROM business_users
+  WHERE ((business_users.user_id = auth.uid()) AND (business_users.is_active = true)))))
+Access method: heap
+
+                                                      Table "public.business_users"
+   Column    |           Type           | Collation | Nullable |      Default      | Storage  | Compression | Stats target | Description 
+-------------+--------------------------+-----------+----------+-------------------+----------+-------------+--------------+-------------
+ id          | uuid                     |           | not null | gen_random_uuid() | plain    |             |              | 
+ business_id | uuid                     |           | not null |                   | plain    |             |              | 
+ user_id     | uuid                     |           | not null |                   | plain    |             |              | 
+ role        | text                     |           | not null | 'cashier'::text   | extended |             |              | 
+ permissions | jsonb                    |           |          | '{}'::jsonb       | extended |             |              | 
+ is_active   | boolean                  |           |          | true              | plain    |             |              | 
+ invited_at  | timestamp with time zone |           |          | now()             | plain    |             |              | 
+ joined_at   | timestamp with time zone |           |          |                   | plain    |             |              | 
+ created_at  | timestamp with time zone |           | not null | now()             | plain    |             |              | 
+ updated_at  | timestamp with time zone |           | not null | now()             | plain    |             |              | 
+Indexes:
+    "business_users_pkey" PRIMARY KEY, btree (id)
+    "business_users_business_id_user_id_key" UNIQUE CONSTRAINT, btree (business_id, user_id)
+    "idx_business_users_active" btree (is_active)
+    "idx_business_users_business_id" btree (business_id)
+    "idx_business_users_user_id" btree (user_id)
+Check constraints:
+    "business_users_role_check" CHECK (role = ANY (ARRAY['owner'::text, 'manager'::text, 'employee'::text, 'cashier'::text, 'admin'::text]))
+Foreign-key constraints:
+    "business_users_business_id_fkey" FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+    "business_users_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+Policies:
+    POLICY "Users can view their business relationships" FOR SELECT
+      USING ((user_id = auth.uid()))
+Access method: heap
+
+                                                                     Table "public.orders"
+          Column           |           Type           | Collation | Nullable |          Default          | Storage  | Compression | Stats target | Description 
+---------------------------+--------------------------+-----------+----------+---------------------------+----------+-------------+--------------+-------------
+ id                        | uuid                     |           | not null | gen_random_uuid()         | plain    |             |              | 
+ order_number              | text                     |           | not null |                           | extended |             |              | 
+ daily_serial              | text                     |           |          |                           | extended |             |              | 
+ serial_date               | date                     |           |          |                           | plain    |             |              | 
+ customer_name             | text                     |           |          |                           | extended |             |              | 
+ items                     | jsonb                    |           | not null |                           | extended |             |              | 
+ total_amount              | numeric(10,2)            |           | not null |                           | main     |             |              | 
+ payment_method            | payment_method           |           | not null | 'cash'::payment_method    | plain    |             |              | 
+ delivery_platform         | delivery_platform        |           |          |                           | plain    |             |              | 
+ status                    | order_status             |           | not null | 'completed'::order_status | plain    |             |              | 
+ discount_type             | text                     |           |          |                           | extended |             |              | 
+ discount_value            | numeric(5,2)             |           |          |                           | main     |             |              | 
+ discount_amount           | numeric(10,2)            |           |          | '0'::numeric              | main     |             |              | 
+ event_discount_name       | text                     |           |          |                           | extended |             |              | 
+ event_discount_percentage | numeric(5,2)             |           |          |                           | main     |             |              | 
+ event_discount_amount     | numeric(10,2)            |           |          | '0'::numeric              | main     |             |              | 
+ cash_amount               | numeric(10,2)            |           |          |                           | main     |             |              | 
+ card_amount               | numeric(10,2)            |           |          |                           | main     |             |              | 
+ cash_received             | numeric(10,2)            |           |          |                           | main     |             |              | 
+ change_amount             | numeric(10,2)            |           |          |                           | main     |             |              | 
+ created_at                | timestamp with time zone |           | not null | now()                     | plain    |             |              | 
+ updated_at                | timestamp with time zone |           | not null | now()                     | plain    |             |              | 
+ created_by                | uuid                     |           | not null |                           | plain    |             |              | 
+Indexes:
+    "orders_pkey" PRIMARY KEY, btree (id)
+    "orders_order_number_key" UNIQUE CONSTRAINT, btree (order_number)
+Foreign-key constraints:
+    "orders_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id)
+Referenced by:
+    TABLE "canceled_orders" CONSTRAINT "canceled_orders_original_order_id_fkey" FOREIGN KEY (original_order_id) REFERENCES orders(id) ON DELETE CASCADE
+    TABLE "modified_orders" CONSTRAINT "modified_orders_original_order_id_fkey" FOREIGN KEY (original_order_id) REFERENCES orders(id) ON DELETE CASCADE
+Access method: heap
+

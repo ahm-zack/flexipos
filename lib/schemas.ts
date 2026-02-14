@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-// Simple role enum
-export const AppRoleEnum = z.enum(['superadmin', 'admin', 'manager', 'cashier', 'kitchen']);
+// Simple role enum (superadmin exists in DB but not exposed in forms)
+export const AppRoleEnum = z.enum(['superadmin', 'admin', 'manager', 'staff']);
 export type AppRole = z.infer<typeof AppRoleEnum>;
 
 // Simple User schema

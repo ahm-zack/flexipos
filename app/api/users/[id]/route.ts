@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserById, updateUser, deleteUser } from '@/lib/user-service-drizzle';
-import { requireSuperAdmin } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Check if user is authorized (super admin only)
-    const { authorized, error: authCheckError } = await requireSuperAdmin();
+    // Check if user is authorized (admin or higher)
+    const { authorized, error: authCheckError } = await requireAdmin();
     
     if (!authorized) {
       console.error('Unauthorized API access attempt:', authCheckError);
       return NextResponse.json(
-        { success: false, error: 'Unauthorized: Only super admins can access users' },
+        { success: false, error: 'Unauthorized: Only admins can access users' },
         { status: 403 }
       );
     }
@@ -40,13 +40,13 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Check if user is authorized (super admin only)
-    const { authorized, error: authCheckError } = await requireSuperAdmin();
+    // Check if user is authorized (admin or higher)
+    const { authorized, error: authCheckError } = await requireAdmin();
     
     if (!authorized) {
       console.error('Unauthorized user update attempt:', authCheckError);
       return NextResponse.json(
-        { success: false, error: 'Unauthorized: Only super admins can update users' },
+        { success: false, error: 'Unauthorized: Only admins can update users' },
         { status: 403 }
       );
     }
@@ -75,13 +75,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Check if user is authorized (super admin only)
-    const { authorized, error: authCheckError } = await requireSuperAdmin();
+    // Check if user is authorized (admin or higher)
+    const { authorized, error: authCheckError } = await requireAdmin();
     
     if (!authorized) {
       console.error('Unauthorized user deletion attempt:', authCheckError);
       return NextResponse.json(
-        { success: false, error: 'Unauthorized: Only super admins can delete users' },
+        { success: false, error: 'Unauthorized: Only admins can delete users' },
         { status: 403 }
       );
     }

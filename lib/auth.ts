@@ -96,8 +96,7 @@ export async function requireRole(requiredRole: AppRole): Promise<{ authorized: 
 
   // Define role hierarchy
   const roleHierarchy: Record<AppRole, number> = {
-    'cashier': 1,
-    'kitchen': 1,
+    'staff': 1,
     'manager': 2,
     'admin': 3,
     'superadmin': 4,

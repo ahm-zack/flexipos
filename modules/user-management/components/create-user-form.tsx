@@ -18,11 +18,9 @@ import { useRouter } from "next/navigation";
 import { UserRole } from "@/lib/db";
 
 const roles: { value: UserRole; label: string }[] = [
-  { value: "cashier", label: "Cashier" },
-  { value: "kitchen", label: "Kitchen Staff" },
-  { value: "manager", label: "Manager" },
   { value: "admin", label: "Admin" },
-  { value: "superadmin", label: "Super Admin" },
+  { value: "manager", label: "Manager" },
+  { value: "staff", label: "Staff" },
 ];
 
 export function CreateUserForm() {
@@ -63,7 +61,7 @@ export function CreateUserForm() {
       router.push("/admin/users");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create user"
+        error instanceof Error ? error.message : "Failed to create user",
       );
     }
   };

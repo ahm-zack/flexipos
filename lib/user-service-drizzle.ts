@@ -111,6 +111,32 @@ export async function getUserByEmail(email: string): Promise<ApiResponse<User>> 
  */
 export async function createUser(userData: NewUser): Promise<ApiResponse<User>> {
   try {
+    // Check if user already exists in database
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.id, userData.id!)
+    });
+
+    if (existingUser) {
+      console.log('User already exists in database:', userData.id);
+      // Update the existing user instead
+      const [updatedUser] = await db
+        .update(users)
+        .set({ 
+          ...userData, 
+          updatedAt: new Date() 
+        })
+        .where(eq(users.id, userData.id!))
+        .returning();
+
+      // Sync role to custom claims
+      if (updatedUser && updatedUser.role) {
+        await syncRoleToCustomClaims(updatedUser.id, updatedUser.role);
+      }
+
+      return { success: true, data: updatedUser };
+    }
+
+    // Insert new user
     const [newUser] = await db.insert(users).values(userData).returning();
 
     // IMPORTANT: Always sync role to custom claims when creating a user
