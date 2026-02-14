@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "gen:types": "npx supabase gen types typescript --local > database.types.ts"
+    "gen:types": "npx supabase gen types typescript --local > database.types.ts",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",

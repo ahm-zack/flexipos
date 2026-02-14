@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
 import { useCategories } from "@/hooks/useCategories";
+import { logout } from "@/app/logout/actions";
 
 interface ModernAdminNavbarProps {
   user?: {
@@ -41,6 +42,10 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
   const [isMenuExpanded, setIsMenuExpanded] = React.useState(false);
+
+  const logOut = () => {
+    logout();
+  };
 
   // Fetch categories with caching
   const {
@@ -263,6 +268,18 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                       Light Mode
                     </>
                   )}
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem asChild>
+                  <Button
+                    className="w-full"
+                    onClick={logOut}
+                    variant={"destructive"}
+                  >
+                    Logout
+                  </Button>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
