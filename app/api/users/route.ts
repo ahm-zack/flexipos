@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUsers, createUser } from '@/lib/user-service-drizzle';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdmin, getCurrentUser } from '@/lib/auth';
 import { CreateUserSchema } from '@/lib/schemas';
+import { db } from '@/lib/db';
+import { businessUsers } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function GET() {
   try {
@@ -117,6 +120,47 @@ export async function POST(request: NextRequest) {
         { success: false, error: dbResult.error },
         { status: 500 }
       );
+    }
+
+    // Step 2: Get the current admin's business and assign the new user to it
+    try {
+      const { user: currentUser } = await getCurrentUser();
+
+      if (!currentUser) {
+        throw new Error('Could not get current user');
+      }
+
+      // Find the admin's business relationship
+      const adminBusinessRelation = await db.query.businessUsers.findFirst({
+        where: eq(businessUsers.userId, currentUser.id),
+      });
+
+      if (!adminBusinessRelation) {
+        console.warn('Admin user has no business assigned');
+        // Still return success for user creation, but log the issue
+        return NextResponse.json({
+          ...dbResult,
+          warning: 'User created but not assigned to any business'
+        }, { status: 201 });
+      }
+
+      // Create business_users relationship for the new user
+      await db.insert(businessUsers).values({
+        businessId: adminBusinessRelation.businessId,
+        userId: userId,
+        role: validatedData.role || 'staff',
+        isActive: true,
+        joinedAt: new Date(),
+      });
+
+      console.log(`User ${userId} assigned to business ${adminBusinessRelation.businessId}`);
+    } catch (businessError) {
+      console.error('Error assigning user to business:', businessError);
+      // Don't fail the entire operation, but log the error
+      return NextResponse.json({
+        ...dbResult,
+        warning: 'User created but business assignment failed'
+      }, { status: 201 });
     }
 
     return NextResponse.json(dbResult, { status: 201 });
