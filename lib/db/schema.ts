@@ -141,6 +141,7 @@ export type NewProduct = typeof products.$inferInsert;
 // Orders table
 export const orders = pgTable('orders', {
   id: uuid('id').primaryKey().defaultRandom(),
+  businessId: uuid('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
   orderNumber: text('order_number').notNull(),
   dailySerial: text('daily_serial'),
   serialDate: date('serial_date'),
@@ -174,6 +175,7 @@ export type DeliveryPlatform = typeof deliveryPlatformEnum.enumValues[number];
 // Canceled Orders table (audit trail)
 export const canceledOrders = pgTable('canceled_orders', {
   id: uuid('id').primaryKey().defaultRandom(),
+  businessId: uuid('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
   originalOrderId: uuid('original_order_id').notNull(),
   canceledAt: timestamp('canceled_at', { withTimezone: true }).defaultNow().notNull(),
   canceledBy: uuid('canceled_by').notNull().references(() => users.id),
@@ -187,6 +189,7 @@ export type NewCanceledOrder = typeof canceledOrders.$inferInsert;
 // Modified Orders table (audit trail)
 export const modifiedOrders = pgTable('modified_orders', {
   id: uuid('id').primaryKey().defaultRandom(),
+  businessId: uuid('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
   originalOrderId: uuid('original_order_id').notNull(),
   modifiedAt: timestamp('modified_at', { withTimezone: true }).defaultNow().notNull(),
   modifiedBy: uuid('modified_by').notNull().references(() => users.id),
