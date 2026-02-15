@@ -13,19 +13,29 @@ export const productKeys = {
 };
 
 // Hook to get all products for a business
-export function useProducts(businessId: string) {
+export function useProducts(businessId: string | null) {
     return useQuery({
-        queryKey: productKeys.list(businessId),
-        queryFn: () => productSupabaseService.getProducts(businessId),
+        queryKey: productKeys.list(businessId || 'no-business'),
+        queryFn: () => {
+            if (!businessId) {
+                throw new Error('Business ID is required to fetch products');
+            }
+            return productSupabaseService.getProducts(businessId);
+        },
         enabled: !!businessId,
     });
 }
 
 // Hook to get products by category
-export function useProductsByCategory(businessId: string, categoryId: string) {
+export function useProductsByCategory(businessId: string | null, categoryId: string) {
     return useQuery({
-        queryKey: productKeys.listByCategory(businessId, categoryId),
-        queryFn: () => productSupabaseService.getProductsByCategory(businessId, categoryId),
+        queryKey: productKeys.listByCategory(businessId || 'no-business', categoryId),
+        queryFn: () => {
+            if (!businessId) {
+                throw new Error('Business ID is required to fetch products');
+            }
+            return productSupabaseService.getProductsByCategory(businessId, categoryId);
+        },
         enabled: !!businessId && !!categoryId,
     });
 }

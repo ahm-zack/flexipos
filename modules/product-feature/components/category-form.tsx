@@ -19,6 +19,7 @@ import {
   type NewCategory,
 } from "../services/category-supabase-service";
 import { useCreateCategory, useUpdateCategory } from "@/hooks/useCategories";
+import { useBusinessId } from "@/hooks/useBusinessId";
 
 interface CategoryFormProps {
   category?: Category | null;
@@ -64,6 +65,12 @@ export function CategoryForm({
   onSuccess,
 }: CategoryFormProps) {
   const isEdit = !!category;
+  const {
+    businessId,
+    isLoading: businessLoading,
+    error: businessError,
+  } = useBusinessId();
+
   const [formData, setFormData] = useState<Partial<NewCategory>>(() => ({
     name: category?.name || "",
     nameAr: category?.nameAr || "",
@@ -73,7 +80,7 @@ export function CategoryForm({
     displayOrder: category?.displayOrder || 0,
     isActive: category?.isActive ?? true,
     slug: category?.slug || "",
-    businessId: category?.businessId || "b1234567-89ab-cdef-0123-456789abcdef", // TODO: Get from context
+    businessId: category?.businessId || businessId || undefined,
     parentCategoryId: category?.parentCategoryId || null,
     metadata: category?.metadata || {},
   }));
@@ -89,37 +96,59 @@ export function CategoryForm({
       return;
     }
 
+    // Validate businessId is available
+    if (!businessId) {
+      alert(
+        "Business information not loaded. Please refresh the page and try again.",
+      );
+      return;
+    }
+
+    // Ensure businessId is set
+    const dataToSubmit = {
+      ...formData,
+      businessId: businessId, // Use the validated businessId
+    };
+
     // Generate slug if not provided
-    if (!formData.slug) {
-      formData.slug = formData.name
-        .toLowerCase()
+    if (!dataToSubmit.slug) {
+      dataToSubmit.slug = dataToSubmit
+        .name!.toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^\w-]/g, "");
     }
+
+    console.log(
+      "Submitting category with businessId:",
+      dataToSubmit.businessId,
+    );
 
     try {
       if (isEdit && category) {
         const updatedCategory = await updateMutation.mutateAsync({
           id: category.id,
-          data: formData as Partial<NewCategory>,
+          data: dataToSubmit as Partial<NewCategory>,
         });
         onSuccess?.(updatedCategory);
       } else {
         const newCategory = await createMutation.mutateAsync(
-          formData as NewCategory
+          dataToSubmit as NewCategory,
         );
+        console.log("Category created successfully:", newCategory);
         onSuccess?.(newCategory);
       }
       onClose();
     } catch (error) {
       console.error("Error saving category:", error);
-      alert("Failed to save category. Please try again.");
+      alert(
+        `Failed to save category: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   };
 
   const handleChange = (
     field: keyof NewCategory,
-    value: string | number | boolean | null
+    value: string | number | boolean | null,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -137,6 +166,19 @@ export function CategoryForm({
               : "Add a new category to organize your products."}
           </DialogDescription>
         </DialogHeader>
+
+        {businessError && (
+          <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            ⚠️ {businessError} - Unable to create category without business
+            information.
+          </div>
+        )}
+
+        {businessLoading && (
+          <div className="text-sm text-muted-foreground">
+            Loading business information...
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -254,13 +296,18 @@ export function CategoryForm({
             </Button>
             <Button
               type="submit"
-              disabled={createMutation.isPending || updateMutation.isPending}
+              disabled={
+                !businessId ||
+                businessLoading ||
+                createMutation.isPending ||
+                updateMutation.isPending
+              }
             >
               {createMutation.isPending || updateMutation.isPending
                 ? "Saving..."
                 : isEdit
-                ? "Update Category"
-                : "Create Category"}
+                  ? "Update Category"
+                  : "Create Category"}
             </Button>
           </DialogFooter>
         </form>

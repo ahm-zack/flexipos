@@ -5,15 +5,13 @@ import { useBusinessContext } from "@/modules/providers/components/business-prov
 /**
  * Custom hook to get the current business ID
  * This replaces hardcoded business IDs throughout the application
+ * Returns null if no business is found - components should handle this appropriately
  */
 export function useBusinessId() {
     const { businessId, loading, error } = useBusinessContext();
 
-    // Fallback to demo business for development/testing
-    const fallbackBusinessId = "b1234567-89ab-cdef-0123-456789abcdef";
-
     return {
-        businessId: businessId || fallbackBusinessId,
+        businessId: businessId || null,
         isLoading: loading,
         error,
         hasDynamicBusinessId: !!businessId,
@@ -28,7 +26,6 @@ export function useBusiness() {
 
     return {
         ...context,
-        // Provide fallback for demo purposes
-        businessId: context.businessId || "b1234567-89ab-cdef-0123-456789abcdef",
+        businessId: context.businessId || null,
     };
 }

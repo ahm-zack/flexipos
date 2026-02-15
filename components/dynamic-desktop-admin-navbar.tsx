@@ -52,7 +52,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
     data: categories = [],
     isLoading,
     error,
-  } = useCategories("b1234567-89ab-cdef-0123-456789abcdef");
+  } = useCategories(); // Now uses authenticated user's businessId from context
 
   // Generate dynamic menu items from categories
   const dynamicMenuItems = React.useMemo(() => {

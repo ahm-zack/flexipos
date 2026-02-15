@@ -6,8 +6,7 @@ import { useProductsByCategorySlug } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { Package, Loader2 } from "lucide-react";
 import type { Category } from "@/modules/product-feature/services/category-supabase-service";
-
-const DEFAULT_BUSINESS_ID = "b1234567-89ab-cdef-0123-456789abcdef";
+import { useBusinessId } from "@/hooks/useBusinessId";
 
 interface DynamicMenuClientPageProps {
   params: Promise<{ id: string }>;
@@ -17,12 +16,13 @@ export default function DynamicMenuClientPage({
   params,
 }: DynamicMenuClientPageProps) {
   const { id: categorySlug } = use(params);
+  const { businessId } = useBusinessId(); // Now uses authenticated user's businessId from context
 
   // Fetch categories and products for the specific category
   const { data: categories = [], isLoading: categoriesLoading } =
-    useCategories(DEFAULT_BUSINESS_ID);
+    useCategories();
   const { data: categoryProducts = [], isLoading: productsLoading } =
-    useProductsByCategorySlug(categorySlug, DEFAULT_BUSINESS_ID);
+    useProductsByCategorySlug(categorySlug, businessId || undefined);
 
   // Find the current category
   const currentCategory = categories.find(

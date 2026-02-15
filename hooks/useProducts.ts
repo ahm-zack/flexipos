@@ -22,8 +22,13 @@ export function useProducts(overrideBusinessId?: string) {
     const businessId = overrideBusinessId || contextBusinessId;
 
     return useQuery({
-        queryKey: productKeys.list(businessId),
-        queryFn: () => productSupabaseService.getProducts(businessId),
+        queryKey: productKeys.list(businessId || 'no-business'),
+        queryFn: () => {
+            if (!businessId) {
+                throw new Error('Business ID is required to fetch products');
+            }
+            return productSupabaseService.getProducts(businessId);
+        },
         staleTime: 5 * 60 * 1000, // 5 minutes
         refetchOnWindowFocus: false,
         enabled: !!businessId,
@@ -38,8 +43,13 @@ export function useProductsByCategory(categoryId: string, overrideBusinessId?: s
     const businessId = overrideBusinessId || contextBusinessId;
 
     return useQuery({
-        queryKey: [...productKeys.list(businessId), 'category', categoryId],
-        queryFn: () => productSupabaseService.getProductsByCategory(businessId, categoryId),
+        queryKey: [...productKeys.list(businessId || 'no-business'), 'category', categoryId],
+        queryFn: () => {
+            if (!businessId) {
+                throw new Error('Business ID is required to fetch products');
+            }
+            return productSupabaseService.getProductsByCategory(businessId, categoryId);
+        },
         staleTime: 5 * 60 * 1000, // 5 minutes
         refetchOnWindowFocus: false,
         enabled: !!businessId && !!categoryId,
@@ -68,12 +78,17 @@ export function useCreateProduct(overrideBusinessId?: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (productData: Omit<NewProduct, 'businessId'>) =>
-            productSupabaseService.createProduct({
+        mutationFn: (productData: Omit<NewProduct, 'businessId'>) => {
+            if (!businessId) {
+                throw new Error('Business ID is required to create a product');
+            }
+            return productSupabaseService.createProduct({
                 ...productData,
                 businessId: businessId,
-            }),
+            });
+        },
         onSuccess: (newProduct) => {
+            if (!businessId) return;
             // Update the cache with the new product
             queryClient.setQueryData<Product[]>(
                 productKeys.list(businessId),
@@ -112,6 +127,7 @@ export function useUpdateProduct(overrideBusinessId?: string) {
         mutationFn: ({ id, data }: { id: string; data: Partial<NewProduct> }) =>
             productSupabaseService.updateProduct(id, data),
         onSuccess: (updatedProduct) => {
+            if (!businessId) return;
             // Update the cache with the updated product
             queryClient.setQueryData<Product[]>(
                 productKeys.list(businessId),
@@ -153,6 +169,7 @@ export function useDeleteProduct(overrideBusinessId?: string) {
     return useMutation({
         mutationFn: (productId: string) => productSupabaseService.deleteProduct(productId),
         onSuccess: (_, productId) => {
+            if (!businessId) return;
             // Remove the product from cache
             queryClient.setQueryData<Product[]>(
                 productKeys.list(businessId),
@@ -177,8 +194,11 @@ export function useProductsByCategorySlug(categorySlug: string, overrideBusiness
     const businessId = overrideBusinessId || contextBusinessId;
 
     return useQuery({
-        queryKey: [...productKeys.list(businessId), 'categorySlug', categorySlug],
+        queryKey: [...productKeys.list(businessId || 'no-business'), 'categorySlug', categorySlug],
         queryFn: async () => {
+            if (!businessId) {
+                throw new Error('Business ID is required to fetch products');
+            }
             // First get the category by slug to get the categoryId
             const category = await categorySupabaseService.getCategoryBySlug(businessId, categorySlug);
             if (!category) {

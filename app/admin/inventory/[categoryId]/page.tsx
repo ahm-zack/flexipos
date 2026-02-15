@@ -5,6 +5,7 @@ import { ProductManagementView } from "@/modules/product-feature/components/prod
 import { useProductsByCategory } from "@/modules/product-feature/hooks/useProducts";
 import { useQuery } from "@tanstack/react-query";
 import { categorySupabaseService } from "@/modules/product-feature/services/category-supabase-service";
+import { useBusinessId } from "@/hooks/useBusinessId";
 
 export default function CategoryInventoryPage({
   params,
@@ -12,9 +13,7 @@ export default function CategoryInventoryPage({
   params: Promise<{ categoryId: string }>;
 }) {
   const { categoryId } = use(params);
-
-  // Get business ID (in a real app, this would come from auth context)
-  const businessId = "b1234567-89ab-cdef-0123-456789abcdef";
+  const { businessId } = useBusinessId(); // Now uses authenticated user's businessId from context
 
   // Fetch category information by ID
   const {
@@ -62,6 +61,19 @@ export default function CategoryInventoryPage({
     categoryName: category?.name || `Category ${categoryId}`,
     categoryIdFromData: category?.id,
   });
+
+  if (!businessId) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">
+            Error Loading Business
+          </h1>
+          <p className="text-muted-foreground">Business ID not found</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-6">

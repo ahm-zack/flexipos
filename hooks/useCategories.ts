@@ -13,8 +13,13 @@ export function useCategories(overrideBusinessId?: string) {
     const businessId = overrideBusinessId || contextBusinessId;
 
     return useQuery({
-        queryKey: categoryKeys.list(businessId),
-        queryFn: () => categorySupabaseService.getCategories(businessId),
+        queryKey: categoryKeys.list(businessId || 'no-business'),
+        queryFn: () => {
+            if (!businessId) {
+                throw new Error('Business ID is required to fetch categories');
+            }
+            return categorySupabaseService.getCategories(businessId);
+        },
         staleTime: 5 * 60 * 1000, // 5 minutes
         refetchOnWindowFocus: false,
         enabled: !!businessId,
@@ -29,8 +34,13 @@ export function useCategoryBySlug(slug: string, overrideBusinessId?: string) {
     const businessId = overrideBusinessId || contextBusinessId;
 
     return useQuery({
-        queryKey: [...categoryKeys.list(businessId), 'slug', slug],
-        queryFn: () => categorySupabaseService.getCategoryBySlug(businessId, slug),
+        queryKey: [...categoryKeys.list(businessId || 'no-business'), 'slug', slug],
+        queryFn: () => {
+            if (!businessId) {
+                throw new Error('Business ID is required to fetch category');
+            }
+            return categorySupabaseService.getCategoryBySlug(businessId, slug);
+        },
         staleTime: 5 * 60 * 1000, // 5 minutes
         refetchOnWindowFocus: false,
         enabled: !!slug && !!businessId,
@@ -46,8 +56,13 @@ export function useCreateCategory(overrideBusinessId?: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (data: NewCategory) => categorySupabaseService.createCategory(data),
+        mutationFn: (data: NewCategory) => {
+            console.log('Creating category with data:', data);
+            return categorySupabaseService.createCategory(data);
+        },
         onSuccess: (newCategory) => {
+            console.log('Category created successfully, updating cache:', newCategory);
+            if (!businessId) return;
             // Update the cache with the new category
             queryClient.setQueryData<Category[]>(
                 categoryKeys.list(businessId),
@@ -59,6 +74,9 @@ export function useCreateCategory(overrideBusinessId?: string) {
 
             // Invalidate to ensure fresh data
             queryClient.invalidateQueries({ queryKey: categoryKeys.list(businessId) });
+        },
+        onError: (error) => {
+            console.error('Error creating category:', error);
         },
     });
 }
@@ -75,6 +93,7 @@ export function useUpdateCategory(overrideBusinessId?: string) {
         mutationFn: ({ id, data }: { id: string; data: Partial<NewCategory> }) =>
             categorySupabaseService.updateCategory(id, data),
         onSuccess: (updatedCategory) => {
+            if (!businessId) return;
             // Update the cache with the updated category
             queryClient.setQueryData<Category[]>(
                 categoryKeys.list(businessId),
@@ -103,6 +122,7 @@ export function useDeleteCategory(overrideBusinessId?: string) {
     return useMutation({
         mutationFn: (id: string) => categorySupabaseService.deleteCategory(id),
         onSuccess: (_, deletedId) => {
+            if (!businessId) return;
             // Remove the category from cache
             queryClient.setQueryData<Category[]>(
                 categoryKeys.list(businessId),
@@ -122,11 +142,13 @@ export function useDeleteCategory(overrideBusinessId?: string) {
  * Prefetch categories for SSG (for use in getStaticProps)
  */
 export async function prefetchCategories(queryClient: QueryClient, businessId?: string) {
-    const fallbackBusinessId = "b1234567-89ab-cdef-0123-456789abcdef";
-    const finalBusinessId = businessId || fallbackBusinessId;
+    if (!businessId) {
+        console.warn('Cannot prefetch categories without businessId');
+        return;
+    }
     await queryClient.prefetchQuery({
-        queryKey: categoryKeys.list(finalBusinessId),
-        queryFn: () => categorySupabaseService.getCategories(finalBusinessId),
+        queryKey: categoryKeys.list(businessId),
+        queryFn: () => categorySupabaseService.getCategories(businessId),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }

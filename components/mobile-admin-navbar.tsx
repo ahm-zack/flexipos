@@ -43,11 +43,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
   >(null);
 
   // Fetch categories with caching
-  const {
-    data: categories = [],
-    isLoading,
-    error,
-  } = useCategories("b1234567-89ab-cdef-0123-456789abcdef");
+  const { data: categories = [], isLoading, error } = useCategories(); // Now uses authenticated user's businessId from context
 
   // Generate dynamic menu items from categories
   const dynamicMenuItems = React.useMemo(() => {
@@ -107,7 +103,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
               <Button
                 className={cn(
                   "relative flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 shadow-md hover:shadow-lg",
-                  activeDropdown === "menu" && "bg-primary/80 shadow-lg"
+                  activeDropdown === "menu" && "bg-primary/80 shadow-lg",
                 )}
                 onClick={() => toggleDropdown("menu")}
               >
@@ -115,7 +111,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                 <ChevronDown
                   className={cn(
                     "size-4 transition-transform duration-200",
-                    activeDropdown === "menu" && "rotate-180"
+                    activeDropdown === "menu" && "rotate-180",
                   )}
                 />
                 {/* Active Indicator Circle */}
@@ -129,7 +125,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                 variant="ghost"
                 className={cn(
                   "relative flex items-center gap-2 h-10 w-10 p-0 hover:bg-accent transition-colors duration-200",
-                  activeDropdown === "cart" && "bg-accent"
+                  activeDropdown === "cart" && "bg-accent",
                 )}
                 onClick={() => toggleDropdown("cart")}
               >
@@ -150,7 +146,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                 variant="ghost"
                 className={cn(
                   "relative h-10 w-10 p-0 hover:bg-accent transition-colors duration-200",
-                  activeDropdown === "avatar" && "bg-accent"
+                  activeDropdown === "avatar" && "bg-accent",
                 )}
                 onClick={() => toggleDropdown("avatar")}
               >
@@ -176,7 +172,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
           <div
             className={cn(
               "bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70 rounded-2xl shadow-lg mx-auto max-w-sm",
-              activeDropdown !== "cart" && "border"
+              activeDropdown !== "cart" && "border",
             )}
           >
             {/* Menu Dropdown */}
@@ -235,7 +231,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                             "active:scale-[0.98]",
                             "transform-gpu touch-manipulation",
                             isActive &&
-                              "bg-primary/10 border-primary/50 shadow-md"
+                              "bg-primary/10 border-primary/50 shadow-md",
                           )}
                           onClick={closeDropdowns}
                         >
@@ -250,7 +246,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                               "text-xs font-medium text-center leading-tight transition-colors duration-200",
                               isActive
                                 ? "text-primary font-semibold"
-                                : "text-foreground/80 group-hover:text-primary"
+                                : "text-foreground/80 group-hover:text-primary",
                             )}
                           >
                             {item.title}

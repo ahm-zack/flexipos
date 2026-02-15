@@ -13,14 +13,14 @@ interface BusinessContextType {
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export function useBusinessContext() {
   const context = useContext(BusinessContext);
   if (context === undefined) {
     throw new Error(
-      "useBusinessContext must be used within a BusinessProvider"
+      "useBusinessContext must be used within a BusinessProvider",
     );
   }
   return context;
@@ -78,7 +78,7 @@ export function BusinessProvider({ children }: BusinessProviderProps) {
               name,
               settings
             )
-          `
+          `,
           )
           .eq("user_id", currentUser.id)
           .eq("is_active", true)
@@ -94,20 +94,19 @@ export function BusinessProvider({ children }: BusinessProviderProps) {
             userId: currentUser.id,
           });
 
-          // If no business_users record found, use fallback for development
+          // If no business_users record found, show error
           if (businessError.code === "PGRST116") {
-            console.warn(
-              "No business_users record found, using development fallback"
+            console.error(
+              "No business association found for user. Please complete signup or contact support.",
             );
-            const fallbackBusinessId = "b1234567-89ab-cdef-0123-456789abcdef";
-            setBusinessId(fallbackBusinessId);
-            setBusinessName("Development Business");
-            setError(null);
+            setBusinessId(null);
+            setBusinessName(null);
+            setError("No business found. Please complete your business setup.");
             return;
           }
 
           setError(
-            `Failed to load business information: ${businessError.message}`
+            `Failed to load business information: ${businessError.message}`,
           );
           return;
         }
@@ -125,13 +124,12 @@ export function BusinessProvider({ children }: BusinessProviderProps) {
             businessName: business.name,
           });
         } else {
-          console.warn(
-            "No business relationship found, using development fallback"
+          console.error(
+            "No business relationship found for user. Data may be corrupted.",
           );
-          const fallbackBusinessId = "b1234567-89ab-cdef-0123-456789abcdef";
-          setBusinessId(fallbackBusinessId);
-          setBusinessName("Development Business");
-          setError(null);
+          setBusinessId(null);
+          setBusinessName(null);
+          setError("Business data not found. Please contact support.");
         }
       } catch (err) {
         console.error("Error in fetchBusinessData:", err);
