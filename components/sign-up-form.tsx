@@ -46,6 +46,7 @@ export function SignUpForm({
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const [step, setStep] = useState(1);
+  const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -61,7 +62,7 @@ export function SignUpForm({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleNextStep = (e: React.FormEvent) => {
+  const handleNextStep = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -75,27 +76,11 @@ export function SignUpForm({
       return;
     }
 
-    setStep(2);
-  };
-
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
     setIsLoading(true);
-    setError(null);
 
     try {
-      const slug = generateSlug(businessData.name);
-
-      const response = await fetch("/api/auth/signup", {
+      // Call Step 1 API: Create auth user and users table entry
+      const response = await fetch("/api/auth/signup/step1", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -103,19 +88,6 @@ export function SignUpForm({
         body: JSON.stringify({
           email,
           password,
-          business: {
-            name: businessData.name,
-            slug,
-            type: businessData.type,
-            address: {
-              street: businessData.address,
-              city: businessData.city,
-              country: businessData.country,
-            },
-            contact: {
-              phone: businessData.phone,
-            },
-          },
         }),
       });
 
@@ -125,7 +97,62 @@ export function SignUpForm({
         throw new Error(data.error || "Failed to create account");
       }
 
-      router.push("/");
+      // Store userId and move to step 2
+      setUserId(data.data.userId);
+      setStep(2);
+      console.log("✅ Step 1 complete: User created");
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    if (!userId) {
+      setError("Session expired. Please start again.");
+      setStep(1);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Call Step 2 API: Create business and link to user
+      const response = await fetch("/api/auth/signup/step2", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          business: {
+            name: businessData.name,
+            phone: businessData.phone,
+            address: businessData.address
+              ? `${businessData.address}, ${businessData.city}, ${businessData.country}`
+              : null,
+            timezone: "Asia/Riyadh",
+            currency: "SAR",
+          },
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create business");
+      }
+
+      console.log("✅ Step 2 complete: Business created");
+
+      // Success! Redirect to login
+      router.push(
+        "/login?message=Account created successfully! Please log in.",
+      );
       router.refresh();
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
@@ -135,14 +162,18 @@ export function SignUpForm({
   };
 
   const isStep1Valid =
-    email && password && repeatPassword && password === repeatPassword;
+    email &&
+    password &&
+    password.length >= 6 &&
+    repeatPassword &&
+    password === repeatPassword;
   const isStep2Valid =
     businessData.name && businessData.type && businessData.phone;
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
-        <CardHeader>
+        <CardHeader className="space-y-1">
           <CardTitle className="text-2xl">
             {step === 1 ? "Create Account" : "Business Information"}
           </CardTitle>
@@ -152,7 +183,7 @@ export function SignUpForm({
               : "Step 2 of 2: Tell us about your business"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-6">
           {step === 1 ? (
             <form onSubmit={handleNextStep}>
               <div className="flex flex-col gap-6">
@@ -177,6 +208,11 @@ export function SignUpForm({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  {password && password.length < 6 && (
+                    <p className="text-xs text-muted-foreground">
+                      Password must be at least 6 characters
+                    </p>
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="repeat-password">Repeat Password</Label>
@@ -188,14 +224,19 @@ export function SignUpForm({
                     value={repeatPassword}
                     onChange={(e) => setRepeatPassword(e.target.value)}
                   />
+                  {repeatPassword && password !== repeatPassword && (
+                    <p className="text-xs text-destructive">
+                      Passwords do not match
+                    </p>
+                  )}
                 </div>
                 {error && <p className="text-sm text-red-500">{error}</p>}
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={!isStep1Valid}
+                  disabled={!isStep1Valid || isLoading}
                 >
-                  Next
+                  {isLoading ? "Creating account..." : "Next"}
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">
@@ -207,7 +248,7 @@ export function SignUpForm({
             </form>
           ) : (
             <form onSubmit={handleSignUp}>
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="business-name">Business Name *</Label>
                   <Input
@@ -272,7 +313,7 @@ export function SignUpForm({
                     }
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="city">City</Label>
                     <Input
@@ -305,8 +346,8 @@ export function SignUpForm({
                   </div>
                 </div>
                 {error && <p className="text-sm text-red-500">{error}</p>}
-                <div className="flex gap-3">
-                  <Button
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {/* <Button
                     type="button"
                     variant="outline"
                     className="w-full"
@@ -314,9 +355,10 @@ export function SignUpForm({
                       setStep(1);
                       setError(null);
                     }}
+                    disabled={isLoading}
                   >
                     Back
-                  </Button>
+                  </Button> */}
                   <Button
                     type="submit"
                     className="w-full"

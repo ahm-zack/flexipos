@@ -256,3 +256,26 @@
  TAB ...................................... Complete filename & cycle.
  SHIFT-TAB ...................... ESC-TAB   Complete filename & reverse cycle.
  ctrl-L ................................... Complete filename, list all.
+                                                       Table "public.users"
+   Column   |           Type           | Collation | Nullable |   Default    | Storage  | Compression | Stats target | Description 
+------------+--------------------------+-----------+----------+--------------+----------+-------------+--------------+-------------
+ id         | uuid                     |           | not null |              | plain    |             |              | 
+ email      | text                     |           | not null |              | extended |             |              | 
+ full_name  | text                     |           |          |              | extended |             |              | 
+ avatar_url | text                     |           |          |              | extended |             |              | 
+ phone      | text                     |           |          |              | extended |             |              | 
+ role       | text                     |           |          | 'user'::text | extended |             |              | 
+ is_active  | boolean                  |           |          | true         | plain    |             |              | 
+ metadata   | jsonb                    |           |          | '{}'::jsonb  | extended |             |              | 
+ created_at | timestamp with time zone |           |          | now()        | plain    |             |              | 
+ updated_at | timestamp with time zone |           |          | now()        | plain    |             |              | 
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+    "users_email_unique" UNIQUE CONSTRAINT, btree (email)
+Referenced by:
+    TABLE "business_users" CONSTRAINT "business_users_user_id_users_id_fk" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "canceled_orders" CONSTRAINT "canceled_orders_canceled_by_users_id_fk" FOREIGN KEY (canceled_by) REFERENCES users(id)
+    TABLE "modified_orders" CONSTRAINT "modified_orders_modified_by_users_id_fk" FOREIGN KEY (modified_by) REFERENCES users(id)
+    TABLE "orders" CONSTRAINT "orders_created_by_users_id_fk" FOREIGN KEY (created_by) REFERENCES users(id)
+Access method: heap
+
