@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUsers, createUser } from '@/lib/user-service-drizzle';
-import { createAdminClient } from '@/utils/supabase/admin';
-import { requireAdmin, getCurrentUser } from '@/lib/auth';
+import {
+  getBusinessUsers,
+  createBusinessUser,
+  getCurrentUserBusinessId
+} from '@/lib/user-service-drizzle';
+import { requireAdmin } from '@/lib/auth';
 import { CreateUserSchema } from '@/lib/schemas';
-import { db } from '@/lib/db';
-import { businessUsers } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
 
 export async function GET() {
   try {
     // Check if user is authorized (admin or higher)
-    const { authorized, error: authCheckError } = await requireAdmin();
+    const { authorized, user, error: authCheckError } = await requireAdmin();
 
-    if (!authorized) {
+    if (!authorized || !user) {
       console.error('Unauthorized API access attempt:', authCheckError);
       return NextResponse.json(
         { success: false, error: 'Unauthorized: Only admins can access users' },
@@ -20,7 +20,17 @@ export async function GET() {
       );
     }
 
-    const result = await getUsers();
+    // Get current user's business
+    const businessResult = await getCurrentUserBusinessId(user.id);
+    if (!businessResult.success || !businessResult.data) {
+      return NextResponse.json(
+        { success: false, error: 'User is not associated with any business' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch business users for the current business
+    const result = await getBusinessUsers(businessResult.data);
 
     if (!result.success) {
       return NextResponse.json(result, { status: 500 });
@@ -39,9 +49,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     // Check if user is authorized (admin or higher)
-    const { authorized, error: authCheckError } = await requireAdmin();
+    const { authorized, user, error: authCheckError } = await requireAdmin();
 
-    if (!authorized) {
+    if (!authorized || !user) {
       console.error('Unauthorized user creation attempt:', authCheckError);
       return NextResponse.json(
         { success: false, error: 'Unauthorized: Only admins can create users' },
@@ -49,7 +59,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get current user's business
+    const businessResult = await getCurrentUserBusinessId(user.id);
+    if (!businessResult.success || !businessResult.data) {
+      return NextResponse.json(
+        { success: false, error: 'User is not associated with any business' },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
+    console.log('📝 Received user creation request:', { email: body.email, role: body.role });
 
     // Validate the data (map 'name' to 'fullName')
     const validatedData = CreateUserSchema.parse({
@@ -66,104 +86,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const adminClient = createAdminClient();
-
-    // Check if user already exists in Supabase Auth
-    const { data: existingAuthUsers } = await adminClient.auth.admin.listUsers();
-    const existingAuthUser = existingAuthUsers?.users.find(u => u.email === validatedData.email);
-
-    let userId: string;
-    let authCreated = false;
-
-    if (existingAuthUser) {
-      console.log('Auth user already exists, using existing ID:', existingAuthUser.id);
-      userId = existingAuthUser.id;
-    } else {
-      // Create Supabase auth user with the provided password
-      const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+    console.log('✅ Validation passed, creating user in business:', businessResult.data);
+    // Create business user (includes auth user, users table, and business_users table)
+    const result = await createBusinessUser(
+      businessResult.data,
+      {
         email: validatedData.email,
+        fullName: validatedData.fullName,
         password: body.password,
-        email_confirm: true,
-        app_metadata: {
-          user_role: validatedData.role
-        }
-      });
-
-      if (authError) {
-        console.error('Error creating auth user:', authError);
-        return NextResponse.json(
-          { success: false, error: `Failed to create authentication user: ${authError.message}` },
-          { status: 500 }
-        );
+        role: validatedData.role,
+        permissions: body.permissions || {},
       }
+    );
 
-      userId = authData.user.id;
-      authCreated = true;
-    }
-
-    // Create user in database using Drizzle
-    const dbResult = await createUser({
-      id: userId,
-      email: validatedData.email,
-      fullName: validatedData.fullName,
-      role: validatedData.role,
-    });
-
-    if (!dbResult.success) {
-      // If database creation fails and we just created the auth user, cleanup
-      if (authCreated) {
-        console.error('Database user creation failed, cleaning up auth user');
-        await adminClient.auth.admin.deleteUser(userId);
-      }
-
+    if (!result.success) {
+      console.error('❌ Failed to create user:', result.error);
       return NextResponse.json(
-        { success: false, error: dbResult.error },
+        { success: false, error: result.error },
         { status: 500 }
       );
     }
 
-    // Step 2: Get the current admin's business and assign the new user to it
-    try {
-      const { user: currentUser } = await getCurrentUser();
-
-      if (!currentUser) {
-        throw new Error('Could not get current user');
-      }
-
-      // Find the admin's business relationship
-      const adminBusinessRelation = await db.query.businessUsers.findFirst({
-        where: eq(businessUsers.userId, currentUser.id),
-      });
-
-      if (!adminBusinessRelation) {
-        console.warn('Admin user has no business assigned');
-        // Still return success for user creation, but log the issue
-        return NextResponse.json({
-          ...dbResult,
-          warning: 'User created but not assigned to any business'
-        }, { status: 201 });
-      }
-
-      // Create business_users relationship for the new user
-      await db.insert(businessUsers).values({
-        businessId: adminBusinessRelation.businessId,
-        userId: userId,
-        role: validatedData.role || 'staff',
-        isActive: true,
-        joinedAt: new Date(),
-      });
-
-      console.log(`User ${userId} assigned to business ${adminBusinessRelation.businessId}`);
-    } catch (businessError) {
-      console.error('Error assigning user to business:', businessError);
-      // Don't fail the entire operation, but log the error
-      return NextResponse.json({
-        ...dbResult,
-        warning: 'User created but business assignment failed'
-      }, { status: 201 });
-    }
-
-    return NextResponse.json(dbResult, { status: 201 });
+    console.log('✅ User created successfully:', result.data?.user?.email);
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error('Error in POST /api/users:', error);
     return NextResponse.json(

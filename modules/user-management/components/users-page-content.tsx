@@ -30,8 +30,8 @@ export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
   const filteredUsers = (users || []).filter((user) => {
     const matchesSearch =
       !searchTerm ||
-      user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      user.user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.user.email.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
 

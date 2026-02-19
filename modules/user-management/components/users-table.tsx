@@ -10,7 +10,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -30,7 +29,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
 import {
   MoreHorizontal,
   Trash2,
@@ -38,23 +36,15 @@ import {
   Mail,
   Calendar,
   Clock,
-  Plus,
-  Search,
-  Filter,
-  UserCheck,
-  Shield,
-  Crown,
-  ChefHat,
-  CreditCard,
 } from "lucide-react";
-import { User } from "@/lib/db";
+import type { BusinessUserWithDetails } from "@/lib/user-service-drizzle";
 import { useDeleteUser } from "../hooks/use-users";
 import { EditUserDialog } from "./edit-user-dialog";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
 interface UsersTableProps {
-  users: User[];
+  users: BusinessUserWithDetails[];
   currentUserId: string;
   onAddUser?: () => void;
 }
@@ -67,31 +57,27 @@ const roleColors = {
   cashier: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   kitchen:
     "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-} as const;
-
-const roleIcons = {
-  superadmin: Crown,
-  admin: Shield,
-  manager: UserCheck,
-  cashier: CreditCard,
-  kitchen: ChefHat,
+  staff: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
 } as const;
 
 export function UsersCards({ users, currentUserId }: UsersTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] =
+    useState<BusinessUserWithDetails | null>(null);
+  const [userToEdit, setUserToEdit] = useState<BusinessUserWithDetails | null>(
+    null,
+  );
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const deleteUserMutation = useDeleteUser();
 
-  const handleDeleteClick = (user: User) => {
+  const handleDeleteClick = (user: BusinessUserWithDetails) => {
     setUserToDelete(user);
     setDeleteDialogOpen(true);
   };
 
-  const handleEditClick = (user: User) => {
+  const handleEditClick = (user: BusinessUserWithDetails) => {
     setUserToEdit(user);
     setEditDialogOpen(true);
   };
@@ -101,12 +87,12 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
 
     try {
       await deleteUserMutation.mutateAsync(userToDelete.id);
-      toast.success(`User ${userToDelete.fullName} deleted successfully`);
+      toast.success(`User ${userToDelete.user.fullName} deleted successfully`);
       setDeleteDialogOpen(false);
       setUserToDelete(null);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete user"
+        error instanceof Error ? error.message : "Failed to delete user",
       );
     }
   };
@@ -155,7 +141,7 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
   };
 
   const handleSelectAll = () => {
-    const selectableUsers = users.filter((user) => !isCurrentUser(user.id));
+    const selectableUsers = users.filter((user) => !isCurrentUser(user.userId));
     if (selectedUsers.size === selectableUsers.length) {
       setSelectedUsers(new Set());
     } else {
@@ -174,7 +160,7 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
     try {
       // Delete users one by one (could be optimized with a bulk API endpoint)
       const deletePromises = Array.from(selectedUsers).map((userId) =>
-        deleteUserMutation.mutateAsync(userId)
+        deleteUserMutation.mutateAsync(userId),
       );
       await Promise.all(deletePromises);
 
@@ -183,12 +169,13 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
       setBulkDeleteDialogOpen(false);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete users"
+        error instanceof Error ? error.message : "Failed to delete users",
       );
     }
   };
 
-  const canSelect = (user: User) => !isCurrentUser(user.id);
+  const canSelect = (user: BusinessUserWithDetails) =>
+    !isCurrentUser(user.userId);
   const selectableUsersCount = users.filter(canSelect).length;
 
   if (users.length === 0) {
@@ -276,15 +263,15 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
                   )}
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-primary text-white">
-                      {getInitials(user.fullName)}
+                      {getInitials(user.user.fullName)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-sm truncate">
-                        {user.fullName}
+                        {user.user.fullName}
                       </h3>
-                      {isCurrentUser(user.id) && (
+                      {isCurrentUser(user.userId) && (
                         <Badge
                           variant="outline"
                           className="text-xs px-1.5 py-0.5"
@@ -298,7 +285,7 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
                     </Badge>
                   </div>
                 </div>
-                {!isCurrentUser(user.id) && (
+                {!isCurrentUser(user.userId) && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
@@ -327,7 +314,7 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Mail className="h-4 w-4" />
-                  <span className="truncate">{user.email}</span>
+                  <span className="truncate">{user.user.email}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
@@ -349,7 +336,7 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
             <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete user &quot;
-              {userToDelete?.fullName}
+              {userToDelete?.user.fullName}
               &quot;? This action cannot be undone and will remove the user from
               both the database and authentication system.
             </DialogDescription>
@@ -399,7 +386,7 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
                   const user = users.find((u) => u.id === userId);
                   return (
                     <li key={userId} className="text-sm">
-                      {user?.fullName || user?.email || userId}
+                      {user?.user.fullName || user?.user.email || userId}
                     </li>
                   );
                 })}

@@ -59,7 +59,7 @@ export async function getCurrentUser(): Promise<{ user: AuthUser | null; error?:
             user: {
               id: authUser.id,
               email: authUser.email || '',
-              role: userResult.data.role as 'superadmin' | 'admin' | 'manager' | 'cashier' | 'kitchen',
+              role: userResult.data.role as 'superadmin' | 'admin' | 'manager' | 'staff',
             }
           };
         }
@@ -128,4 +128,8 @@ export async function requireSuperAdmin(): Promise<{ authorized: boolean; user?:
  */
 export async function requireAdmin(): Promise<{ authorized: boolean; user?: AuthUser; error?: string }> {
   return requireRole('admin');
+}
+
+export async function requireManagerOrHigher(): Promise<{ authorized: boolean; user?: AuthUser; error?: string }> {
+  return requireRole('manager');
 }

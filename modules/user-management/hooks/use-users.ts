@@ -1,19 +1,30 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, NewUser, UserRole } from '@/lib/db';
+import type { BusinessUserWithDetails } from '@/lib/user-service-drizzle';
 
 // API function types
 interface CreateUserData {
   email: string;
   name: string;
-  role: UserRole;
+  role: string;
   password: string;
+  permissions?: Record<string, unknown>;
+}
+
+interface UpdateUserData {
+  fullName?: string;
+  name?: string;
+  role?: string;
+  permissions?: Record<string, unknown>;
+  isActive?: boolean;
+  phone?: string;
+  avatarUrl?: string;
 }
 
 // API functions
 const userAPI = {
-  getUsers: async (): Promise<User[]> => {
+  getUsers: async (): Promise<BusinessUserWithDetails[]> => {
     const response = await fetch('/api/users');
     if (!response.ok) {
       throw new Error('Failed to fetch users');
@@ -25,7 +36,7 @@ const userAPI = {
     return result.data;
   },
 
-  createUser: async (userData: CreateUserData): Promise<User> => {
+  createUser: async (userData: CreateUserData): Promise<BusinessUserWithDetails> => {
     const response = await fetch('/api/users', {
       method: 'POST',
       headers: {
@@ -43,7 +54,7 @@ const userAPI = {
     return result.data;
   },
 
-  updateUser: async ({ id, data }: { id: string; data: Partial<NewUser> }): Promise<User> => {
+  updateUser: async ({ id, data }: { id: string; data: UpdateUserData }): Promise<BusinessUserWithDetails> => {
     const response = await fetch(`/api/users/${id}`, {
       method: 'PATCH',
       headers: {

@@ -19,18 +19,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, UserRole } from "@/lib/db";
+import type { BusinessUserWithDetails } from "@/lib/user-service-drizzle";
+import type { UserRole } from "@/lib/db/schema";
 import { useUpdateUser } from "../hooks/use-users";
 import { toast } from "sonner";
 import { User as UserIcon, Mail, Shield, Edit } from "lucide-react";
 
 interface EditUserDialogProps {
-  user: User | null;
+  user: BusinessUserWithDetails | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const roles: { value: UserRole; label: string; description: string }[] = [
+const roles: { value: string; label: string; description: string }[] = [
   {
     value: "admin",
     label: "Admin",
@@ -46,6 +47,11 @@ const roles: { value: UserRole; label: string; description: string }[] = [
     label: "Staff",
     description: "Handle orders and daily operations",
   },
+  {
+    value: "cashier",
+    label: "Cashier",
+    description: "Handle customer transactions",
+  },
 ];
 
 export function EditUserDialog({
@@ -57,7 +63,7 @@ export function EditUserDialog({
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    role: "" as UserRole,
+    role: "",
   });
 
   const [errors, setErrors] = useState({
@@ -72,9 +78,9 @@ export function EditUserDialog({
   useEffect(() => {
     if (user && open) {
       const newFormData = {
-        name: user.fullName || "",
-        email: user.email,
-        role: (user.role || "staff") as UserRole,
+        name: user.user.fullName || "",
+        email: user.user.email,
+        role: user.role || "staff",
       };
       setFormData(newFormData);
       setIsDirty(false);
@@ -113,8 +119,8 @@ export function EditUserDialog({
     if (!user) return false;
 
     return (
-      newFormData.name !== (user.fullName || "") ||
-      newFormData.email !== user.email ||
+      newFormData.name !== (user.user.fullName || "") ||
+      newFormData.email !== user.user.email ||
       newFormData.role !== (user.role || "staff")
     );
   };
@@ -139,7 +145,6 @@ export function EditUserDialog({
         id: user.id,
         data: {
           fullName: formData.name.trim(),
-          email: formData.email.trim(),
           role: formData.role,
         },
       });
@@ -158,9 +163,9 @@ export function EditUserDialog({
     // Reset form data to original values
     if (user) {
       const originalData = {
-        name: user.fullName || "",
-        email: user.email,
-        role: (user.role || "cashier") as UserRole,
+        name: user.user.fullName || "",
+        email: user.user.email,
+        role: user.role || "staff",
       };
       setFormData(originalData);
       setIsDirty(false);
