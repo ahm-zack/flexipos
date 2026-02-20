@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import {
   Plus,
   Minus,
@@ -29,7 +29,8 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { orderKeys } from "@/modules/orders-feature/hooks/use-orders";
 import { Order, OrderItem } from "@/lib/orders";
-import { orderClientService } from "@/lib/order-client-service";
+import { createClient } from "@/utils/supabase/client";
+import { useBusinessContext } from "@/modules/providers/components/business-provider";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { cn } from "@/lib/utils";
 
@@ -50,19 +51,38 @@ export function EditOrderDialog({
 }: EditOrderDialogProps) {
   const [items, setItems] = useState<EditableOrderItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "mixed">(
-    "cash"
+    "cash",
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, startTransition] = useTransition();
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
+  const { businessId } = useBusinessContext();
 
   // Reset items and payment method when order changes
   useEffect(() => {
     if (order) {
       setItems(
-        order.items.map((item) => ({ ...item, quantity: item.quantity }))
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (order.items as any[]).map((item: any) => {
+          const unitPrice: number =
+            (item.unitPrice as number) ?? (item.price as number) ?? 0;
+          const qty: number = item.quantity ?? 1;
+          return {
+            ...item,
+            unitPrice,
+            quantity: qty,
+            totalPrice: item.totalPrice ?? unitPrice * qty,
+          };
+        }),
       );
-      setPaymentMethod(order.paymentMethod as "cash" | "card" | "mixed");
+      setPaymentMethod(
+        (((order as Record<string, unknown>).paymentMethod ||
+          (order as Record<string, unknown>).payment_method) as
+          | "cash"
+          | "card"
+          | "mixed") ?? "cash",
+      );
     } else {
       setItems([]);
       setPaymentMethod("cash");
@@ -80,8 +100,8 @@ export function EditOrderDialog({
               quantity: newQuantity,
               totalPrice: item.unitPrice * newQuantity,
             }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -99,34 +119,70 @@ export function EditOrderDialog({
     setIsSubmitting(true);
 
     try {
+      if (!businessId) throw new Error("No business context");
+      const supabase = createClient();
+
       // If no items remain, cancel the order
       if (items.length === 0) {
-        await orderClientService.cancelOrder(
-          order.id,
-          user.id,
-          "All items removed during edit"
-        );
+        // Fetch full order to snapshot it
+        const { data: originalOrder, error: fetchErr } = await supabase
+          .from("orders")
+          .select("*")
+          .eq("id", order.id)
+          .single();
+        if (fetchErr || !originalOrder)
+          throw new Error(fetchErr?.message ?? "Order not found");
+
+        const { error: cancelErr } = await supabase
+          .from("canceled_orders")
+          .insert({
+            business_id: businessId,
+            original_order_id: order.id,
+            canceled_by: user.id,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            order_data: originalOrder as any,
+            reason: "All items removed during edit",
+          });
+        if (cancelErr) throw new Error(cancelErr.message);
+
+        const { error: updateErr } = await supabase
+          .from("orders")
+          .update({ status: "canceled" })
+          .eq("id", order.id);
+        if (updateErr) throw new Error(updateErr.message);
+
         toast.success("Order canceled - all items were removed");
+        onOpenChange(false);
+        startTransition(() => {
+          queryClient.invalidateQueries({ queryKey: orderKeys.all });
+        });
+        return;
       } else {
         // Build reason description based on what changed
         const changes: string[] = [];
 
-        if (paymentMethod !== order.paymentMethod) {
+        if (
+          paymentMethod !==
+          ((order as Record<string, unknown>).paymentMethod ??
+            (order as Record<string, unknown>).payment_method)
+        ) {
           changes.push(`payment method to ${paymentMethod}`);
         }
 
-        if (items.length !== order.items.length) {
+        const originalItems = order.items as Record<string, unknown>[];
+        if (items.length !== originalItems.length) {
           changes.push("item quantities");
         } else {
           const quantityChanged = items.some((item) => {
-            const originalItem = order.items.find(
-              (orig) => orig.id === item.id
+            const originalItem = originalItems.find(
+              (orig) => orig.id === item.id,
             );
-            return originalItem && originalItem.quantity !== item.quantity;
+            return (
+              originalItem &&
+              (originalItem.quantity as number) !== item.quantity
+            );
           });
-          if (quantityChanged) {
-            changes.push("item quantities");
-          }
+          if (quantityChanged) changes.push("item quantities");
         }
 
         const reason =
@@ -134,21 +190,58 @@ export function EditOrderDialog({
             ? `Modified ${changes.join(" and ")} via edit dialog`
             : "Order modified via edit dialog";
 
-        // Modify the order with remaining items
-        await orderClientService.modifyOrder(order.id, {
-          modifiedBy: user.id,
-          modificationType: "multiple_changes",
-          items: items,
-          totalAmount: calculateTotal(),
-          paymentMethod: paymentMethod,
-          reason: reason,
-        });
+        // Fetch current order snapshot before mutating
+        const { data: originalOrder, error: fetchErr } = await supabase
+          .from("orders")
+          .select("*")
+          .eq("id", order.id)
+          .single();
+        if (fetchErr || !originalOrder)
+          throw new Error(fetchErr?.message ?? "Order not found");
+
+        const newTotal = calculateTotal();
+
+        // Record modification
+        const { error: modifyErr } = await supabase
+          .from("modified_orders")
+          .insert({
+            business_id: businessId,
+            original_order_id: order.id,
+            modified_by: user.id,
+            modification_type: "multiple_changes",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            original_data: originalOrder as any,
+            new_data: {
+              items,
+              total_amount: newTotal,
+              payment_method: paymentMethod,
+              reason,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any,
+          });
+        if (modifyErr) throw new Error(modifyErr.message);
+
+        // Update order
+        const { error: updateErr } = await supabase
+          .from("orders")
+          .update({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            items: items as any,
+            total_amount: newTotal,
+            payment_method: paymentMethod,
+            status: "modified",
+          })
+          .eq("id", order.id);
+        if (updateErr) throw new Error(updateErr.message);
+
         toast.success("Order modified successfully");
       }
 
-      // Refresh orders list
-      queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      // Close dialog first so Radix finishes its animation, then refresh list
       onOpenChange(false);
+      startTransition(() => {
+        queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      });
     } catch (error) {
       console.error("Error saving order:", error);
       toast.error("Failed to save changes");
@@ -159,17 +252,16 @@ export function EditOrderDialog({
 
   const hasChanges = () => {
     if (!order) return false;
-
-    // Check if payment method changed
-    if (paymentMethod !== order.paymentMethod) return true;
-
-    // Check if number of items changed
-    if (items.length !== order.items.length) return true;
-
-    // Check if any item quantities changed
+    const o = order as Record<string, unknown>;
+    const origPayment = (o.paymentMethod ?? o.payment_method) as string;
+    if (paymentMethod !== origPayment) return true;
+    const origItems = order.items as Record<string, unknown>[];
+    if (items.length !== origItems.length) return true;
     return items.some((item) => {
-      const originalItem = order.items.find((orig) => orig.id === item.id);
-      return !originalItem || originalItem.quantity !== item.quantity;
+      const originalItem = origItems.find((orig) => orig.id === item.id);
+      return (
+        !originalItem || (originalItem.quantity as number) !== item.quantity
+      );
     });
   };
 
@@ -181,7 +273,11 @@ export function EditOrderDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Edit Order #{order.orderNumber}
+            Edit Order #
+            {
+              ((order as Record<string, unknown>).orderNumber ??
+                (order as Record<string, unknown>).order_number) as string
+            }
           </DialogTitle>
         </DialogHeader>
 
@@ -242,7 +338,7 @@ export function EditOrderDialog({
                         "touch-manipulation select-none active:scale-95",
                         "min-h-[56px] w-full",
                         paymentMethod === "cash" &&
-                          "border-primary bg-primary/5 ring-1 ring-primary/20"
+                          "border-primary bg-primary/5 ring-1 ring-primary/20",
                       )}
                     >
                       <RadioGroupItem value="cash" id="edit-cash" />
@@ -261,7 +357,7 @@ export function EditOrderDialog({
                         "touch-manipulation select-none active:scale-95",
                         "min-h-[56px] w-full",
                         paymentMethod === "card" &&
-                          "border-primary bg-primary/5 ring-1 ring-primary/20"
+                          "border-primary bg-primary/5 ring-1 ring-primary/20",
                       )}
                     >
                       <RadioGroupItem value="card" id="edit-card" />
@@ -280,7 +376,7 @@ export function EditOrderDialog({
                         "touch-manipulation select-none active:scale-95",
                         "min-h-[56px] w-full",
                         paymentMethod === "mixed" &&
-                          "border-primary bg-primary/5 ring-1 ring-primary/20"
+                          "border-primary bg-primary/5 ring-1 ring-primary/20",
                       )}
                     >
                       <RadioGroupItem value="mixed" id="edit-mixed" />
@@ -404,8 +500,8 @@ export function EditOrderDialog({
             {isSubmitting
               ? "Saving..."
               : items.length === 0
-              ? "Cancel Order"
-              : "Save Changes"}
+                ? "Cancel Order"
+                : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>

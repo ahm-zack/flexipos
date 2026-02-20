@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { orderClientService } from '@/lib/order-client-service';
+import { createClient } from '@/utils/supabase/client';
 import type { Database } from '@/database.types';
 import type { Order } from '@/lib/orders';
 
@@ -74,15 +74,20 @@ export function useOrderForReceipt(orderId: string) {
   return useQuery({
     queryKey: ['order-receipt', orderId],
     queryFn: async () => {
-      const dbOrder = await orderClientService.getOrderById(orderId);
+      const supabase = createClient();
+      const { data: dbOrder, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', orderId)
+        .single();
 
-      if (!dbOrder) {
-        throw new Error('Order not found');
+      if (error || !dbOrder) {
+        throw new Error(error?.message ?? 'Order not found');
       }
 
       return convertOrderForReceipt(dbOrder);
     },
     enabled: !!orderId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }

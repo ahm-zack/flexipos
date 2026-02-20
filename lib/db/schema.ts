@@ -202,6 +202,14 @@ export type ModifiedOrder = typeof modifiedOrders.$inferSelect;
 export type NewModifiedOrder = typeof modifiedOrders.$inferInsert;
 export type ModificationType = typeof modificationTypeEnum.enumValues[number];
 
+// Per-business order serial counter (increments from 1, never resets)
+export const businessOrderCounters = pgTable('business_order_counters', {
+  businessId: uuid('business_id').primaryKey().references(() => businesses.id, { onDelete: 'cascade' }),
+  lastSerial: integer('last_serial').notNull().default(0),
+});
+
+export type BusinessOrderCounter = typeof businessOrderCounters.$inferSelect;
+
 // ================================
 // TYPE HELPERS
 // ================================

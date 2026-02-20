@@ -1,6 +1,7 @@
 // Modern orders feature module using dynamic product system
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { orderClientService } from '@/lib/order-client-service';
+import { createClient } from '@/utils/supabase/client';
+import { useBusinessContext } from '@/modules/providers/components/business-provider';
 import type { Database } from '@/database.types';
 
 // Use database-generated types for consistency
@@ -80,14 +81,23 @@ export interface CreateOrderData {
 
 export function useCreateOrder() {
     const queryClient = useQueryClient();
+    const { businessId } = useBusinessContext();
 
     return useMutation({
         mutationFn: async (orderData: CreateOrderData) => {
-            // Generate order number
-            const orderNumber = `ORD-${Date.now()}`;
+            if (!businessId) throw new Error('No business context');
+            const supabase = createClient();
+
+            // Get next serial atomically — each business has independent serial starting at 1
+            const { data: serial, error: serialError } = await supabase
+                .rpc('get_next_order_serial', { p_business_id: businessId });
+            if (serialError) throw new Error(serialError.message);
+
+            const orderNumber = String(serial as number);
 
             // Map client data to database format
             const dbOrderData = {
+                business_id: businessId,
                 order_number: orderNumber,
                 customer_name: orderData.customerName || null,
                 items: orderData.items as unknown as Database['public']['Tables']['orders']['Insert']['items'],
@@ -108,7 +118,13 @@ export function useCreateOrder() {
                 status: 'completed' as const,
             };
 
-            const createdOrder = await orderClientService.createOrder(dbOrderData);
+            const { data: createdOrder, error } = await supabase
+                .from('orders')
+                .insert(dbOrderData)
+                .select()
+                .single();
+
+            if (error) throw new Error(error.message);
 
             // Convert database response to client-friendly format
             return {
@@ -143,5 +159,4 @@ export function useCreateOrder() {
     });
 }
 
-// Export client service instead of server service to avoid client-side imports
-export { orderClientService as orderService } from '@/lib/order-client-service';
+

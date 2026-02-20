@@ -34,6 +34,29 @@ export type Database = {
     }
     public: {
         Tables: {
+            business_order_counters: {
+                Row: {
+                    business_id: string
+                    last_serial: number
+                }
+                Insert: {
+                    business_id: string
+                    last_serial?: number
+                }
+                Update: {
+                    business_id?: string
+                    last_serial?: number
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "business_order_counters_business_id_fkey"
+                        columns: ["business_id"]
+                        isOneToOne: true
+                        referencedRelation: "businesses"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
             business_users: {
                 Row: {
                     business_id: string
@@ -73,14 +96,14 @@ export type Database = {
                 }
                 Relationships: [
                     {
-                        foreignKeyName: "business_users_business_id_fkey"
+                        foreignKeyName: "business_users_business_id_businesses_id_fk"
                         columns: ["business_id"]
                         isOneToOne: false
                         referencedRelation: "businesses"
                         referencedColumns: ["id"]
                     },
                     {
-                        foreignKeyName: "business_users_user_id_fkey"
+                        foreignKeyName: "business_users_user_id_users_id_fk"
                         columns: ["user_id"]
                         isOneToOne: false
                         referencedRelation: "users"
@@ -144,6 +167,7 @@ export type Database = {
             }
             canceled_orders: {
                 Row: {
+                    business_id: string
                     canceled_at: string
                     canceled_by: string
                     id: string
@@ -152,6 +176,7 @@ export type Database = {
                     reason: string | null
                 }
                 Insert: {
+                    business_id: string
                     canceled_at?: string
                     canceled_by: string
                     id?: string
@@ -160,6 +185,7 @@ export type Database = {
                     reason?: string | null
                 }
                 Update: {
+                    business_id?: string
                     canceled_at?: string
                     canceled_by?: string
                     id?: string
@@ -169,17 +195,17 @@ export type Database = {
                 }
                 Relationships: [
                     {
-                        foreignKeyName: "canceled_orders_canceled_by_fkey"
-                        columns: ["canceled_by"]
+                        foreignKeyName: "canceled_orders_business_id_businesses_id_fk"
+                        columns: ["business_id"]
                         isOneToOne: false
-                        referencedRelation: "users"
+                        referencedRelation: "businesses"
                         referencedColumns: ["id"]
                     },
                     {
-                        foreignKeyName: "canceled_orders_original_order_id_fkey"
-                        columns: ["original_order_id"]
+                        foreignKeyName: "canceled_orders_canceled_by_users_id_fk"
+                        columns: ["canceled_by"]
                         isOneToOne: false
-                        referencedRelation: "orders"
+                        referencedRelation: "users"
                         referencedColumns: ["id"]
                     },
                 ]
@@ -232,7 +258,7 @@ export type Database = {
                 }
                 Relationships: [
                     {
-                        foreignKeyName: "categories_business_id_fkey"
+                        foreignKeyName: "categories_business_id_businesses_id_fk"
                         columns: ["business_id"]
                         isOneToOne: false
                         referencedRelation: "businesses"
@@ -242,6 +268,7 @@ export type Database = {
             }
             modified_orders: {
                 Row: {
+                    business_id: string
                     id: string
                     modification_type: Database["public"]["Enums"]["modification_type"]
                     modified_at: string
@@ -251,6 +278,7 @@ export type Database = {
                     original_order_id: string
                 }
                 Insert: {
+                    business_id: string
                     id?: string
                     modification_type: Database["public"]["Enums"]["modification_type"]
                     modified_at?: string
@@ -260,6 +288,7 @@ export type Database = {
                     original_order_id: string
                 }
                 Update: {
+                    business_id?: string
                     id?: string
                     modification_type?: Database["public"]["Enums"]["modification_type"]
                     modified_at?: string
@@ -270,23 +299,24 @@ export type Database = {
                 }
                 Relationships: [
                     {
-                        foreignKeyName: "modified_orders_modified_by_fkey"
-                        columns: ["modified_by"]
+                        foreignKeyName: "modified_orders_business_id_businesses_id_fk"
+                        columns: ["business_id"]
                         isOneToOne: false
-                        referencedRelation: "users"
+                        referencedRelation: "businesses"
                         referencedColumns: ["id"]
                     },
                     {
-                        foreignKeyName: "modified_orders_original_order_id_fkey"
-                        columns: ["original_order_id"]
+                        foreignKeyName: "modified_orders_modified_by_users_id_fk"
+                        columns: ["modified_by"]
                         isOneToOne: false
-                        referencedRelation: "orders"
+                        referencedRelation: "users"
                         referencedColumns: ["id"]
                     },
                 ]
             }
             orders: {
                 Row: {
+                    business_id: string
                     card_amount: number | null
                     cash_amount: number | null
                     cash_received: number | null
@@ -314,6 +344,7 @@ export type Database = {
                     updated_at: string
                 }
                 Insert: {
+                    business_id: string
                     card_amount?: number | null
                     cash_amount?: number | null
                     cash_received?: number | null
@@ -341,6 +372,7 @@ export type Database = {
                     updated_at?: string
                 }
                 Update: {
+                    business_id?: string
                     card_amount?: number | null
                     cash_amount?: number | null
                     cash_received?: number | null
@@ -369,7 +401,14 @@ export type Database = {
                 }
                 Relationships: [
                     {
-                        foreignKeyName: "orders_created_by_fkey"
+                        foreignKeyName: "orders_business_id_businesses_id_fk"
+                        columns: ["business_id"]
+                        isOneToOne: false
+                        referencedRelation: "businesses"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "orders_created_by_users_id_fk"
                         columns: ["created_by"]
                         isOneToOne: false
                         referencedRelation: "users"
@@ -449,14 +488,14 @@ export type Database = {
                 }
                 Relationships: [
                     {
-                        foreignKeyName: "products_business_id_fkey"
+                        foreignKeyName: "products_business_id_businesses_id_fk"
                         columns: ["business_id"]
                         isOneToOne: false
                         referencedRelation: "businesses"
                         referencedColumns: ["id"]
                     },
                     {
-                        foreignKeyName: "products_category_id_fkey"
+                        foreignKeyName: "products_category_id_categories_id_fk"
                         columns: ["category_id"]
                         isOneToOne: false
                         referencedRelation: "categories"
@@ -508,7 +547,10 @@ export type Database = {
             [_ in never]: never
         }
         Functions: {
-            [_ in never]: never
+            get_next_order_serial: {
+                Args: { p_business_id: string }
+                Returns: number
+            }
         }
         Enums: {
             delivery_platform: "keeta" | "hunger_station" | "jahez"
@@ -520,6 +562,7 @@ export type Database = {
             | "multiple_changes"
             order_status: "completed" | "canceled" | "modified"
             payment_method: "cash" | "card" | "mixed" | "delivery"
+            role: "superadmin" | "admin" | "manager" | "staff"
         }
         CompositeTypes: {
             [_ in never]: never
@@ -660,6 +703,7 @@ export const Constants = {
             ],
             order_status: ["completed", "canceled", "modified"],
             payment_method: ["cash", "card", "mixed", "delivery"],
+            role: ["superadmin", "admin", "manager", "staff"],
         },
     },
 } as const

@@ -93,7 +93,7 @@ export function OrdersList() {
 
   const getPaymentMethodDisplay = (
     paymentMethod: string,
-    deliveryPlatform?: string
+    deliveryPlatform?: string,
   ) => {
     switch (paymentMethod) {
       case "cash":
@@ -254,33 +254,22 @@ export function OrdersList() {
                   "group hover:shadow-lg hover:shadow-black/5 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out bg-card cursor-pointer relative",
                   // Visually distinguish cancelled orders
                   order.status === "canceled" &&
-                    "opacity-75 border border-red-200 dark:border-red-800"
+                    "opacity-75 border border-red-200 dark:border-red-800",
                 )}
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex flex-col items-start gap-2">
                       <div className="flex flex-col">
-                        {order.daily_serial ? (
-                          <>
-                            <CardTitle className="text-lg font-semibold">
-                              Daily: {order.daily_serial}
-                            </CardTitle>
-                            <span className="text-xs text-muted-foreground">
-                              #{order.order_number}
-                            </span>
-                          </>
-                        ) : (
-                          <CardTitle className="text-lg font-semibold">
-                            #{order.order_number}
-                          </CardTitle>
-                        )}
+                        <CardTitle className="text-lg font-semibold">
+                          Order #{order.order_number}
+                        </CardTitle>
                       </div>
                       <Badge
                         variant={getStatusBadgeVariant(order.status)}
                         className={cn(
                           "transition-colors duration-200 group-hover:scale-105",
-                          getStatusBadgeClassName(order.status)
+                          getStatusBadgeClassName(order.status),
                         )}
                       >
                         {getOrderStatusText(order.status)}
@@ -396,7 +385,7 @@ export function OrdersList() {
                       {(() => {
                         const paymentDisplay = getPaymentMethodDisplay(
                           order.payment_method || "cash",
-                          order.delivery_platform || undefined
+                          order.delivery_platform || undefined,
                         );
                         const IconComponent = paymentDisplay.icon;
                         return (
@@ -451,7 +440,7 @@ export function OrdersList() {
                                     {item.details.modifiers.map(
                                       (
                                         modifier: SavedModifier,
-                                        modIndex: number
+                                        modIndex: number,
                                       ) => (
                                         <div
                                           key={modIndex}
@@ -471,7 +460,7 @@ export function OrdersList() {
                                               </span>
                                             )}
                                         </div>
-                                      )
+                                      ),
                                     )}
                                   </div>
                                 )}
