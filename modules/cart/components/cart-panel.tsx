@@ -32,7 +32,7 @@ import { useCart } from "../hooks/use-cart";
 import { PriceDisplay, SaudiRiyalSymbol } from "@/components/currency";
 import { cn } from "@/lib/utils";
 import { ApiOrder, useCreateOrder } from "@/modules/orders-feature";
-import { useUpdateCustomerPurchases } from "@/modules/customer-feature";
+import { useUpdateCustomerPurchases } from "@/modules/customers-feature";
 import { customerService } from "@/lib/supabase-queries/customer-client-service";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -89,7 +89,7 @@ export function CartPanel({ className }: CartPanelProps) {
   const [paymentMethod, setPaymentMethod] = useState<
     "cash" | "card" | "mixed" | "delivery"
   >(
-    "card" // Default to card instead of cash
+    "card", // Default to card instead of cash
   );
 
   // Delivery platform state (for delivery orders)
@@ -108,7 +108,7 @@ export function CartPanel({ className }: CartPanelProps) {
 
   // Discount state
   const [discountType, setDiscountType] = useState<"percentage" | "amount">(
-    "percentage"
+    "percentage",
   );
   const [discountValue, setDiscountValue] = useState<string>("");
   const [isDiscountSectionCollapsed, setIsDiscountSectionCollapsed] =
@@ -173,7 +173,7 @@ export function CartPanel({ className }: CartPanelProps) {
       `Order restored${order.customerName ? ` for ${order.customerName}` : ""}`,
       {
         description: "All items and settings have been restored to your cart.",
-      }
+      },
     );
   };
 
@@ -285,7 +285,7 @@ export function CartPanel({ className }: CartPanelProps) {
     overrideCardAmount?: number,
     overrideCashReceived?: number,
     overrideChangeAmount?: number,
-    overrideDeliveryPlatform?: "keeta" | "hunger_station" | "jahez"
+    overrideDeliveryPlatform?: "keeta" | "hunger_station" | "jahez",
   ) => {
     if (!currentUser) {
       toast.error("Please log in to create an order");
@@ -340,14 +340,14 @@ export function CartPanel({ className }: CartPanelProps) {
         paymentMethod === "cash"
           ? finalTotal
           : paymentMethod === "mixed"
-          ? effectiveCashAmount
-          : undefined,
+            ? effectiveCashAmount
+            : undefined,
       cardAmount:
         paymentMethod === "card"
           ? finalTotal
           : paymentMethod === "mixed"
-          ? effectiveCardAmount
-          : undefined,
+            ? effectiveCardAmount
+            : undefined,
       cashReceived:
         paymentMethod === "cash" || paymentMethod === "mixed"
           ? effectiveCashReceived
@@ -373,25 +373,25 @@ export function CartPanel({ className }: CartPanelProps) {
             `Order #${
               data.orderNumber
             } created! Cash received: ${cashReceived.toFixed(
-              2
+              2,
             )} SAR | Change: ${changeAmount.toFixed(2)} SAR`,
-            { duration: 8000 }
+            { duration: 8000 },
           );
         } else if (paymentMethod === "mixed") {
           toast.success(
             `Order #${
               data.orderNumber
             } created! Mixed Payment - Cash: ${mixedCashAmount.toFixed(
-              2
+              2,
             )} SAR | Card: ${mixedCardAmount.toFixed(2)} SAR`,
-            { duration: 8000 }
+            { duration: 8000 },
           );
         } else if (paymentMethod === "delivery") {
           toast.success(
             `Order #${
               data.orderNumber
             } created! 🚚 Delivery Order - Total: ${finalTotal.toFixed(2)} SAR`,
-            { duration: 8000 }
+            { duration: 8000 },
           );
         } else {
           toast.success(`Order #${data.orderNumber} created successfully!`);
@@ -405,9 +405,8 @@ export function CartPanel({ className }: CartPanelProps) {
 
             if (isExistingCustomer) {
               // Find existing customer by phone to get ID
-              const existingCustomer = await customerService.searchByPhone(
-                customerPhone
-              );
+              const existingCustomer =
+                await customerService.searchByPhone(customerPhone);
               customerId = existingCustomer?.id;
             } else {
               // Create new customer
@@ -417,7 +416,7 @@ export function CartPanel({ className }: CartPanelProps) {
                   name: customerName,
                   address: customerAddress || undefined,
                 },
-                currentUser.id
+                currentUser.id,
               );
               customerId = newCustomer.id;
             }
@@ -483,9 +482,8 @@ export function CartPanel({ className }: CartPanelProps) {
           createdBy: data.createdBy,
         };
         // Import and trigger PDF download
-        const { downloadReceiptPDF } = await import(
-          "@/components/restaurant-receipt"
-        );
+        const { downloadReceiptPDF } =
+          await import("@/components/restaurant-receipt");
         await downloadReceiptPDF({
           ...apiOrder,
           customerName:
@@ -505,7 +503,7 @@ export function CartPanel({ className }: CartPanelProps) {
     setShowCashCalculator(false);
     // Show change information toast
     toast.info(
-      `Cash: ${cashReceived.toFixed(2)} SAR | Change: ${change.toFixed(2)} SAR`
+      `Cash: ${cashReceived.toFixed(2)} SAR | Change: ${change.toFixed(2)} SAR`,
     );
     // Process the order after cash calculation with direct values
     processOrder(undefined, undefined, cashReceived, change);
@@ -532,8 +530,8 @@ export function CartPanel({ className }: CartPanelProps) {
     // Show mixed payment information toast
     toast.info(
       `Mixed Payment - Cash: ${cashAmount.toFixed(
-        2
-      )} SAR | Card: ${cardAmount.toFixed(2)} SAR`
+        2,
+      )} SAR | Card: ${cardAmount.toFixed(2)} SAR`,
     );
 
     // Debug: log what we're about to pass to processOrder
@@ -565,7 +563,7 @@ export function CartPanel({ className }: CartPanelProps) {
           "transform transition-transform duration-300 ease-in-out",
           "flex flex-col",
           isOpen ? "translate-x-0" : "translate-x-full",
-          className
+          className,
         )}
       >
         {/* Header */}
@@ -1106,7 +1104,7 @@ export function CartPanel({ className }: CartPanelProps) {
                 value={paymentMethod}
                 onValueChange={(value) =>
                   setPaymentMethod(
-                    value as "cash" | "card" | "mixed" | "delivery"
+                    value as "cash" | "card" | "mixed" | "delivery",
                   )
                 }
                 className="grid grid-cols-2 gap-2"
@@ -1120,7 +1118,7 @@ export function CartPanel({ className }: CartPanelProps) {
                       "touch-manipulation select-none active:scale-95",
                       "min-h-[56px] w-full",
                       paymentMethod === "cash" &&
-                        "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        "border-primary bg-primary/5 ring-1 ring-primary/20",
                     )}
                   >
                     <RadioGroupItem value="cash" id="cash" />
@@ -1139,7 +1137,7 @@ export function CartPanel({ className }: CartPanelProps) {
                       "touch-manipulation select-none active:scale-95",
                       "min-h-[56px] w-full",
                       paymentMethod === "card" &&
-                        "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        "border-primary bg-primary/5 ring-1 ring-primary/20",
                     )}
                   >
                     <RadioGroupItem value="card" id="card" />
@@ -1158,7 +1156,7 @@ export function CartPanel({ className }: CartPanelProps) {
                       "touch-manipulation select-none active:scale-95",
                       "min-h-[56px] w-full",
                       paymentMethod === "mixed" &&
-                        "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        "border-primary bg-primary/5 ring-1 ring-primary/20",
                     )}
                   >
                     <RadioGroupItem value="mixed" id="mixed" />
@@ -1177,7 +1175,7 @@ export function CartPanel({ className }: CartPanelProps) {
                       "touch-manipulation select-none active:scale-95",
                       "min-h-[56px] w-full",
                       paymentMethod === "delivery" &&
-                        "border-yellow-500 bg-yellow-50 ring-1 ring-yellow-200 text-yellow-700"
+                        "border-yellow-500 bg-yellow-50 ring-1 ring-yellow-200 text-yellow-700",
                     )}
                   >
                     <RadioGroupItem value="delivery" id="delivery" />
@@ -1199,10 +1197,10 @@ export function CartPanel({ className }: CartPanelProps) {
               {createOrder.isPending
                 ? "Creating Order..."
                 : userLoading
-                ? "Loading..."
-                : !currentUser
-                ? "Please Login to Checkout"
-                : "Proceed to Checkout"}
+                  ? "Loading..."
+                  : !currentUser
+                    ? "Please Login to Checkout"
+                    : "Proceed to Checkout"}
             </Button>
           </div>
         )}

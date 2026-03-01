@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, pgEnum, decimal, integer, jsonb, date, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, pgEnum, decimal, integer, jsonb, date, boolean, unique } from 'drizzle-orm/pg-core';
 
 // ================================
 // ENUMS
@@ -229,3 +229,40 @@ export type OrderItem = {
   modifiers?: Modifier[];
   [key: string]: unknown; // For any additional fields like category, productId, etc.
 };
+
+// ================================
+// CUSTOMERS TABLE
+// ================================
+
+// Customers table – one customer record per business (multi-tenant: phone unique per business)
+export const customers = pgTable(
+  'customers',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    businessId: uuid('business_id')
+      .notNull()
+      .references(() => businesses.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    phone: text('phone').notNull(),
+    address: text('address'),
+    totalPurchases: decimal('total_purchases', { precision: 12, scale: 2 })
+      .notNull()
+      .default('0'),
+    orderCount: integer('order_count').notNull().default(0),
+    lastOrderAt: timestamp('last_order_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+  },
+  (table) => ({
+    uniquePhonePerBusiness: unique('customers_business_phone_unique').on(
+      table.businessId,
+      table.phone
+    ),
+  })
+);
+
+export type Customer = typeof customers.$inferSelect;
+export type NewCustomer = typeof customers.$inferInsert;

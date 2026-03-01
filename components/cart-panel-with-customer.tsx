@@ -19,8 +19,9 @@ import { useCart } from "@/modules/cart/hooks/use-cart";
 import { PriceDisplay, SaudiRiyalSymbol } from "@/components/currency";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useCreateOrder } from "@/modules/orders-feature";
-import { useUpdateCustomerPurchases } from "@/modules/customer-feature";
+import { useRecordCustomerPurchase } from "@/modules/customers-feature";
 import { customerService } from "@/lib/supabase-queries/customer-client-service";
+import { useBusinessContext } from "@/modules/providers/components/business-provider";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
@@ -39,7 +40,7 @@ export function CartPanelWithCustomer() {
   const [paymentMethod, setPaymentMethod] = useState<
     "cash" | "card" | "mixed" | "delivery"
   >(
-    "card" // Default to card instead of cash
+    "card", // Default to card instead of cash
   );
 
   // Customer form states
@@ -53,7 +54,7 @@ export function CartPanelWithCustomer() {
 
   // Discount state
   const [discountType, setDiscountType] = useState<"percentage" | "amount">(
-    "percentage"
+    "percentage",
   );
   const [discountValue, setDiscountValue] = useState<string>("");
   const [isDiscountSectionCollapsed, setIsDiscountSectionCollapsed] =
@@ -66,17 +67,21 @@ export function CartPanelWithCustomer() {
   const [showDeliveryPlatform, setShowDeliveryPlatform] = useState(false);
 
   const { user: currentUser, loading: userLoading } = useCurrentUser();
+  const { businessId } = useBusinessContext();
   const createOrder = useCreateOrder();
-  const updateCustomerPurchases = useUpdateCustomerPurchases();
+  const recordPurchase = useRecordCustomerPurchase();
   // Using imported customerService singleton
 
   // Search for customer when phone changes
   useEffect(() => {
     const searchCustomer = async () => {
-      if (customerPhone.length >= 4) {
+      if (customerPhone.length >= 4 && businessId) {
         setIsSearching(true);
         try {
-          const customer = await customerService.searchByPhone(customerPhone);
+          const customer = await customerService.searchByPhone(
+            customerPhone,
+            businessId,
+          );
           if (customer) {
             setCustomerName(customer.name);
             setCustomerAddress(customer.address || "");
@@ -146,7 +151,7 @@ export function CartPanelWithCustomer() {
   };
 
   const processOrder = async (
-    overrideDeliveryPlatform?: "keeta" | "hunger_station" | "jahez"
+    overrideDeliveryPlatform?: "keeta" | "hunger_station" | "jahez",
   ) => {
     if (!currentUser) {
       toast.error("Please log in to create an order");
@@ -182,27 +187,31 @@ export function CartPanelWithCustomer() {
             // First, try to create/update customer
             let customerId = null;
 
+            if (!businessId) throw new Error("No business context");
+
             if (isExistingCustomer) {
               // Find existing customer by phone to get ID
               const existingCustomer = await customerService.searchByPhone(
-                customerPhone
+                customerPhone,
+                businessId,
               );
-              customerId = existingCustomer?.id;
+              customerId = existingCustomer?.id ?? null;
             } else {
-              // Create new customer
+              // Create new customer scoped to this business
               const newCustomer = await customerService.createCustomer(
                 {
                   phone: customerPhone,
                   name: customerName,
                   address: customerAddress || undefined,
                 },
-                currentUser.id
+                businessId,
+                currentUser.id,
               );
               customerId = newCustomer.id;
             }
 
             if (customerId) {
-              await updateCustomerPurchases.mutateAsync({
+              await recordPurchase.mutateAsync({
                 customerId,
                 orderTotal: finalTotal, // Use final total after discount
                 orderNumber: data.orderNumber,
@@ -245,9 +254,8 @@ export function CartPanelWithCustomer() {
           createdBy: data.createdBy,
         };
 
-        const { downloadReceiptPDF } = await import(
-          "@/components/restaurant-receipt"
-        );
+        const { downloadReceiptPDF } =
+          await import("@/components/restaurant-receipt");
 
         const mappedItems = Array.isArray(apiOrder.items)
           ? apiOrder.items.map((item: any) => ({
@@ -740,7 +748,7 @@ export function CartPanelWithCustomer() {
                   size="sm"
                   onClick={() =>
                     setPaymentMethod(
-                      method.value as "cash" | "card" | "mixed" | "delivery"
+                      method.value as "cash" | "card" | "mixed" | "delivery",
                     )
                   }
                   className={`flex flex-col items-center gap-1 h-auto py-3 px-2 rounded-lg border transition-all duration-200
@@ -779,7 +787,7 @@ export function CartPanelWithCustomer() {
                   size="sm"
                   onClick={() =>
                     setPaymentMethod(
-                      method.value as "cash" | "card" | "mixed" | "delivery"
+                      method.value as "cash" | "card" | "mixed" | "delivery",
                     )
                   }
                   className={`flex flex-col items-center gap-1 h-auto py-3 px-2 rounded-lg border transition-all duration-200
@@ -807,10 +815,10 @@ export function CartPanelWithCustomer() {
             {createOrder.isPending
               ? "Creating Order..."
               : userLoading
-              ? "Loading..."
-              : !currentUser
-              ? "Please Login to Checkout"
-              : "Proceed to Checkout"}
+                ? "Loading..."
+                : !currentUser
+                  ? "Please Login to Checkout"
+                  : "Proceed to Checkout"}
           </Button>
         </div>
       )}

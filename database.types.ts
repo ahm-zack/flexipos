@@ -165,6 +165,63 @@ export type Database = {
                 }
                 Relationships: []
             }
+            customers: {
+                Row: {
+                    id: string
+                    business_id: string
+                    name: string
+                    phone: string
+                    address: string | null
+                    total_purchases: string
+                    order_count: number
+                    last_order_at: string | null
+                    created_at: string
+                    updated_at: string
+                    created_by: string
+                }
+                Insert: {
+                    id?: string
+                    business_id: string
+                    name: string
+                    phone: string
+                    address?: string | null
+                    total_purchases?: string
+                    order_count?: number
+                    last_order_at?: string | null
+                    created_at?: string
+                    updated_at?: string
+                    created_by: string
+                }
+                Update: {
+                    id?: string
+                    business_id?: string
+                    name?: string
+                    phone?: string
+                    address?: string | null
+                    total_purchases?: string
+                    order_count?: number
+                    last_order_at?: string | null
+                    created_at?: string
+                    updated_at?: string
+                    created_by?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "customers_business_id_businesses_id_fk"
+                        columns: ["business_id"]
+                        isOneToOne: false
+                        referencedRelation: "businesses"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "customers_created_by_users_id_fk"
+                        columns: ["created_by"]
+                        isOneToOne: false
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
             canceled_orders: {
                 Row: {
                     business_id: string

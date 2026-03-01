@@ -1,42 +1,36 @@
-import { pgTable, text, timestamp, uuid, decimal } from 'drizzle-orm/pg-core';
-import { users } from '../db/schema';
+// Re-export from the canonical schema in lib/db/schema.ts
+// The customers table lives there so Drizzle migrations pick it up automatically.
+export { customers } from '../db/schema';
+export type { Customer, NewCustomer } from '../db/schema';
 
-// Customers table - Stores customer information and purchase aggregation
-export const customers = pgTable('customers', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    phone: text('phone').notNull().unique(), // Phone number as unique identifier
-    name: text('name').notNull(), // Customer name
-    address: text('address'), // Customer address (optional)
-    totalPurchases: decimal('total_purchases', { precision: 12, scale: 2 }).notNull().default('0'), // Total amount spent
-    orderCount: decimal('order_count', { precision: 10, scale: 0 }).notNull().default('0'), // Number of orders
-    lastOrderAt: timestamp('last_order_at', { withTimezone: true }), // Last order timestamp
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-    createdBy: uuid('created_by').notNull().references(() => users.id), // Who added this customer
-});
+// Thin shims kept for backward-compat with lib/customers/index.ts
+export type CustomerOrder = {
+    id: string;
+    customerId: string;
+    orderNumber: string;
+    orderTotal: string;
+    createdAt: string;
+};
+export type NewCustomerOrder = Omit<CustomerOrder, 'id' | 'createdAt'>;
 
-// Customer orders junction table - Links customers to their orders
-export const customerOrders = pgTable('customer_orders', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    customerId: uuid('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
-    orderNumber: text('order_number').notNull(), // Reference to orders.orderNumber
-    orderTotal: decimal('order_total', { precision: 10, scale: 2 }).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+export const customerOrders = null; // legacy – no longer a separate table
 
-// Export TypeScript types inferred from the schema
-export type Customer = typeof customers.$inferSelect;
-export type NewCustomer = typeof customers.$inferInsert;
-
-export type CustomerOrder = typeof customerOrders.$inferSelect;
-export type NewCustomerOrder = typeof customerOrders.$inferInsert;
-
-// Helper type for customer with aggregated data
-export interface CustomerWithStats extends Customer {
-    recentOrderNumbers?: string[]; // Recent order numbers for reference
+// Helper types
+export interface CustomerWithStats {
+    id: string;
+    businessId: string;
+    phone: string;
+    name: string;
+    address?: string | null;
+    totalPurchases: string;
+    orderCount: number;
+    lastOrderAt?: string | null;
+    createdAt: string;
+    updatedAt: string;
+    createdBy: string;
+    recentOrderNumbers?: string[];
 }
 
-// Helper type for customer search results
 export interface CustomerSearchResult {
     id: string;
     phone: string;
@@ -47,12 +41,9 @@ export interface CustomerSearchResult {
     lastOrderAt?: string;
 }
 
-// Indexes for better query performance
 export const customerIndexes = {
     customersByPhone: 'idx_customers_phone',
     customersByName: 'idx_customers_name',
     customersByCreatedBy: 'idx_customers_created_by',
     customersByCreatedAt: 'idx_customers_created_at',
-    customerOrdersByCustomerId: 'idx_customer_orders_customer_id',
-    customerOrdersByOrderNumber: 'idx_customer_orders_order_number',
 };
