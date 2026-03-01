@@ -33,6 +33,7 @@ export function ProductCashierCard({ product }: ProductCashierCardProps) {
     description: product.description || product.name,
     image: product.images?.[0] || "",
     itemType: "side-order" as const,
+    stockQuantity: product.stockQuantity ?? null,
     modifiers: (product.modifiers || []).map((mod) => ({
       id: mod.id,
       type: (mod.type === "single" ? "extra" : "without") as

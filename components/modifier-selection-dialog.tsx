@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   XCircle,
   Package,
+  AlertTriangle,
 } from "lucide-react";
 import { useCart } from "@/modules/cart/hooks/use-cart";
 import { PriceDisplay } from "@/components/currency";
@@ -47,6 +48,8 @@ interface ModifierSelectionDialogProps {
       | "burger"
       | "side-order";
     modifiers: Modifier[];
+    /** null = unlimited; undefined = not tracked; 0 = out of stock */
+    stockQuantity?: number | null;
   };
 }
 
@@ -59,7 +62,20 @@ export function ModifierSelectionDialog({
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const { addItem } = useCart();
+  const { addItem, cart } = useCart();
+
+  // Stock calculations
+  // stockQuantity: null/undefined = unlimited; 0 = out of stock; N = max N
+  const stock = item.stockQuantity;
+  const isOutOfStock = stock === 0;
+  const isTracked = stock != null; // true when it's a real number (not null/undefined)
+  // How many of this item are already in the cart (any modifier variant)
+  const alreadyInCart = cart.items
+    .filter((i) => i.id === item.id || i.id.startsWith(`${item.id}-`))
+    .reduce((sum, i) => sum + i.quantity, 0);
+  const maxAddable = isTracked
+    ? Math.max(0, (stock as number) - alreadyInCart)
+    : Infinity;
 
   useEffect(() => {
     if (open) {
@@ -68,7 +84,7 @@ export function ModifierSelectionDialog({
       setIsAdding(false);
       setImageError(false);
     }
-  }, [open]);
+  }, [open, item.id]);
 
   const handleModifierToggle = (modifier: Modifier) => {
     setSelectedModifiers((prev) =>
@@ -85,6 +101,11 @@ export function ModifierSelectionDialog({
   const grandTotal = (item.price + extrasTotal) * quantity;
 
   const handleAddToCart = async () => {
+    if (isOutOfStock) return;
+    if (isTracked && quantity > maxAddable) {
+      toast.error(`Only ${maxAddable} left in stock`);
+      return;
+    }
     setIsAdding(true);
     await new Promise((resolve) => setTimeout(resolve, 300));
 
@@ -95,8 +116,19 @@ export function ModifierSelectionDialog({
       price: m.price,
     }));
 
+    // Build a deterministic id: product id + stable modifier fingerprint.
+    // Same product + same modifiers always get the same id so the store
+    // deduplicates them into one cart entry and just increments quantity.
+    const modifierFingerprint = [...cartModifiers]
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map((m) => `${m.id}:${m.type}`)
+      .join("+");
+    const stableId = modifierFingerprint
+      ? `${item.id}__${modifierFingerprint}`
+      : item.id;
+
     const cartItem: Omit<CartItem, "quantity"> = {
-      id: `${item.id}-${Date.now()}`,
+      id: stableId,
       name: item.name,
       price: item.price,
       category: item.category,
@@ -106,9 +138,8 @@ export function ModifierSelectionDialog({
       modifiersTotal: extrasTotal,
     };
 
-    for (let i = 0; i < quantity; i++) {
-      addItem({ ...cartItem });
-    }
+    // Single addItem call with the full quantity — no loop needed.
+    addItem(cartItem, quantity);
 
     toast.success(
       `${quantity}× ${item.nameEn ?? item.name} added to cart${
@@ -192,13 +223,20 @@ export function ModifierSelectionDialog({
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5">
               {/* Quantity row */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border border-border/40">
-                <span className="font-semibold text-sm">Quantity</span>
+                <div>
+                  <span className="font-semibold text-sm">Quantity</span>
+                  {isTracked && !isOutOfStock && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {maxAddable} available
+                    </p>
+                  )}
+                </div>
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1}
+                    disabled={quantity <= 1 || isOutOfStock}
                     className="h-9 w-9 rounded-full p-0"
                   >
                     <Minus className="h-4 w-4" />
@@ -209,13 +247,38 @@ export function ModifierSelectionDialog({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() =>
+                      setQuantity(
+                        Math.min(
+                          quantity + 1,
+                          isTracked ? maxAddable : Infinity,
+                        ),
+                      )
+                    }
+                    disabled={
+                      isOutOfStock || (isTracked && quantity >= maxAddable)
+                    }
                     className="h-9 w-9 rounded-full p-0"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
+
+              {/* Out-of-stock overlay message */}
+              {isOutOfStock && (
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-800">
+                  <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-red-700 dark:text-red-400 text-sm">
+                      Out of Stock
+                    </p>
+                    <p className="text-xs text-red-500 dark:text-red-500 mt-0.5">
+                      This item is currently unavailable.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Extras */}
               {extras.length > 0 && (
@@ -371,13 +434,24 @@ export function ModifierSelectionDialog({
                 </Button>
                 <Button
                   onClick={handleAddToCart}
-                  disabled={isAdding}
-                  className="flex-1 h-11 text-base font-semibold bg-primary hover:bg-primary/90"
+                  disabled={
+                    isAdding || isOutOfStock || (isTracked && maxAddable === 0)
+                  }
+                  className={`flex-1 h-11 text-base font-semibold ${
+                    isOutOfStock
+                      ? "bg-muted text-muted-foreground cursor-not-allowed"
+                      : "bg-primary hover:bg-primary/90"
+                  }`}
                 >
                   {isAdding ? (
                     <span className="flex items-center gap-2">
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       Adding...
+                    </span>
+                  ) : isOutOfStock ? (
+                    <span className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Out of Stock
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">

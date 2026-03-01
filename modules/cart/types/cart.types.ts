@@ -14,7 +14,9 @@ export interface CartItem {
   description?: string;
   image?: string;
   modifiers?: CartItemModifier[];
-  modifiersTotal?: number; // Total price of selected modifiers
+  modifiersTotal?: number;
+  /** null = unlimited stock; undefined = not tracked; 0 = out of stock */
+  stockQuantity?: number | null;
 }
 
 export interface Cart {
@@ -25,7 +27,7 @@ export interface Cart {
 
 export interface CartContextType {
   cart: Cart;
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  addItem: (item: Omit<CartItem, 'quantity'>, qty?: number) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
