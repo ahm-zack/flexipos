@@ -7,6 +7,7 @@ import { getReliableImageUrl } from "@/lib/image-utils";
 import type { Product } from "../services/product-supabase-service";
 import { cn } from "@/lib/utils";
 import { ModifierSelectionDialog } from "@/components/modifier-selection-dialog";
+import { useCart } from "@/modules/cart/hooks/use-cart";
 
 interface ProductCashierCardProps {
   product: Product;
@@ -15,6 +16,12 @@ interface ProductCashierCardProps {
 export function ProductCashierCard({ product }: ProductCashierCardProps) {
   const [imageError, setImageError] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const { cart } = useCart();
+
+  // Count all cart entries that belong to this product (with any modifier combos)
+  const cartQty = cart.items
+    .filter((i) => i.id === product.id || i.id.startsWith(`${product.id}-`))
+    .reduce((sum, i) => sum + i.quantity, 0);
 
   const menuItem = {
     id: product.id,
@@ -40,7 +47,8 @@ export function ProductCashierCard({ product }: ProductCashierCardProps) {
     <>
       <div
         className={cn(
-          "relative bg-card rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:scale-[1.02] active:scale-[0.98]"
+          "relative bg-card rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:scale-[1.02] active:scale-[0.98]",
+          cartQty > 0 && "ring-2 ring-primary",
         )}
         onClick={() => setModalOpen(true)}
         tabIndex={0}
@@ -62,15 +70,23 @@ export function ProductCashierCard({ product }: ProductCashierCardProps) {
               <span className="text-6xl">🛍️</span>
             </div>
           )}
+
+          {/* Cart quantity badge */}
+          {cartQty > 0 && (
+            <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-md">
+              {cartQty}
+            </div>
+          )}
         </div>
+
         {/* Content Section */}
-        <div className="p-6 space-y-4">
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-1">
+        <div className="p-4 space-y-3">
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white line-clamp-1">
               {product.name}
             </h3>
             <p
-              className="text-gray-600 dark:text-gray-300 line-clamp-1"
+              className="text-gray-600 dark:text-gray-300 line-clamp-1 text-sm"
               dir="rtl"
             >
               {product.nameAr || product.name}
@@ -80,13 +96,19 @@ export function ProductCashierCard({ product }: ProductCashierCardProps) {
           <div className="flex items-center justify-between">
             <PriceDisplay
               price={product.price}
-              symbolSize={20}
+              symbolSize={16}
               variant="primary"
-              className="text-2xl font-bold text-green-600 dark:text-green-400"
+              className="text-lg font-bold text-green-600 dark:text-green-400"
             />
+            {cartQty > 0 && (
+              <span className="text-xs font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                {cartQty} in cart
+              </span>
+            )}
           </div>
         </div>
       </div>
+
       {modalOpen && (
         <ModifierSelectionDialog
           open={modalOpen}

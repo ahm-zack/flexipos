@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
+import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +17,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Upload, X } from "lucide-react";
 import { useUpdateProduct } from "../hooks/useProducts";
+import { uploadMenuImage, deleteMenuImage } from "@/lib/image-upload";
 import type { Product, NewProduct } from "../services/product-supabase-service";
 import { ModifierManager } from "@/components/modifier-manager";
 
@@ -31,9 +35,12 @@ export function EditProductForm({
   onOpenChange,
 }: EditProductFormProps) {
   const [formData, setFormData] = useState<Partial<NewProduct>>({});
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
+
   const updateProductMutation = useUpdateProduct();
 
-  // Initialize form data when product changes
   useEffect(() => {
     if (product) {
       setFormData({
@@ -51,8 +58,41 @@ export function EditProductForm({
         tags: product.tags,
         modifiers: product.modifiers,
       });
+      setSelectedFile(null);
+      setPreviewUrl("");
     }
   }, [product]);
+
+  const handleImageUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        if (!file.type.startsWith("image/")) {
+          toast.error("Please select an image file");
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error("Image size should be less than 5MB");
+          return;
+        }
+        setSelectedFile(file);
+        const reader = new FileReader();
+        reader.onload = (e) => setPreviewUrl(e.target?.result as string);
+        reader.readAsDataURL(file);
+      }
+    },
+    [],
+  );
+
+  const removeImage = useCallback(() => {
+    setSelectedFile(null);
+    setPreviewUrl("");
+    setFormData((prev) => ({ ...prev, images: [] }));
+    const fileInput = document.getElementById(
+      "editProductImageFile",
+    ) as HTMLInputElement;
+    if (fileInput) fileInput.value = "";
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,13 +105,44 @@ export function EditProductForm({
     }
 
     try {
+      let images = formData.images ?? [];
+      const oldImageUrl = product.images?.[0];
+
+      if (selectedFile) {
+        setIsUploading(true);
+        try {
+          const uploadedUrl = await uploadMenuImage(selectedFile);
+          if (uploadedUrl) {
+            images = [uploadedUrl];
+          } else {
+            toast.error("Failed to upload image");
+            setIsUploading(false);
+            return;
+          }
+        } catch (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          toast.error("Failed to upload image");
+          setIsUploading(false);
+          return;
+        }
+        setIsUploading(false);
+      }
+
       const updates = {
         ...formData,
         price: Number(formData.price),
         stockQuantity: Number(formData.stockQuantity),
+        images,
       };
 
       await updateProductMutation.mutateAsync({ id: product.id, updates });
+
+      // Clean up old storage file if image was replaced or removed
+      if (oldImageUrl && oldImageUrl !== images[0]) {
+        deleteMenuImage(oldImageUrl).catch((err) =>
+          console.warn("Could not delete old product image:", err),
+        );
+      }
 
       toast.success("Product updated successfully!");
       onOpenChange(false);
@@ -82,6 +153,11 @@ export function EditProductForm({
   };
 
   if (!product) return null;
+
+  const existingImage = formData.images?.[0];
+  const displayPreview =
+    previewUrl ||
+    (existingImage ? getReliableImageUrl(existingImage, "product") : "");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -94,6 +170,7 @@ export function EditProductForm({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Names */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name (English) *</Label>
@@ -107,7 +184,6 @@ export function EditProductForm({
                 required
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="nameAr">Name (Arabic)</Label>
               <Input
@@ -122,6 +198,7 @@ export function EditProductForm({
             </div>
           </div>
 
+          {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
@@ -138,6 +215,7 @@ export function EditProductForm({
             />
           </div>
 
+          {/* Price & Stock */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">Price *</Label>
@@ -157,7 +235,6 @@ export function EditProductForm({
                 required
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="stockQuantity">Stock Quantity</Label>
               <Input
@@ -176,6 +253,7 @@ export function EditProductForm({
             </div>
           </div>
 
+          {/* SKU & Barcode */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="sku">SKU</Label>
@@ -188,17 +266,69 @@ export function EditProductForm({
                 placeholder="Product SKU"
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="barcode">Barcode</Label>
               <Input
                 id="barcode"
                 value={formData.barcode || ""}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, barcode: e.target.value }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    barcode: e.target.value,
+                  }))
                 }
                 placeholder="Product barcode"
               />
+            </div>
+          </div>
+
+          {/* Product Image */}
+          <div className="space-y-2">
+            <Label htmlFor="editProductImageFile">Product Image</Label>
+            <div className="space-y-3">
+              <Input
+                id="editProductImageFile"
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="cursor-pointer"
+              />
+
+              {displayPreview ? (
+                <div className="relative w-full h-48 border-2 border-dashed border-gray-200 rounded-lg overflow-hidden">
+                  <Image
+                    src={displayPreview}
+                    alt="Product preview"
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-2 right-2">
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
+                      title="Remove image"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {selectedFile && (
+                    <div className="absolute bottom-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                      New Image
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg">
+                  <div className="text-center">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-400">PNG, JPG up to 5MB</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -244,6 +374,7 @@ export function EditProductForm({
             />
           </div>
 
+          {/* Toggles */}
           <div className="flex gap-6">
             <div className="flex items-center space-x-2">
               <Switch
@@ -255,7 +386,6 @@ export function EditProductForm({
               />
               <Label htmlFor="isActive">Active</Label>
             </div>
-
             <div className="flex items-center space-x-2">
               <Switch
                 id="isFeatured"
@@ -276,7 +406,16 @@ export function EditProductForm({
             >
               Cancel
             </Button>
-            <Button type="submit">Update Product</Button>
+            <Button
+              type="submit"
+              disabled={isUploading || updateProductMutation.isPending}
+            >
+              {isUploading
+                ? "Uploading..."
+                : updateProductMutation.isPending
+                  ? "Saving..."
+                  : "Update Product"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
