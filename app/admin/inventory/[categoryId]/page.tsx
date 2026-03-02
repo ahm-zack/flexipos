@@ -1,6 +1,7 @@
 "use client";
 
 import { use } from "react";
+import { useTranslations } from "next-intl";
 import { ProductManagementView } from "@/modules/product-feature/components/product-management-view";
 import { useProductsByCategory } from "@/modules/product-feature/hooks/useProducts";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +13,7 @@ export default function CategoryInventoryPage({
 }: {
   params: Promise<{ categoryId: string }>;
 }) {
+  const t = useTranslations("menu");
   const { categoryId } = use(params);
   const { businessId } = useBusinessId(); // Now uses authenticated user's businessId from context
 
@@ -46,7 +48,7 @@ export default function CategoryInventoryPage({
       <div className="container mx-auto px-4 py-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">
-            Error Loading Category
+            {t("errorLoadingCategory")}
           </h1>
           <p className="text-muted-foreground">{error.message}</p>
         </div>
@@ -67,9 +69,9 @@ export default function CategoryInventoryPage({
       <div className="container mx-auto px-4 py-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">
-            Error Loading Business
+            {t("errorLoadingBusiness")}
           </h1>
-          <p className="text-muted-foreground">Business ID not found</p>
+          <p className="text-muted-foreground">{t("businessIdNotFound")}</p>
         </div>
       </div>
     );

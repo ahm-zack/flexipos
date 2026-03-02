@@ -46,6 +46,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("dashboard");
+  const tMenu = useTranslations("menu");
   const [isMenuExpanded, setIsMenuExpanded] = React.useState(false);
 
   const logOut = () => {
@@ -174,7 +175,11 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">
+              <DropdownMenuContent
+                className="w-56"
+                align="end"
+                dir={locale === "ar" ? "rtl" : "ltr"}
+              >
                 {user && (
                   <>
                     <div className="flex flex-col space-y-1 p-2">
@@ -199,7 +204,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                     }`}
                   >
                     <ShoppingBag className="size-4" />
-                    Orders
+                    {t("nav.orders")}
                   </Link>
                 </DropdownMenuItem>
 
@@ -213,7 +218,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                     }`}
                   >
                     <Package className="size-4" />
-                    Inventory
+                    {t("nav.inventory")}
                   </Link>
                 </DropdownMenuItem>
 
@@ -227,7 +232,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                     }`}
                   >
                     <UserCheck className="size-4" />
-                    Customers
+                    {t("nav.customers")}
                   </Link>
                 </DropdownMenuItem>
 
@@ -241,7 +246,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                     }`}
                   >
                     <Users className="size-4" />
-                    Users
+                    {t("nav.users")}
                   </Link>
                 </DropdownMenuItem>
 
@@ -255,7 +260,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                     }`}
                   >
                     <BarChart3 className="size-4" />
-                    Reports
+                    {t("nav.reports")}
                   </Link>
                 </DropdownMenuItem>
 
@@ -267,12 +272,12 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                   {theme === "light" ? (
                     <>
                       <Moon className="size-4 me-2" />
-                      Dark Mode
+                      {t("nav.darkMode")}
                     </>
                   ) : (
                     <>
                       <Sun className="size-4 me-2" />
-                      Light Mode
+                      {t("nav.lightMode")}
                     </>
                   )}
                 </DropdownMenuItem>
@@ -290,7 +295,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                     onClick={logOut}
                     variant={"destructive"}
                   >
-                    Logout
+                    {t("nav.logout")}
                   </Button>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -304,7 +309,9 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <UtensilsCrossed className="size-5 text-primary" />
-                <h2 className="text-lg font-semibold">Menu Categories</h2>
+                <h2 className="text-lg font-semibold">
+                  {t("nav.menuCategories")}
+                </h2>
                 <span className="text-sm text-muted-foreground">
                   ({dynamicMenuItems.length} categories)
                 </span>
@@ -335,14 +342,14 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
             {error && (
               <div className="text-center py-8">
                 <p className="text-destructive mb-4">
-                  Failed to load categories
+                  {tMenu("failedLoadCategories")}
                 </p>
                 <Link
                   href="/admin/inventory"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   <Package className="size-4" />
-                  Go to Inventory
+                  {tMenu("goToInventory")}
                 </Link>
               </div>
             )}

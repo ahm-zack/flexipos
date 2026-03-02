@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ProductManagementCard } from "./product-management-card";
 import type { Product } from "../services/product-supabase-service";
 
@@ -10,14 +11,16 @@ interface ProductGridProps {
 }
 
 export function ProductGrid({ products, onEdit, onDelete }: ProductGridProps) {
+  const t = useTranslations("menu");
+
   if (products.length === 0) {
     return (
       <div className="text-center py-12">
         <h3 className="text-lg font-medium text-muted-foreground mb-2">
-          No products found
+          {t("noProductsFound")}
         </h3>
         <p className="text-sm text-muted-foreground">
-          Create your first product to get started.
+          {t("createFirstProduct")}
         </p>
       </div>
     );

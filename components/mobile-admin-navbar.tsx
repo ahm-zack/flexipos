@@ -18,15 +18,17 @@ import {
   Moon,
   Sun,
   Languages,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/modules/cart/hooks/use-cart";
 import { CartPanel } from "@/modules/cart";
 import { useCategories } from "@/hooks/useCategories";
+import { createClient } from "@/utils/supabase/client";
 
 interface MobileAdminNavbarProps {
   user?: {
@@ -42,9 +44,16 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations("dashboard");
   const [activeDropdown, setActiveDropdown] = useState<
     "menu" | "avatar" | "cart" | null
   >(null);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   const toggleLocale = () => {
     const next = locale === "en" ? "ar" : "en";
@@ -61,7 +70,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
       // Fallback items while loading or if no categories
       return [
         {
-          title: "Inventory",
+          title: t("nav.inventory"),
           url: "/admin/inventory",
           icon: "📦",
           color: "#4ECDC4",
@@ -78,7 +87,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
         icon: category.icon || "📁",
         color: category.color || "#4ECDC4",
       }));
-  }, [categories, isLoading, error]);
+  }, [categories, isLoading, error, t]);
 
   const toggleDropdown = (dropdown: "menu" | "avatar" | "cart") => {
     setActiveDropdown(activeDropdown === dropdown ? null : dropdown);
@@ -300,7 +309,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                     onClick={closeDropdowns}
                   >
                     <ShoppingBag className="size-4" />
-                    <span>Orders</span>
+                    <span>{t("nav.orders")}</span>
                   </Link>
 
                   <Link
@@ -313,7 +322,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                     onClick={closeDropdowns}
                   >
                     <Package className="size-4" />
-                    <span>Inventory</span>
+                    <span>{t("nav.inventory")}</span>
                   </Link>
 
                   <Link
@@ -326,7 +335,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                     onClick={closeDropdowns}
                   >
                     <UserCheck className="size-4" />
-                    <span>Customers</span>
+                    <span>{t("nav.customers")}</span>
                   </Link>
 
                   <Link
@@ -339,7 +348,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                     onClick={closeDropdowns}
                   >
                     <Users className="size-4" />
-                    <span>Users</span>
+                    <span>{t("nav.users")}</span>
                   </Link>
 
                   <Link
@@ -352,7 +361,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                     onClick={closeDropdowns}
                   >
                     <BarChart3 className="size-4" />
-                    <span>Reports</span>
+                    <span>{t("nav.reports")}</span>
                   </Link>
 
                   <div className="border-t border-border my-2"></div>
@@ -378,14 +387,27 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                     {theme === "dark" ? (
                       <>
                         <Sun className="size-4" />
-                        <span>Light Mode</span>
+                        <span>{t("nav.lightMode")}</span>
                       </>
                     ) : (
                       <>
                         <Moon className="size-4" />
-                        <span>Dark Mode</span>
+                        <span>{t("nav.darkMode")}</span>
                       </>
                     )}
+                  </button>
+
+                  <div className="border-t border-border my-2"></div>
+
+                  <button
+                    onClick={() => {
+                      closeDropdowns();
+                      handleLogout();
+                    }}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors w-full text-start text-destructive"
+                  >
+                    <LogOut className="size-4" />
+                    <span>{t("nav.logout")}</span>
                   </button>
                 </div>
               </div>
