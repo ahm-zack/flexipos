@@ -95,18 +95,9 @@ export async function POST(request: Request) {
         }
         console.log('✅ Auth user verified in database');
 
-        // Check if this userId somehow already exists in users table (should never happen but let's be safe)
-        const { data: existingUserById } = await adminClient.from('users').select('id').eq('id', userId).maybeSingle();
-
-        if (existingUserById) {
-            console.log('🧹 Found orphaned user record with this ID, cleaning up:', existingUserById.id);
-            await adminClient.from('users').delete().eq('id', userId);
-            console.log('✅ Orphaned record by ID cleaned');
-        }
-
-        // Step 2: Create/update user record in users table
-        // The on_auth_user_created trigger may have already inserted this row,
-        // so use upsert to avoid a duplicate-key conflict.
+        // Step 2: Upsert user record in users table.
+        // The on_auth_user_created trigger has already inserted the row,
+        // so we just upsert to set role='admin' and is_active=true.
         console.log('📝 Upserting user record in users table for userId:', userId);
         try {
             const upsertPayload = {
