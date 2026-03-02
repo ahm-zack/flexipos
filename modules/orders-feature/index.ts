@@ -155,6 +155,20 @@ export function useCreateOrder() {
             }
             // ─────────────────────────────────────────────────────────────
 
+            // ── Update dashboard_metrics (fire-and-forget, never blocks order) ──
+            // Do not await errors — a metrics failure must never fail an order.
+            supabase.rpc('increment_dashboard_metrics', {
+                p_business_id: businessId,
+                p_total: createdOrder.total_amount,
+                p_payment_method: createdOrder.payment_method,
+                p_delivery_platform: createdOrder.delivery_platform ?? undefined,
+                p_cash_amount: createdOrder.cash_amount ?? 0,
+                p_card_amount: createdOrder.card_amount ?? 0,
+            }).then(({ error: rpcError }) => {
+                if (rpcError) console.warn('[dashboard_metrics] RPC error:', rpcError.message);
+            });
+            // ─────────────────────────────────────────────────────────────
+
             // Convert database response to client-friendly format
             return {
                 id: createdOrder.id,
@@ -186,6 +200,8 @@ export function useCreateOrder() {
             // Refresh orders list and product stock quantities in the UI
             queryClient.invalidateQueries({ queryKey: ['orders'] });
             queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+            // Refresh dashboard metrics so the dashboard reflects the new order
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         },
     });
 }

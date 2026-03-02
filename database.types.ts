@@ -323,6 +323,143 @@ export type Database = {
           },
         ]
       }
+      dashboard_metrics: {
+        Row: {
+          business_id: string
+          card_total: number
+          cash_total: number
+          current_day: string
+          current_month_start: string
+          current_week_start: string
+          daily_card: number
+          daily_cash: number
+          daily_hunger_station: number
+          daily_jahez: number
+          daily_keeta: number
+          daily_mixed: number
+          daily_orders: number
+          daily_total: number
+          delivery_hunger_station_total: number
+          delivery_jahez_total: number
+          delivery_keeta_total: number
+          delivery_total: number
+          id: string
+          mixed_card_total: number
+          mixed_cash_total: number
+          monthly_card: number
+          monthly_cash: number
+          monthly_hunger_station: number
+          monthly_jahez: number
+          monthly_keeta: number
+          monthly_mixed: number
+          monthly_orders: number
+          monthly_total: number
+          total_orders: number
+          total_revenue: number
+          updated_at: string
+          weekly_card: number
+          weekly_cash: number
+          weekly_hunger_station: number
+          weekly_jahez: number
+          weekly_keeta: number
+          weekly_mixed: number
+          weekly_orders: number
+          weekly_total: number
+        }
+        Insert: {
+          business_id: string
+          card_total?: number
+          cash_total?: number
+          current_day?: string
+          current_month_start?: string
+          current_week_start?: string
+          daily_card?: number
+          daily_cash?: number
+          daily_hunger_station?: number
+          daily_jahez?: number
+          daily_keeta?: number
+          daily_mixed?: number
+          daily_orders?: number
+          daily_total?: number
+          delivery_hunger_station_total?: number
+          delivery_jahez_total?: number
+          delivery_keeta_total?: number
+          delivery_total?: number
+          id?: string
+          mixed_card_total?: number
+          mixed_cash_total?: number
+          monthly_card?: number
+          monthly_cash?: number
+          monthly_hunger_station?: number
+          monthly_jahez?: number
+          monthly_keeta?: number
+          monthly_mixed?: number
+          monthly_orders?: number
+          monthly_total?: number
+          total_orders?: number
+          total_revenue?: number
+          updated_at?: string
+          weekly_card?: number
+          weekly_cash?: number
+          weekly_hunger_station?: number
+          weekly_jahez?: number
+          weekly_keeta?: number
+          weekly_mixed?: number
+          weekly_orders?: number
+          weekly_total?: number
+        }
+        Update: {
+          business_id?: string
+          card_total?: number
+          cash_total?: number
+          current_day?: string
+          current_month_start?: string
+          current_week_start?: string
+          daily_card?: number
+          daily_cash?: number
+          daily_hunger_station?: number
+          daily_jahez?: number
+          daily_keeta?: number
+          daily_mixed?: number
+          daily_orders?: number
+          daily_total?: number
+          delivery_hunger_station_total?: number
+          delivery_jahez_total?: number
+          delivery_keeta_total?: number
+          delivery_total?: number
+          id?: string
+          mixed_card_total?: number
+          mixed_cash_total?: number
+          monthly_card?: number
+          monthly_cash?: number
+          monthly_hunger_station?: number
+          monthly_jahez?: number
+          monthly_keeta?: number
+          monthly_mixed?: number
+          monthly_orders?: number
+          monthly_total?: number
+          total_orders?: number
+          total_revenue?: number
+          updated_at?: string
+          weekly_card?: number
+          weekly_cash?: number
+          weekly_hunger_station?: number
+          weekly_jahez?: number
+          weekly_keeta?: number
+          weekly_mixed?: number
+          weekly_orders?: number
+          weekly_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_metrics_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eod_reports: {
         Row: {
           average_order_value: number
@@ -808,6 +945,17 @@ export type Database = {
       get_next_order_serial: {
         Args: { p_business_id: string }
         Returns: number
+      }
+      increment_dashboard_metrics: {
+        Args: {
+          p_business_id: string
+          p_card_amount?: number
+          p_cash_amount?: number
+          p_delivery_platform?: string
+          p_payment_method: string
+          p_total: number
+        }
+        Returns: undefined
       }
     }
     Enums: {
