@@ -175,10 +175,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-56"
-                align="end"
-              >
+              <DropdownMenuContent className="w-56" align="end">
                 {user && (
                   <>
                     <div className="flex flex-col space-y-1 p-2">

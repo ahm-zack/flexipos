@@ -104,16 +104,18 @@ export async function POST(request: Request) {
             console.log('✅ Orphaned record by ID cleaned');
         }
 
-        // Step 2: Create user record in users table
-        console.log('📝 Creating user record in users table');
+        // Step 2: Create/update user record in users table
+        // The on_auth_user_created trigger may have already inserted this row,
+        // so use upsert to avoid a duplicate-key conflict.
+        console.log('📝 Upserting user record in users table');
         try {
-            const { error: insertError } = await adminClient.from('users').insert({
+            const { error: insertError } = await adminClient.from('users').upsert({
                 id: userId,
                 email: authData.user.email!,
                 full_name: email.split('@')[0], // Temporary name, can be updated later
                 role: 'admin',
                 is_active: true,
-            });
+            }, { onConflict: 'id' });
             if (insertError) throw insertError;
 
             console.log('✅ User record created in users table');
@@ -138,8 +140,14 @@ export async function POST(request: Request) {
                 console.error('❌ Failed to rollback auth user:', rollbackError);
             }
 
-            // Check if it's a duplicate key error
-            if (dbError instanceof Error && dbError.message.includes('duplicate key')) {
+            // Check if it's a duplicate key error (handles both native Error and PostgrestError)
+            const isDuplicate =
+                (dbError instanceof Error && dbError.message.includes('duplicate key')) ||
+                (typeof dbError === 'object' && dbError !== null &&
+                    ('code' in dbError && (dbError as { code: string }).code === '23505' ||
+                        'message' in dbError && typeof (dbError as { message: string }).message === 'string' &&
+                        (dbError as { message: string }).message.includes('duplicate key')));
+            if (isDuplicate) {
                 return NextResponse.json(
                     { error: 'A user with this email already exists in the database. Please try logging in or use a different email.' },
                     { status: 400 }
