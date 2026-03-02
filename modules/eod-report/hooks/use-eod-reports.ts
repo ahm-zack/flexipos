@@ -1,383 +1,107 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type {
-  EODReportRequest,
-  EODReportData,
-  SavedEODReport,
-  EODReportHistoryRequest
-} from '@/lib/schemas';
-
-// Query key factory
-export const eodReportKeys = {
-  all: ['eodReports'] as const,
-  lists: () => [...eodReportKeys.all, 'list'] as const,
-  list: (filters: string) => [...eodReportKeys.lists(), { filters }] as const,
-  details: () => [...eodReportKeys.all, 'detail'] as const,
-  detail: (id: string) => [...eodReportKeys.details(), id] as const,
-  history: () => [...eodReportKeys.all, 'history'] as const,
-  historyWithFilters: (filters: EODReportHistoryRequest) => [...eodReportKeys.history(), filters] as const,
-  generate: () => [...eodReportKeys.all, 'generate'] as const,
-  generateWithParams: (params: EODReportRequest) => [...eodReportKeys.generate(), params] as const,
-};
-
-// API functions
-const generateEODReport = async (reportRequest: EODReportRequest): Promise<EODReportData> => {
-  const response = await fetch("/api/admin/reports/eod", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(reportRequest),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    // Handle specific auth errors
-    if (response.status === 403) {
-      throw new Error(data.error || 'Insufficient permissions for EOD reports');
-    }
-    throw new Error(data.error || `Failed to generate EOD report (${response.status})`);
-  }
-
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to generate EOD report');
-  }
-
-  return data.data;
-};
-
-const generateEODReportWithPreset = async (preset: string = 'today', saveToDb: boolean = false): Promise<EODReportData> => {
-  const response = await fetch(`/api/admin/reports/eod?preset=${preset}&save=${saveToDb}`);
-
-  if (!response.ok) {
-    // Handle specific auth errors
-    if (response.status === 403) {
-      const data = await response.json();
-      throw new Error(data.error || 'Insufficient permissions for EOD reports');
-    }
-    throw new Error("Failed to generate EOD report");
-  }
-
-  const data = await response.json();
-
-  if (!data.success) {
-    throw new Error(data.error || "Failed to generate EOD report");
-  }
-
-  return data.data;
-};
-
-export const fetchEODReportHistory = async (historyRequest: EODReportHistoryRequest): Promise<{
-  reports: SavedEODReport[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}> => {
-  const params = new URLSearchParams({
-    page: historyRequest.page.toString(),
-    limit: historyRequest.limit.toString(),
-  });
-
-  if (historyRequest.startDate) {
-    params.append('startDate', historyRequest.startDate);
-  }
-  if (historyRequest.endDate) {
-    params.append('endDate', historyRequest.endDate);
-  }
-  if (historyRequest.reportType) {
-    params.append('reportType', historyRequest.reportType);
-  }
-
-  const response = await fetch(`/api/admin/reports/eod/history?${params}`);
-
-  if (!response.ok) {
-    // Handle specific auth errors
-    if (response.status === 403) {
-      const data = await response.json();
-      throw new Error(data.error || 'Insufficient permissions for EOD reports');
-    }
-    throw new Error("Failed to fetch EOD report history");
-  }
-
-  const data = await response.json();
-
-  if (!data.success) {
-    throw new Error(data.error || "Failed to fetch EOD report history");
-  }
-
-  return {
-    reports: data.reports,
-    pagination: data.pagination,
-  };
-};
-
-const fetchEODReportById = async (id: string): Promise<SavedEODReport> => {
-  const response = await fetch(`/api/admin/reports/eod/${id}`);
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error("EOD report not found");
-    }
-    // Handle specific auth errors
-    if (response.status === 403) {
-      const data = await response.json();
-      throw new Error(data.error || 'Insufficient permissions for EOD reports');
-    }
-    throw new Error("Failed to fetch EOD report");
-  }
-
-  const data = await response.json();
-
-  if (!data.success) {
-    throw new Error(data.error || "Failed to fetch EOD report");
-  }
-
-  return data.data;
-};
-
-const deleteEODReport = async (id: string): Promise<void> => {
-  const response = await fetch(`/api/admin/reports/eod/${id}`, {
-    method: 'DELETE',
-  });
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error("EOD report not found");
-    }
-    // Handle specific auth errors
-    if (response.status === 403) {
-      const data = await response.json();
-      throw new Error(data.error || 'Insufficient permissions to delete EOD reports');
-    }
-    throw new Error("Failed to delete EOD report");
-  }
-
-  const data = await response.json();
-
-  if (!data.success) {
-    throw new Error(data.error || "Failed to delete EOD report");
-  }
-};
-
-// Hooks
-
 /**
- * Hook to generate EOD report with custom parameters
+ * EOD Report hooks – Supabase client + TanStack Query (no API routes)
  */
+'use client';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useBusinessId } from '@/hooks/useBusinessId';
+import { useCurrentUser } from '@/hooks/use-current-user';
+import {
+  getSmartEODPreview,
+  generateAndSaveEODReport,
+  fetchEODReportHistory,
+  fetchEODReportById,
+  deleteEODReport,
+} from '@/lib/reports/eod-service';
+import type { SmartEODPreview, SavedEODReport } from '@/lib/reports/types';
+
+// ─────────────────────────────────────────────────────────────────────────
+// Query keys
+// ─────────────────────────────────────────────────────────────────────────
+export const eodReportKeys = {
+  all: (businessId: string) => ['eodReports', businessId] as const,
+  preview: (businessId: string) => ['eodReports', businessId, 'preview'] as const,
+  history: (businessId: string, page: number) =>
+    ['eodReports', businessId, 'history', page] as const,
+  detail: (id: string) => ['eodReports', 'detail', id] as const,
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// Smart EOD preview hook (auto-detects pending orders)
+// ─────────────────────────────────────────────────────────────────────────
+export const useSmartEODPreview = () => {
+  const { businessId, isLoading: loading } = useBusinessId();
+
+  return useQuery<SmartEODPreview>({
+    queryKey: eodReportKeys.preview(businessId ?? ''),
+    queryFn: () => getSmartEODPreview(businessId!),
+    enabled: !!businessId && !loading,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// Generate + save EOD report mutation
+// ─────────────────────────────────────────────────────────────────────────
 export const useGenerateEODReport = () => {
   const queryClient = useQueryClient();
+  const { businessId } = useBusinessId();
+  const { user } = useCurrentUser();
 
   return useMutation({
-    mutationFn: generateEODReport,
-    onSuccess: (data) => {
-      // Invalidate history queries to show new saved reports
-      queryClient.invalidateQueries({ queryKey: eodReportKeys.history() });
-
-      // Cache the generated report - create a proper request object from the data
-      const cacheKey = eodReportKeys.generate();
-      queryClient.setQueryData(cacheKey, data);
+    mutationFn: (notes?: string) => {
+      if (!businessId) throw new Error('No business ID');
+      if (!user?.id) throw new Error('Must be logged in');
+      return generateAndSaveEODReport(businessId, user.id, notes);
     },
-  });
-};
-
-/**
- * Hook to generate EOD report with preset date ranges
- */
-export const useGenerateEODReportWithPreset = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ preset, saveToDb }: { preset: string; saveToDb: boolean }) =>
-      generateEODReportWithPreset(preset, saveToDb),
-    onSuccess: (data, variables) => {
-      // Invalidate history queries if report was saved
-      if (variables.saveToDb) {
-        queryClient.invalidateQueries({ queryKey: eodReportKeys.history() });
+    onSuccess: () => {
+      if (businessId) {
+        queryClient.invalidateQueries({ queryKey: eodReportKeys.all(businessId) });
       }
-
-      // Cache the generated report
-      queryClient.setQueryData(eodReportKeys.generate(), data);
     },
   });
 };
 
-/**
- * Hook to fetch EOD report history with pagination and filters
- */
-export const useEODReportHistory = (historyRequest: EODReportHistoryRequest) => {
+// ─────────────────────────────────────────────────────────────────────────
+// EOD report history
+// ─────────────────────────────────────────────────────────────────────────
+export const useEODReportHistory = (page = 1, limit = 10) => {
+  const { businessId, isLoading: loading } = useBusinessId();
+
   return useQuery({
-    queryKey: eodReportKeys.historyWithFilters(historyRequest),
-    queryFn: () => fetchEODReportHistory(historyRequest),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    retry: 3,
+    queryKey: eodReportKeys.history(businessId ?? '', page),
+    queryFn: () => fetchEODReportHistory(businessId!, page, limit),
+    enabled: !!businessId && !loading,
+    staleTime: 60_000,
   });
 };
 
-/**
- * Hook to fetch a specific EOD report by ID
- */
-export const useEODReport = (id: string) => {
-  return useQuery({
-    queryKey: eodReportKeys.detail(id),
-    queryFn: () => fetchEODReportById(id),
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+// ─────────────────────────────────────────────────────────────────────────
+// Single EOD report
+// ─────────────────────────────────────────────────────────────────────────
+export const useEODReportDetail = (reportId: string | null) => {
+  return useQuery<SavedEODReport>({
+    queryKey: eodReportKeys.detail(reportId ?? ''),
+    queryFn: () => fetchEODReportById(reportId!),
+    enabled: !!reportId,
+    staleTime: 5 * 60_000,
   });
 };
 
-/**
- * Hook to delete an EOD report
- */
+// ─────────────────────────────────────────────────────────────────────────
+// Delete EOD report mutation
+// ─────────────────────────────────────────────────────────────────────────
 export const useDeleteEODReport = () => {
   const queryClient = useQueryClient();
+  const { businessId } = useBusinessId();
 
   return useMutation({
-    mutationFn: deleteEODReport,
+    mutationFn: (reportId: string) => deleteEODReport(reportId),
     onSuccess: () => {
-      // Invalidate history queries to refresh the list
-      queryClient.invalidateQueries({ queryKey: eodReportKeys.history() });
+      if (businessId) {
+        queryClient.invalidateQueries({ queryKey: eodReportKeys.all(businessId) });
+      }
     },
   });
-};
-
-/**
- * Hook to generate today's EOD report (quick preset)
- */
-export const useTodayEODReport = (saveToDb: boolean = false) => {
-  return useQuery({
-    queryKey: eodReportKeys.generateWithParams({
-      startDateTime: new Date().toISOString().split('T')[0] + 'T00:00:00Z',
-      endDateTime: new Date().toISOString(),
-      saveToDatabase: saveToDb,
-      includePreviousPeriodComparison: false
-    }),
-    queryFn: () => generateEODReportWithPreset('today', saveToDb),
-    staleTime: 1 * 60 * 1000, // 1 minute for today's data
-    retry: 2,
-  });
-};
-
-/**
- * Hook to generate yesterday's EOD report (quick preset)
- */
-export const useYesterdayEODReport = (saveToDb: boolean = false) => {
-  return useQuery({
-    queryKey: eodReportKeys.generateWithParams({
-      startDateTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0] + 'T00:00:00Z',
-      endDateTime: new Date().toISOString().split('T')[0] + 'T00:00:00Z',
-      saveToDatabase: saveToDb,
-      includePreviousPeriodComparison: false
-    }),
-    queryFn: () => generateEODReportWithPreset('yesterday', saveToDb),
-    staleTime: 5 * 60 * 1000, // 5 minutes for yesterday's data
-    retry: 2,
-  });
-};
-
-/**
- * Hook to generate last 7 days EOD report (quick preset)
- */
-export const useLast7DaysEODReport = (saveToDb: boolean = false) => {
-  return useQuery({
-    queryKey: eodReportKeys.generateWithParams({
-      startDateTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + 'T00:00:00Z',
-      endDateTime: new Date().toISOString(),
-      saveToDatabase: saveToDb,
-      includePreviousPeriodComparison: false
-    }),
-    queryFn: () => generateEODReportWithPreset('last-7-days', saveToDb),
-    staleTime: 3 * 60 * 1000, // 3 minutes for weekly data
-    retry: 2,
-  });
-};
-
-/**
- * Hook to prefetch common EOD report data
- */
-export const usePrefetchEODReports = () => {
-  const queryClient = useQueryClient();
-
-  const prefetchHistory = () => {
-    queryClient.prefetchQuery({
-      queryKey: eodReportKeys.historyWithFilters({
-        page: 1,
-        limit: 10,
-      }),
-      queryFn: () => fetchEODReportHistory({
-        page: 1,
-        limit: 10,
-      }),
-      staleTime: 2 * 60 * 1000,
-    });
-  };
-
-  const prefetchTodayReport = () => {
-    queryClient.prefetchQuery({
-      queryKey: eodReportKeys.generateWithParams({
-        startDateTime: new Date().toISOString().split('T')[0] + 'T00:00:00Z',
-        endDateTime: new Date().toISOString(),
-        saveToDatabase: false,
-        includePreviousPeriodComparison: false
-      }),
-      queryFn: () => generateEODReportWithPreset('today', false),
-      staleTime: 1 * 60 * 1000,
-    });
-  };
-
-  return {
-    prefetchHistory,
-    prefetchTodayReport,
-  };
-};
-
-/**
- * Hook to invalidate all EOD report queries
- */
-export const useInvalidateEODReports = () => {
-  const queryClient = useQueryClient();
-
-  return {
-    invalidateAll: () => {
-      queryClient.invalidateQueries({ queryKey: eodReportKeys.all });
-    },
-    invalidateHistory: () => {
-      queryClient.invalidateQueries({ queryKey: eodReportKeys.history() });
-    },
-    invalidateGenerated: () => {
-      queryClient.invalidateQueries({ queryKey: eodReportKeys.generate() });
-    },
-  };
-};
-
-/**
- * Custom hook for managing EOD report state and operations
- */
-export const useEODReportManager = () => {
-  const generateReport = useGenerateEODReport();
-  const generateWithPreset = useGenerateEODReportWithPreset();
-  const invalidate = useInvalidateEODReports();
-  const prefetch = usePrefetchEODReports();
-
-  return {
-    // Generation
-    generateReport: generateReport.mutate,
-    generateWithPreset: generateWithPreset.mutate,
-    isGenerating: generateReport.isPending || generateWithPreset.isPending,
-    generationError: generateReport.error || generateWithPreset.error,
-
-    // Cache management
-    invalidateAll: invalidate.invalidateAll,
-    invalidateHistory: invalidate.invalidateHistory,
-    invalidateGenerated: invalidate.invalidateGenerated,
-    prefetchHistory: prefetch.prefetchHistory,
-    prefetchTodayReport: prefetch.prefetchTodayReport,
-
-    // Status
-    isSuccess: generateReport.isSuccess || generateWithPreset.isSuccess,
-    isError: generateReport.isError || generateWithPreset.isError,
-    data: generateReport.data || generateWithPreset.data,
-  };
 };

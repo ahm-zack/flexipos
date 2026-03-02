@@ -23,5 +23,15 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "lib/order-service-backup.ts",
+    "check-user-state.ts",
+    "x check-user-state.ts",
+    "check-tables.js",
+    "cleanup-orphaned-users.ts",
+    "cleanup-all-orphans.ts",
+    "delete-user-by-email.ts",
+    "test-supabase-connection.ts"
+  ]
 }

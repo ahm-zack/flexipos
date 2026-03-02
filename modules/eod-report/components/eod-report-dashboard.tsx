@@ -4,601 +4,842 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import { SaudiRiyalSymbol } from "@/components/currency/saudi-riyal-symbol";
-import { DateTimePicker } from "@/components/date-time-picker";
-import { useGenerateEODReport, useEODReportFormatters } from "../hooks";
-import { generateEODReportPDF } from "@/lib/eod-pdf-generator";
+import {
+  useSmartEODPreview,
+  useGenerateEODReport,
+  useEODReportHistory,
+  useDeleteEODReport,
+} from "../hooks/use-eod-reports";
+import type { SavedEODReport } from "@/lib/reports/types";
+import {
+  FileText,
+  TrendingUp,
+  ShoppingCart,
+  Clock,
+  Banknote,
+  CreditCard,
+  Truck,
+  AlertCircle,
+  CheckCircle2,
+  RefreshCw,
+  Trash2,
+  ChevronRight,
+  Package,
+  BarChart3,
+  Zap,
+  ArrowLeft,
+  Calendar,
+  XCircle,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { vatUtils } from "@/lib/vat-config";
+import { toast } from "sonner";
 
-// Export the historical reports component
-export { HistoricalEODReports } from "./historical-eod-reports";
+// ─── helpers ─────────────────────────────────────────────────────────────────
+const fmt = (n: number | string) =>
+  parseFloat(n.toString()).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
+const fmtDate = (d: string | Date) =>
+  new Date(d).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+const fmtShortDate = (d: string | Date) =>
+  new Date(d).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+// ─── Stat card ────────────────────────────────────────────────────────────────
+type CardColor = "blue" | "green" | "orange" | "purple" | "red" | "teal";
+
+const COLOR_MAP: Record<
+  CardColor,
+  { icon: string; value: string; bg: string; border: string }
+> = {
+  blue: {
+    icon: "text-blue-500",
+    value: "text-blue-700 dark:text-blue-300",
+    bg: "bg-blue-500/10",
+    border: "border-blue-200 dark:border-blue-800",
+  },
+  green: {
+    icon: "text-emerald-500",
+    value: "text-emerald-700 dark:text-emerald-300",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-200 dark:border-emerald-800",
+  },
+  orange: {
+    icon: "text-orange-500",
+    value: "text-orange-700 dark:text-orange-300",
+    bg: "bg-orange-500/10",
+    border: "border-orange-200 dark:border-orange-800",
+  },
+  purple: {
+    icon: "text-violet-500",
+    value: "text-violet-700 dark:text-violet-300",
+    bg: "bg-violet-500/10",
+    border: "border-violet-200 dark:border-violet-800",
+  },
+  red: {
+    icon: "text-rose-500",
+    value: "text-rose-700 dark:text-rose-300",
+    bg: "bg-rose-500/10",
+    border: "border-rose-200 dark:border-rose-800",
+  },
+  teal: {
+    icon: "text-teal-500",
+    value: "text-teal-700 dark:text-teal-300",
+    bg: "bg-teal-500/10",
+    border: "border-teal-200 dark:border-teal-800",
+  },
+};
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  color = "blue",
+  currency = false,
+  sub,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ElementType;
+  color?: CardColor;
+  currency?: boolean;
+  sub?: string;
+}) {
+  const c = COLOR_MAP[color];
+  return (
+    <div
+      className={cn(
+        "rounded-xl border p-4 bg-background space-y-3 shadow-sm",
+        c.border,
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-muted-foreground">
+          {label}
+        </span>
+        <div className={cn("p-2 rounded-lg", c.bg)}>
+          <Icon className={cn("h-4 w-4", c.icon)} />
+        </div>
+      </div>
+      <p className={cn("text-2xl font-bold tracking-tight", c.value)}>
+        {currency ? (
+          <span className="flex items-center gap-1">
+            <SaudiRiyalSymbol className="h-4 w-4 opacity-70" />
+            {fmt(value)}
+          </span>
+        ) : (
+          value
+        )}
+      </p>
+      {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+    </div>
+  );
+}
+
+// ─── Payment bar ──────────────────────────────────────────────────────────────
+const PAY_COLORS: Record<string, { bar: string; icon: string; bg: string }> = {
+  cash: {
+    bar: "bg-emerald-500",
+    icon: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+  },
+  card: { bar: "bg-blue-500", icon: "text-blue-500", bg: "bg-blue-500/10" },
+  delivery: {
+    bar: "bg-orange-500",
+    icon: "text-orange-500",
+    bg: "bg-orange-500/10",
+  },
+};
+
+const PAY_ICONS: Record<string, React.ElementType> = {
+  cash: Banknote,
+  card: CreditCard,
+  delivery: Truck,
+};
+
+// ─── Section wrapper ──────────────────────────────────────────────────────────
+function Section({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  icon?: React.ElementType;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="shadow-sm border-border/60">
+      <CardHeader className="pb-2 pt-4 px-5">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+          {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <Separator className="mx-5 mb-0" style={{ width: "calc(100% - 40px)" }} />
+      <CardContent className="px-5 pt-4 pb-5">{children}</CardContent>
+    </Card>
+  );
+}
+
+// ─── Report View ──────────────────────────────────────────────────────────────
+function ReportView({ report }: { report: SavedEODReport }) {
+  const topItems = Array.isArray(report.top_items)
+    ? report.top_items.slice(0, 10)
+    : [];
+  const catBreak = Array.isArray(report.category_breakdown)
+    ? report.category_breakdown
+    : [];
+  const hourly = Array.isArray(report.hourly_sales)
+    ? (report.hourly_sales as Array<{
+        hour: number;
+        label: string;
+        orderCount: number;
+        revenue: number;
+      }>)
+    : [];
+  const payBreak = Array.isArray(report.payment_breakdown)
+    ? report.payment_breakdown
+    : [];
+  const maxRevenue = Math.max(...hourly.map((h) => h.revenue), 1);
+
+  return (
+    <div className="space-y-5">
+      {/* Hero header */}
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-0.5 uppercase tracking-wide">
+            EOD Report
+          </p>
+          <h2 className="text-xl font-bold">{report.report_number}</h2>
+          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5" />
+            {fmtShortDate(report.period_start)}
+            <span className="text-border">→</span>
+            {fmtShortDate(report.period_end)}
+          </p>
+        </div>
+        <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 gap-1.5 px-3 py-1.5 text-xs font-medium">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Completed
+        </Badge>
+      </div>
+
+      {/* KPI grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatCard
+          label="Total Revenue"
+          value={report.total_revenue}
+          icon={TrendingUp}
+          color="green"
+          currency
+        />
+        <StatCard
+          label="Orders"
+          value={report.completed_orders}
+          icon={ShoppingCart}
+          color="blue"
+        />
+        <StatCard
+          label="Avg. Order"
+          value={report.average_order_value}
+          icon={BarChart3}
+          color="purple"
+          currency
+        />
+        <StatCard
+          label="Cancelled"
+          value={report.cancelled_orders}
+          icon={XCircle}
+          color="red"
+        />
+      </div>
+
+      {/* Revenue split */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard
+          label="Cash"
+          value={report.cash_revenue}
+          icon={Banknote}
+          color="green"
+          currency
+        />
+        <StatCard
+          label="Card"
+          value={report.card_revenue}
+          icon={CreditCard}
+          color="blue"
+          currency
+        />
+        <StatCard
+          label="Delivery"
+          value={report.delivery_revenue}
+          icon={Truck}
+          color="orange"
+          currency
+        />
+      </div>
+
+      {/* VAT */}
+      {vatUtils.shouldShowVAT() && (
+        <Section title="VAT Breakdown (15%)">
+          <div className="grid grid-cols-3 gap-6">
+            {[
+              { label: "Revenue incl. VAT", value: report.total_revenue },
+              { label: "VAT Amount", value: report.total_vat },
+              { label: "Revenue excl. VAT", value: report.revenue_ex_vat },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                <p className="font-bold text-sm flex items-center gap-1">
+                  <SaudiRiyalSymbol className="h-3 w-3 opacity-60" />
+                  {fmt(value)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Payment breakdown */}
+      {payBreak.length > 0 && (
+        <Section title="Payment Methods" icon={CreditCard}>
+          <div className="space-y-4">
+            {payBreak.map((p) => {
+              const Icon = PAY_ICONS[p.method] ?? Banknote;
+              const pc = PAY_COLORS[p.method] ?? PAY_COLORS.cash;
+              return (
+                <div key={p.method} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className={cn("p-1.5 rounded-md", pc.bg)}>
+                        <Icon className={cn("h-3.5 w-3.5", pc.icon)} />
+                      </div>
+                      <span className="capitalize font-medium">{p.method}</span>
+                      <span className="text-muted-foreground text-xs">
+                        ({p.orderCount} orders)
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground">
+                        {p.percentage.toFixed(1)}%
+                      </span>
+                      <span className="font-semibold flex items-center gap-0.5">
+                        <SaudiRiyalSymbol className="h-3 w-3 opacity-60" />
+                        {fmt(p.totalAmount)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-500",
+                        pc.bar,
+                      )}
+                      style={{ width: `${p.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Section>
+      )}
+
+      {/* Top items */}
+      {topItems.length > 0 && (
+        <Section title="Top Selling Items" icon={Package}>
+          <div className="space-y-2">
+            {topItems.map((item, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <span
+                  className={cn(
+                    "flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold",
+                    i === 0
+                      ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
+                      : i === 1
+                        ? "bg-slate-500/15 text-slate-600 dark:text-slate-400"
+                        : i === 2
+                          ? "bg-orange-500/15 text-orange-700 dark:text-orange-400"
+                          : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {i + 1}
+                </span>
+                <span className="flex-1 text-sm font-medium truncate">
+                  {item.name}
+                </span>
+                {item.categoryName && (
+                  <Badge
+                    variant="secondary"
+                    className="text-[11px] px-2 py-0 shrink-0"
+                  >
+                    {item.categoryName}
+                  </Badge>
+                )}
+                <span className="text-xs text-muted-foreground shrink-0">
+                  ×{item.quantity}
+                </span>
+                <span className="text-sm font-semibold min-w-[72px] text-right flex items-center justify-end gap-0.5">
+                  <SaudiRiyalSymbol className="h-3 w-3 opacity-60" />
+                  {fmt(item.revenue)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Category breakdown */}
+      {catBreak.length > 0 && (
+        <Section title="Category Breakdown" icon={BarChart3}>
+          <div className="space-y-2">
+            {catBreak.map((cat, i) => (
+              <div key={i} className="flex items-center justify-between py-1.5">
+                <span className="text-sm text-muted-foreground">
+                  {cat.categoryName}
+                </span>
+                <span className="text-sm font-semibold flex items-center gap-0.5">
+                  <SaudiRiyalSymbol className="h-3 w-3 opacity-60" />
+                  {fmt(cat.revenue)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Hourly chart */}
+      {hourly.some((h) => h.orderCount > 0) && (
+        <Section title="Hourly Activity" icon={Clock}>
+          <div className="flex items-end gap-px h-24">
+            {hourly.map((h) => (
+              <div
+                key={h.hour}
+                className="flex-1 flex flex-col items-center group relative"
+              >
+                <div
+                  className={cn(
+                    "w-full rounded-sm transition-colors cursor-default",
+                    h.orderCount > 0
+                      ? "bg-primary/25 hover:bg-primary/50"
+                      : "bg-muted/50",
+                  )}
+                  style={{
+                    height: `${Math.max(3, (h.revenue / maxRevenue) * 100)}%`,
+                    minHeight: h.orderCount > 0 ? "4px" : "2px",
+                  }}
+                />
+                {h.orderCount > 0 && (
+                  <div className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-popover border rounded-lg px-2.5 py-1.5 text-xs whitespace-nowrap shadow-md pointer-events-none">
+                    <span className="font-medium">{h.label}</span>
+                    <span className="text-muted-foreground ml-1">·</span>
+                    <span className="text-muted-foreground ml-1">
+                      {h.orderCount} orders
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between text-[10px] text-muted-foreground mt-2 px-px">
+            <span>00:00</span>
+            <span>06:00</span>
+            <span>12:00</span>
+            <span>18:00</span>
+            <span>23:00</span>
+          </div>
+        </Section>
+      )}
+    </div>
+  );
+}
+
+// ─── History row ──────────────────────────────────────────────────────────────
+function HistoryRow({
+  report,
+  onSelect,
+  onDelete,
+}: {
+  report: SavedEODReport;
+  onSelect: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div
+      className="group flex items-center gap-3 p-3.5 rounded-xl border border-border/50 bg-background hover:border-border hover:shadow-sm transition-all duration-150 cursor-pointer"
+      onClick={onSelect}
+    >
+      <div className="p-2.5 bg-blue-500/10 rounded-xl shrink-0">
+        <FileText className="h-4 w-4 text-blue-500" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-sm">{report.report_number}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {fmtShortDate(report.period_start)} →{" "}
+          {fmtShortDate(report.period_end)}
+        </p>
+      </div>
+      <div className="text-right shrink-0">
+        <p className="text-sm font-bold flex items-center gap-0.5 justify-end">
+          <SaudiRiyalSymbol className="h-3 w-3 opacity-60" />
+          {fmt(report.total_revenue)}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {report.completed_orders} orders
+        </p>
+      </div>
+      <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={onSelect}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={onDelete}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main dashboard ───────────────────────────────────────────────────────────
 export function EODReportDashboard() {
-  // Calculate default date range: 4 PM today to 12 AM tomorrow (restaurant operating hours)
-  const getDefaultDateRange = () => {
-    const today = new Date();
-
-    // Start time: 4 PM today
-    const startDateTime = new Date(today);
-    startDateTime.setHours(16, 0, 0, 0); // 4:00 PM
-
-    // End time: 12 AM tomorrow (midnight)
-    const endDateTime = new Date(today);
-    endDateTime.setDate(today.getDate() + 1); // Next day
-    endDateTime.setHours(0, 0, 0, 0); // 12:00 AM (midnight)
-
-    return { startDateTime, endDateTime };
-  };
-
-  const defaultRange = getDefaultDateRange();
-  const [startDateTime, setStartDateTime] = useState<Date | undefined>(
-    defaultRange.startDateTime
+  const [selectedReport, setSelectedReport] = useState<SavedEODReport | null>(
+    null,
   );
-  const [endDateTime, setEndDateTime] = useState<Date | undefined>(
-    defaultRange.endDateTime
-  );
-  const [nextReportNumber, setNextReportNumber] = useState<string | null>(null);
+  const [view, setView] = useState<"generate" | "history">("generate");
+  const [historyPage, setHistoryPage] = useState(1);
 
-  const generateReport = useGenerateEODReport();
-  const formatters = useEODReportFormatters();
+  const preview = useSmartEODPreview();
+  const generate = useGenerateEODReport();
+  const history = useEODReportHistory(historyPage);
+  const deleteReport = useDeleteEODReport();
 
-  // Fetch next report number when component mounts
-  React.useEffect(() => {
-    const fetchNextReportNumber = async () => {
-      try {
-        const response = await fetch("/api/admin/reports/eod/next-number");
-        const result = await response.json();
-        if (result.success && result.data?.nextReportNumber) {
-          setNextReportNumber(result.data.nextReportNumber);
-        }
-      } catch (error) {
-        console.error("Failed to fetch next report number:", error);
-      }
-    };
-
-    fetchNextReportNumber();
-  }, []);
-
-  const handleGenerateReport = () => {
-    if (!startDateTime || !endDateTime) {
-      alert("Please select both start and end date/time");
-      return;
-    }
-
-    if (startDateTime >= endDateTime) {
-      alert("End date/time must be after start date/time");
-      return;
-    }
-
-    generateReport.mutate({
-      startDateTime: startDateTime.toISOString(),
-      endDateTime: endDateTime.toISOString(),
-      saveToDatabase: true,
-      includePreviousPeriodComparison: false,
+  const handleGenerate = () => {
+    generate.mutate(undefined, {
+      onSuccess: (report) => {
+        setSelectedReport(report);
+        toast.success(`${report.report_number} generated successfully`);
+      },
+      onError: (err) =>
+        toast.error(
+          err instanceof Error ? err.message : "Failed to generate report",
+        ),
     });
   };
 
-  const handleDownloadPDF = async (format: "a4" | "thermal") => {
-    if (!reportData) return;
-
-    // Pass the report data directly - it already has the correct Date types
-    await generateEODReportPDF(reportData, format, formatters);
+  const handleDelete = (reportId: string) => {
+    if (!confirm("Delete this EOD report? This cannot be undone.")) return;
+    deleteReport.mutate(reportId, {
+      onSuccess: () => {
+        toast.success("Report deleted");
+        if (selectedReport?.id === reportId) setSelectedReport(null);
+      },
+      onError: (err) =>
+        toast.error(
+          err instanceof Error ? err.message : "Failed to delete report",
+        ),
+    });
   };
-  const reportData = generateReport.data;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-2 sm:px-4 lg:px-6">
-      <div className="px-2 sm:px-0">
-        <h1 className="text-2xl sm:text-3xl font-bold">EOD Report Generator</h1>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          Select date and time range to generate End of Day report
-        </p>
+    <div className="space-y-5">
+      {/* Tab strip */}
+      <div className="flex gap-1 p-1 bg-muted/50 rounded-xl w-fit">
+        {(["generate", "history"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => {
+              setView(tab);
+              setSelectedReport(null);
+            }}
+            className={cn(
+              "flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150",
+              view === tab
+                ? "bg-background shadow-sm text-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {tab === "generate" ? (
+              <Zap className="h-3.5 w-3.5" />
+            ) : (
+              <FileText className="h-3.5 w-3.5" />
+            )}
+            {tab === "generate" ? "Generate" : "Saved Reports"}
+          </button>
+        ))}
       </div>
 
-      <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <CardTitle className="text-lg">Select Date & Time Range</CardTitle>
-            {nextReportNumber && (
-              <Badge variant="secondary" className="text-xs font-mono">
-                Next: {nextReportNumber}
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-4">
-            {/* Date/Time Range Picker */}
-            <DateTimePicker
-              fromDate={startDateTime}
-              toDate={endDateTime}
-              onFromDateChange={setStartDateTime}
-              onToDateChange={setEndDateTime}
-              onClearDates={() => {
-                setStartDateTime(undefined);
-                setEndDateTime(undefined);
-              }}
-              fromDateLabel="Start Date"
-              toDateLabel="End Date"
-              fromTimeLabel="Start Time"
-              toTimeLabel="End Time"
-              showRange={true}
-              showClearButton={true}
-              className=""
-            />
-          </div>
-
-          <Button
-            onClick={handleGenerateReport}
-            disabled={generateReport.isPending}
-            className="w-full sm:w-auto sm:px-8 text-sm"
-          >
-            {generateReport.isPending ? "Generating..." : "Generate EOD Report"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Enhanced Results - Show all EOD Report Details */}
-      {generateReport.isSuccess && reportData && (
-        <div className="space-y-4 sm:space-y-6">
-          <Card className="w-full mx-1 sm:mx-0 border-l-4 border-l-green-500">
-            <CardHeader>
-              <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <span className="text-lg text-green-600 dark:text-green-400">
-                  ✅ Report Generated Successfully
-                </span>
-                <Badge variant="default" className="text-xs bg-green-600">
-                  Saved to Database
-                </Badge>
-              </CardTitle>
-              <div className="text-sm text-muted-foreground">
-                📅 Period:{" "}
-                {formatters.formatDateRange(
-                  new Date(reportData.startDateTime),
-                  new Date(reportData.endDateTime)
-                )}{" "}
-                • 🕒 Generated:{" "}
-                {formatters.formatDate(new Date(reportData.reportGeneratedAt))}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* PDF Download Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  onClick={() => handleDownloadPDF("a4")}
-                  variant="outline"
-                  className="flex-1 sm:flex-none"
-                >
-                  📄 Download A4 PDF
-                </Button>
-                <Button
-                  onClick={() => handleDownloadPDF("thermal")}
-                  variant="outline"
-                  className="flex-1 sm:flex-none"
-                >
-                  🧾 Print
-                </Button>
-              </div>
-
-              {/* Summary Cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-green-500/10 rounded-lg border border-green-500/20">
-                  <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400 flex items-center justify-center gap-1">
-                    <SaudiRiyalSymbol
-                      size={20}
-                      className="text-green-600 dark:text-green-400"
-                    />
-                    {formatters.formatCurrency(reportData.totalWithVat)}
+      {/* ── Generate tab ── */}
+      {view === "generate" && (
+        <div className="space-y-5">
+          {selectedReport ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedReport(null)}
+                className="gap-1.5 -ml-2"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Back
+              </Button>
+              <ReportView report={selectedReport} />
+            </>
+          ) : (
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2 pt-5 px-5">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <div className="p-1.5 bg-primary/10 rounded-lg">
+                    <Zap className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">
-                    💰 Total Revenue
+                  Smart EOD Generation
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Automatically picks up all orders since your last EOD report.
+                </p>
+              </CardHeader>
+              <Separator
+                className="mx-5"
+                style={{ width: "calc(100% - 40px)" }}
+              />
+              <CardContent className="px-5 pt-4 pb-5 space-y-5">
+                {preview.isLoading ? (
+                  <div className="space-y-3">
+                    {[3, 2, 1].map((w) => (
+                      <div
+                        key={w}
+                        className={`h-4 bg-muted rounded animate-pulse`}
+                        style={{ width: `${w * 25}%` }}
+                      />
+                    ))}
                   </div>
-                </div>
-                <div className="text-center p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                  <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {reportData.totalOrders}
+                ) : preview.error ? (
+                  <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/5 rounded-lg p-3">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    Failed to load preview data
                   </div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">
-                    📋 Total Orders
-                  </div>
-                </div>
-                <div className="text-center p-4 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                  <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {formatters.formatPercentage(
-                      reportData.orderCompletionRate
+                ) : preview.data ? (
+                  <>
+                    {/* Last report pill */}
+                    {preview.data.hasLastReport ? (
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                        <span className="text-muted-foreground">
+                          Last report:{" "}
+                          <span className="font-medium text-foreground">
+                            {preview.data.lastReportNumber}
+                          </span>
+                          {preview.data.lastReportDate && (
+                            <span className="ml-1">
+                              — ended {fmtDate(preview.data.lastReportDate)}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        No previous reports — will cover all orders from the
+                        beginning
+                      </div>
                     )}
-                  </div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">
-                    ✅ Completion Rate
-                  </div>
-                </div>
-                <div className="text-center p-4 bg-orange-500/10 rounded-lg border border-orange-500/20">
-                  <div className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400 flex items-center justify-center gap-1">
-                    <SaudiRiyalSymbol
-                      size={20}
-                      className="text-orange-600 dark:text-orange-400"
-                    />
-                    {formatters.formatCurrency(reportData.averageOrderValue)}
-                  </div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">
-                    📊 Average Order
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          <Tabs defaultValue="overview" className="w-full mx-1 sm:mx-0">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto p-1">
-              <TabsTrigger
-                value="overview"
-                className="text-xs sm:text-sm py-2 px-1 sm:px-3"
-              >
-                Overview
-              </TabsTrigger>
-              <TabsTrigger
-                value="payments"
-                className="text-xs sm:text-sm py-2 px-1 sm:px-3"
-              >
-                Payments
-              </TabsTrigger>
-              <TabsTrigger
-                value="products"
-                className="text-xs sm:text-sm py-2 px-1 sm:px-3"
-              >
-                All Sold Items
-              </TabsTrigger>
-              <TabsTrigger
-                value="hourly"
-                className="text-xs sm:text-sm py-2 px-1 sm:px-3"
-              >
-                Hourly Sales
-              </TabsTrigger>
-            </TabsList>
+                    {/* Pending stats */}
+                    {preview.data.canGenerate ? (
+                      <div className="rounded-xl bg-primary/5 border border-primary/15 p-4 space-y-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          New report will cover
+                        </p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-3xl font-bold text-primary">
+                              {preview.data.pendingOrdersCount}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              orders
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              <SaudiRiyalSymbol className="h-5 w-5 opacity-70" />
+                              {fmt(preview.data.pendingRevenue)}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              revenue
+                            </p>
+                          </div>
+                        </div>
+                        {preview.data.periodStart && preview.data.periodEnd && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1 border-t border-primary/10">
+                            <Clock className="h-3 w-3" />
+                            {fmtDate(preview.data.periodStart)} →{" "}
+                            {fmtDate(preview.data.periodEnd)}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl bg-amber-500/8 border border-amber-200 dark:border-amber-800 p-4 flex items-start gap-3 text-sm">
+                        <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                        <p className="text-amber-700 dark:text-amber-400">
+                          No new orders since the last EOD report. Nothing to
+                          generate.
+                        </p>
+                      </div>
+                    )}
 
-            <TabsContent value="overview" className="space-y-4">
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 max-w-6xl mx-auto">
-                <Card className="w-full mx-1 sm:mx-0">
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      💰 Financial Summary
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Total Revenue:</span>
-                      <span className="font-bold text-sm text-green-600 flex items-center gap-1">
-                        <SaudiRiyalSymbol
-                          size={12}
-                          className="text-green-600"
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleGenerate}
+                        disabled={
+                          !preview.data.canGenerate || generate.isPending
+                        }
+                        className="flex-1 h-10"
+                      >
+                        {generate.isPending ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Generating…
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="h-4 w-4 mr-2" />
+                            Generate EOD Report
+                          </>
+                        )}
+                      </Button>
+                      {/* <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 shrink-0"
+                        onClick={() => preview.refetch()}
+                        disabled={preview.isFetching}
+                      >
+                        <RefreshCw
+                          className={cn(
+                            "h-4 w-4",
+                            preview.isFetching && "animate-spin",
+                          )}
                         />
-                        {formatters.formatCurrency(reportData.totalWithVat)}
-                      </span>
+                      </Button> */}
                     </div>
-                    {/* VAT details temporarily hidden - can be re-enabled later */}
-                    {vatUtils.shouldShowVAT() && (
-                      <>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">
-                            Total Revenue (without VAT):
-                          </span>
-                          <span className="text-sm flex items-center gap-1">
-                            <SaudiRiyalSymbol
-                              size={12}
-                              className="text-current"
-                            />
-                            {formatters.formatCurrency(
-                              reportData.totalWithoutVat
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">VAT Amount:</span>
-                          <span className="text-sm text-blue-600 flex items-center gap-1">
-                            <SaudiRiyalSymbol
-                              size={12}
-                              className="text-blue-600"
-                            />
-                            {formatters.formatCurrency(reportData.vatAmount)}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Average Order Value:</span>
-                      <span className="text-sm font-medium flex items-center gap-1">
-                        <SaudiRiyalSymbol size={12} className="text-current" />
-                        {formatters.formatCurrency(
-                          reportData.averageOrderValue
-                        )}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="w-full mx-1 sm:mx-0">
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      📊 Order Statistics
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Total Orders:</span>
-                      <span className="font-bold text-sm">
-                        {reportData.totalOrders}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Completed Orders:</span>
-                      <span className="text-green-600 text-sm font-medium">
-                        {reportData.completedOrders}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Cancelled Orders:</span>
-                      <span className="text-red-600 text-sm font-medium">
-                        {reportData.totalCancelledOrders}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Peak Hour:</span>
-                      <span className="font-bold text-sm">
-                        {formatters.formatPeakHour(reportData.peakHour) ||
-                          "N/A"}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="payments" className="space-y-4">
-              <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    Payment Method Breakdown
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {reportData.paymentBreakdown.map((payment, index) => (
-                      <div
-                        key={index}
-                        className="flex flex-col sm:flex-row justify-between sm:items-center p-3 border rounded gap-2"
-                      >
-                        <div className="flex-1">
-                          <div className="font-semibold capitalize text-sm">
-                            {payment.method}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {payment.orderCount} orders
-                          </div>
-                        </div>
-                        <div className="text-left sm:text-right">
-                          <div className="font-bold text-sm flex items-center gap-1">
-                            <SaudiRiyalSymbol
-                              size={12}
-                              className="text-current"
-                            />
-                            {formatters.formatCurrency(payment.totalAmount)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {formatters.formatPercentage(payment.percentage)}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Delivery Platform Breakdown Card */}
-              {reportData.deliveryPlatformBreakdown &&
-                reportData.deliveryPlatformBreakdown.length > 0 && (
-                  <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
-                    <CardHeader>
-                      <CardTitle className="text-lg text-yellow-600">
-                        Delivery Platform Breakdown
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Orders breakdown by delivery platform (Keeta, Hunger
-                        Station, Jahez)
-                      </p>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {reportData.deliveryPlatformBreakdown.map(
-                          (platform, index) => {
-                            const formatPlatformName = (
-                              platformName: string
-                            ): string => {
-                              switch (platformName) {
-                                case "keeta":
-                                  return "Keeta";
-                                case "hunger_station":
-                                  return "Hunger Station";
-                                case "jahez":
-                                  return "Jahez";
-                                default:
-                                  return platformName;
-                              }
-                            };
-
-                            return (
-                              <div
-                                key={index}
-                                className="flex flex-col sm:flex-row justify-between sm:items-center p-3 border rounded bg-yellow-50 dark:bg-yellow-900/10 gap-2"
-                              >
-                                <div className="flex-1">
-                                  <div className="font-semibold text-sm text-yellow-800 dark:text-yellow-200">
-                                    {formatPlatformName(platform.platform)}
-                                  </div>
-                                  <div className="text-xs text-yellow-600 dark:text-yellow-400">
-                                    {platform.orderCount} delivery orders
-                                  </div>
-                                </div>
-                                <div className="text-left sm:text-right">
-                                  <div className="font-bold text-sm flex items-center gap-1 text-yellow-700 dark:text-yellow-300">
-                                    <SaudiRiyalSymbol
-                                      size={12}
-                                      className="text-current"
-                                    />
-                                    {formatters.formatCurrency(
-                                      platform.totalAmount
-                                    )}
-                                  </div>
-                                  <div className="text-xs text-yellow-600 dark:text-yellow-400">
-                                    {formatters.formatPercentage(
-                                      platform.percentage
-                                    )}{" "}
-                                    of delivery orders
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          }
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-              {/* Cash Flow Details Card */}
-              <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
-                <CardHeader>
-                  <CardTitle className="text-lg">Cash Flow Details</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Detailed cash handling breakdown for the reporting period
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-3 border rounded bg-amber-50 dark:bg-amber-900/10">
-                      <div className="font-semibold text-sm text-amber-800 dark:text-amber-200">
-                        Cash Sales Total
-                      </div>
-                      <div className="text-lg font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-1">
-                        <SaudiRiyalSymbol size={16} className="text-current" />
-                        {formatters.formatCurrency(reportData.totalCashOrders)}
-                      </div>
-                      <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                        Total cash payment orders
-                      </div>
-                    </div>
-
-                    <div className="p-3 border rounded bg-purple-50 dark:bg-purple-900/10">
-                      <div className="font-semibold text-sm text-purple-800 dark:text-purple-200">
-                        Card Sales Total
-                      </div>
-                      <div className="text-lg font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1 mt-1">
-                        <SaudiRiyalSymbol size={16} className="text-current" />
-                        {formatters.formatCurrency(reportData.totalCardOrders)}
-                      </div>
-                      <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                        Total card payment orders
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="products" className="space-y-4">
-              <Card className="w-full mx-1 sm:mx-auto max-w-4xl">
-                <CardHeader>
-                  <CardTitle className="text-lg">All Sold Items</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Complete list of all items sold during the reporting period
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {reportData.bestSellingItems.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex flex-col sm:flex-row justify-between sm:items-center p-3 border rounded gap-2"
-                      >
-                        <div className="flex-1">
-                          <div className="font-semibold text-sm">
-                            {item.itemName}
-                          </div>
-                          <div className="text-xs text-muted-foreground capitalize">
-                            {item.itemType} • Qty: {item.quantity}
-                          </div>
-                        </div>
-                        <div className="text-left sm:text-right">
-                          <div className="font-bold text-sm flex items-center gap-1">
-                            <SaudiRiyalSymbol
-                              size={12}
-                              className="text-current"
-                            />
-                            {formatters.formatCurrency(item.totalRevenue)}
-                          </div>
-                          <div className="text-xs text-muted-foreground flex items-center gap-1">
-                            Avg:{" "}
-                            <SaudiRiyalSymbol
-                              size={10}
-                              className="text-muted-foreground"
-                            />
-                            {formatters.formatCurrency(item.averagePrice)}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="hourly" className="space-y-4">
-              <Card className="w-full mx-1 sm:mx-auto max-w-6xl">
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    Hourly Sales Breakdown
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {reportData.hourlySales
-                      .filter((hour) => hour.orderCount > 0)
-                      .map((hour, index) => (
-                        <div key={index} className="p-3 border rounded">
-                          <div className="font-semibold text-sm">
-                            {hour.hour.toString().padStart(2, "0")}:00
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {hour.orderCount} orders
-                          </div>
-                          <div className="font-bold text-green-600 text-sm flex items-center gap-1">
-                            <SaudiRiyalSymbol
-                              size={12}
-                              className="text-green-600"
-                            />
-                            {formatters.formatCurrency(hour.revenue)}
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                  </>
+                ) : null}
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
-      {generateReport.isError && (
-        <Card className="w-full mx-1 sm:mx-0">
-          <CardHeader>
-            <CardTitle>Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-red-500">
-              {generateReport.error?.message || "Failed to generate report"}
-            </p>
-          </CardContent>
-        </Card>
+      {/* ── History tab ── */}
+      {view === "history" && (
+        <div className="space-y-4">
+          {selectedReport ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedReport(null)}
+                className="gap-1.5 -ml-2"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Back to History
+              </Button>
+              <ReportView report={selectedReport} />
+            </>
+          ) : (
+            <>
+              {history.isLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-[68px] rounded-xl bg-muted animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : history.error ? (
+                <div className="flex items-center gap-2 text-destructive text-sm p-4 bg-destructive/5 rounded-xl">
+                  <AlertCircle className="h-4 w-4" />
+                  Failed to load report history
+                </div>
+              ) : (history.data?.reports?.length ?? 0) === 0 ? (
+                <div className="text-center py-16 text-muted-foreground space-y-3">
+                  <div className="p-4 bg-muted rounded-full w-fit mx-auto">
+                    <FileText className="h-8 w-8 opacity-40" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">No EOD reports yet</p>
+                    <p className="text-xs mt-1">
+                      Generate your first report from the Generate tab
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {history.data!.reports.map((report) => (
+                    <HistoryRow
+                      key={report.id}
+                      report={report}
+                      onSelect={() => setSelectedReport(report)}
+                      onDelete={() => handleDelete(report.id)}
+                    />
+                  ))}
+                  {(history.data?.totalPages ?? 1) > 1 && (
+                    <div className="flex items-center justify-center gap-3 pt-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={historyPage === 1}
+                        onClick={() => setHistoryPage((p) => p - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-sm text-muted-foreground tabular-nums">
+                        {historyPage} / {history.data?.totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={
+                          historyPage >= (history.data?.totalPages ?? 1)
+                        }
+                        onClick={() => setHistoryPage((p) => p + 1)}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       )}
     </div>
   );

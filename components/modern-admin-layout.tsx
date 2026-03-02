@@ -58,7 +58,7 @@ export function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
             </div>
             <div className="h-full pt-24">
               <div className="h-full rounded-2xl shadow-lg overflow-hidden">
-                <div className="h-full overflow-y-auto p-6">{children}</div>
+                <div className="h-full overflow-y-auto p-1">{children}</div>
               </div>
             </div>
           </div>
@@ -74,7 +74,7 @@ export function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
               {/* Left Card - Menu Items */}
               <div className="h-full pt-24">
                 <div className="h-full shadow-lg overflow-hidden rounded-2xl">
-                  <div className="h-full overflow-y-auto p-6">{children}</div>
+                  <div className="h-full overflow-y-auto p-1">{children}</div>
                 </div>
               </div>
             </div>

@@ -266,3 +266,84 @@ export const customers = pgTable(
 
 export type Customer = typeof customers.$inferSelect;
 export type NewCustomer = typeof customers.$inferInsert;
+
+// ================================
+// REPORTS TABLES
+// ================================
+
+// Report type enum
+export const reportTypeEnum = pgEnum('report_type', ['eod', 'sales', 'weekly', 'monthly']);
+
+// EOD Reports table (multi-tenant, generic for any business type)
+export const eodReports = pgTable('eod_reports', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  businessId: uuid('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  reportNumber: text('report_number').notNull(),
+  // Smart order range tracking (for consecutive EOD reports)
+  fromOrderId: uuid('from_order_id'),   // first order included (null = from beginning)
+  toOrderId: uuid('to_order_id'),       // last order included (next EOD starts after this)
+  periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
+  periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
+  // Order counts
+  totalOrders: integer('total_orders').notNull().default(0),
+  completedOrders: integer('completed_orders').notNull().default(0),
+  cancelledOrders: integer('cancelled_orders').notNull().default(0),
+  // Revenue
+  totalRevenue: decimal('total_revenue', { precision: 12, scale: 2 }).notNull().default('0'),
+  totalDiscount: decimal('total_discount', { precision: 12, scale: 2 }).notNull().default('0'),
+  totalVat: decimal('total_vat', { precision: 12, scale: 2 }).notNull().default('0'),
+  revenueExVat: decimal('revenue_ex_vat', { precision: 12, scale: 2 }).notNull().default('0'),
+  // Payment breakdown
+  cashRevenue: decimal('cash_revenue', { precision: 12, scale: 2 }).notNull().default('0'),
+  cardRevenue: decimal('card_revenue', { precision: 12, scale: 2 }).notNull().default('0'),
+  deliveryRevenue: decimal('delivery_revenue', { precision: 12, scale: 2 }).notNull().default('0'),
+  cashReceived: decimal('cash_received', { precision: 12, scale: 2 }).notNull().default('0'),
+  changeGiven: decimal('change_given', { precision: 12, scale: 2 }).notNull().default('0'),
+  averageOrderValue: decimal('average_order_value', { precision: 12, scale: 2 }).notNull().default('0'),
+  // JSON breakdowns (generic - works for any business type)
+  paymentBreakdown: jsonb('payment_breakdown').notNull().default('[]'),
+  topItems: jsonb('top_items').notNull().default('[]'),             // [{name, qty, revenue, categoryId?}]
+  categoryBreakdown: jsonb('category_breakdown').notNull().default('[]'), // [{categoryName, qty, revenue}]
+  hourlySales: jsonb('hourly_sales').notNull().default('[]'),      // [{hour, orderCount, revenue}]
+  // Metadata
+  generatedBy: uuid('generated_by').notNull().references(() => users.id),
+  reportType: reportTypeEnum('report_type').notNull().default('eod'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type EODReport = typeof eodReports.$inferSelect;
+export type NewEODReport = typeof eodReports.$inferInsert;
+
+// Sales Reports table (custom date range, printable)
+export const salesReports = pgTable('sales_reports', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  businessId: uuid('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  reportName: text('report_name'),
+  periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
+  periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
+  // Core metrics
+  totalOrders: integer('total_orders').notNull().default(0),
+  completedOrders: integer('completed_orders').notNull().default(0),
+  cancelledOrders: integer('cancelled_orders').notNull().default(0),
+  totalRevenue: decimal('total_revenue', { precision: 12, scale: 2 }).notNull().default('0'),
+  totalDiscount: decimal('total_discount', { precision: 12, scale: 2 }).notNull().default('0'),
+  totalVat: decimal('total_vat', { precision: 12, scale: 2 }).notNull().default('0'),
+  revenueExVat: decimal('revenue_ex_vat', { precision: 12, scale: 2 }).notNull().default('0'),
+  cashRevenue: decimal('cash_revenue', { precision: 12, scale: 2 }).notNull().default('0'),
+  cardRevenue: decimal('card_revenue', { precision: 12, scale: 2 }).notNull().default('0'),
+  deliveryRevenue: decimal('delivery_revenue', { precision: 12, scale: 2 }).notNull().default('0'),
+  averageOrderValue: decimal('average_order_value', { precision: 12, scale: 2 }).notNull().default('0'),
+  // JSON breakdowns
+  paymentBreakdown: jsonb('payment_breakdown').notNull().default('[]'),
+  topItems: jsonb('top_items').notNull().default('[]'),
+  categoryBreakdown: jsonb('category_breakdown').notNull().default('[]'),
+  dailySales: jsonb('daily_sales').notNull().default('[]'),   // [{date, orderCount, revenue}]
+  hourlySales: jsonb('hourly_sales').notNull().default('[]'),
+  // Metadata
+  generatedBy: uuid('generated_by').notNull().references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type SalesReport = typeof salesReports.$inferSelect;
+export type NewSalesReport = typeof salesReports.$inferInsert;

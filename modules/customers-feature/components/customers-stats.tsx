@@ -11,7 +11,7 @@ interface CustomersStatsProps {
 
 export function CustomersStats({ customers }: CustomersStatsProps) {
   const totalRevenue = customers.reduce(
-    (sum, c) => sum + parseFloat(c.total_purchases),
+    (sum, c) => sum + Number(c.total_purchases),
     0,
   );
   const totalOrders = customers.reduce((sum, c) => sum + c.order_count, 0);

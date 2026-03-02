@@ -169,7 +169,8 @@ export class OrderService {
       // Convert items to JSON format for storage
       const itemsJson = orderData.items;
 
-      const insertData: OrderInsert = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const insertData: any = {
         order_number: orderNumber,
         customer_name: orderData.customerName || null,
         items: itemsJson as unknown as Database['public']['Tables']['orders']['Insert']['items'],
@@ -192,7 +193,8 @@ export class OrderService {
 
       const { data: order, error } = await supabase
         .from('orders')
-        .insert(insertData)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .insert(insertData as any)
         .select()
         .single();
 

@@ -132,6 +132,7 @@ export const orderClientService = {
         const { data: cancelData, error: cancelError } = await supabase
             .from('canceled_orders')
             .insert({
+                business_id: originalOrder.business_id,
                 original_order_id: id,
                 canceled_by: canceledBy,
                 reason: reason || null,

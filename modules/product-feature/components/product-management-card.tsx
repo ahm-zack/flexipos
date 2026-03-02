@@ -20,7 +20,10 @@ export function ProductManagementCard({
   onDelete,
 }: ProductManagementCardProps) {
   const stockQty = product.stockQuantity ?? 0;
-  const hasStock = product.trackStock ? stockQty > 0 : true;
+  const hasStock =
+    product.stockQuantity !== undefined && product.stockQuantity !== null
+      ? stockQty > 0
+      : true;
 
   return (
     <div className="group relative bg-card rounded-xl border border-border/60 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
@@ -48,8 +51,11 @@ export function ProductManagementCard({
               Featured
             </Badge>
           )}
-          {product.hasModifiers && (
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 gap-1">
+          {product.modifiers && product.modifiers.length > 0 && (
+            <Badge
+              variant="secondary"
+              className="text-[10px] px-1.5 py-0 gap-1"
+            >
               <Layers className="w-2.5 h-2.5" />
               Modifiers
             </Badge>
@@ -81,7 +87,10 @@ export function ProductManagementCard({
             {product.name}
           </h3>
           {product.nameAr && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1" dir="rtl">
+            <p
+              className="text-xs text-muted-foreground mt-0.5 line-clamp-1"
+              dir="rtl"
+            >
               {product.nameAr}
             </p>
           )}
@@ -93,19 +102,22 @@ export function ProductManagementCard({
             <SaudiRiyalSymbol size={14} className="text-primary mt-0.5" />
             <span>{product.price.toFixed(2)}</span>
           </div>
-          {product.trackStock && (
-            <Badge
-              variant={hasStock ? "outline" : "destructive"}
-              className={`text-[10px] ${hasStock ? "border-green-500 text-green-700 dark:text-green-400" : ""}`}
-            >
-              {hasStock ? `Stock: ${stockQty}` : "Out of Stock"}
-            </Badge>
-          )}
+          {product.stockQuantity !== undefined &&
+            product.stockQuantity !== null && (
+              <Badge
+                variant={hasStock ? "outline" : "destructive"}
+                className={`text-[10px] ${hasStock ? "border-green-500 text-green-700 dark:text-green-400" : ""}`}
+              >
+                {hasStock ? `Stock: ${stockQty}` : "Out of Stock"}
+              </Badge>
+            )}
         </div>
 
         {/* Description snippet */}
         {product.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
+          <p className="text-xs text-muted-foreground line-clamp-2">
+            {product.description}
+          </p>
         )}
 
         {/* Action Buttons */}

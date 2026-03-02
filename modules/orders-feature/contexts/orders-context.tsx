@@ -15,7 +15,6 @@ import React, {
 } from "react";
 import { useOrderForReceipt } from "@/hooks/use-order-receipt";
 import { Order } from "@/lib/orders";
-import { ApiOrderResponse } from "@/lib/order-service";
 
 // Types for the context
 interface OrdersFilters {
@@ -56,16 +55,16 @@ interface OrdersContextValue {
   printingOrderId: string | null;
 
   // Order Actions
-  handleEditOrder: (apiOrder: ApiOrderResponse) => void;
+  handleEditOrder: (apiOrder: Order) => void;
   handlePrintOrder: (orderId: string) => void;
   handleClosePrint: () => void;
   handleCloseEdit: (open: boolean) => void;
   toggleOrderExpansion: (orderId: string) => void;
-  convertToOrder: (apiOrder: ApiOrderResponse) => Order;
+  convertToOrder: (apiOrder: Order) => Order;
 
   // UI Helpers
   getStatusBadgeVariant: (
-    status: string
+    status: string,
   ) => "default" | "destructive" | "secondary" | "outline";
   getStatusBadgeClassName: (status: string) => string;
   getPaymentMethodDisplay: (paymentMethod: string) => {
@@ -102,20 +101,20 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     () =>
       Boolean(
         filters.searchTerm ||
-          filters.activeFilters.size > 0 ||
-          filters.dateFrom ||
-          filters.dateTo
+        filters.activeFilters.size > 0 ||
+        filters.dateFrom ||
+        filters.dateTo,
       ),
     [
       filters.searchTerm,
       filters.activeFilters,
       filters.dateFrom,
       filters.dateTo,
-    ]
+    ],
   );
 
   const { data: printOrderData } = useOrderForReceipt(
-    uiState.printingOrderId || ""
+    uiState.printingOrderId || "",
   );
 
   // Filter Actions
@@ -129,7 +128,7 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       // If it's a payment method filter, clear other payment method filters
       if (["cash", "card", "mixed", "delivery"].includes(filterKey)) {
         ["cash", "card", "mixed", "delivery"].forEach((key) =>
-          newActiveFilters.delete(key)
+          newActiveFilters.delete(key),
         );
         if (!prev.activeFilters.has(filterKey)) {
           newActiveFilters.add(filterKey);
@@ -138,7 +137,7 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       // If it's a status filter, clear other status filters
       else if (["completed", "modified", "canceled"].includes(filterKey)) {
         ["completed", "modified", "canceled"].forEach((key) =>
-          newActiveFilters.delete(key)
+          newActiveFilters.delete(key),
         );
         if (!prev.activeFilters.has(filterKey)) {
           newActiveFilters.add(filterKey);
@@ -177,12 +176,12 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     (filterKey: string) => {
       return filters.activeFilters.has(filterKey) ? "default" : "outline";
     },
-    [filters.activeFilters]
+    [filters.activeFilters],
   );
 
   // Order Actions
   const convertToOrder = useCallback(
-    (apiOrder: ApiOrderResponse): Order => ({
+    (apiOrder: Order): Order => ({
       id: apiOrder.id,
       orderNumber: apiOrder.orderNumber,
       customerName: apiOrder.customerName || undefined,
@@ -194,11 +193,11 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       updatedAt: apiOrder.updatedAt,
       createdBy: apiOrder.createdBy,
     }),
-    []
+    [],
   );
 
   const handleEditOrder = useCallback(
-    (apiOrder: ApiOrderResponse) => {
+    (apiOrder: Order) => {
       // Prevent editing cancelled orders
       if (apiOrder.status === "canceled") {
         console.warn("Cannot edit cancelled order:", apiOrder.orderNumber);
@@ -212,7 +211,7 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
         isEditDialogOpen: true,
       }));
     },
-    [convertToOrder]
+    [convertToOrder],
   );
 
   const handlePrintOrder = useCallback((orderId: string) => {
@@ -347,7 +346,7 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
       getStatusBadgeVariant,
       getStatusBadgeClassName,
       getPaymentMethodDisplay,
-    ]
+    ],
   );
 
   return (

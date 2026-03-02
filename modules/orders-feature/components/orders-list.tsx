@@ -293,7 +293,7 @@ export function OrdersList() {
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleEditOrder(order);
+                              handleEditOrder(order as any);
                             }}
                             className="cursor-pointer"
                           >

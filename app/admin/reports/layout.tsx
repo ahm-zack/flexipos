@@ -3,6 +3,18 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BarChart3, TrendingUp } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const NAV_LINKS = [
+  { href: "/admin/reports", label: "EOD Report", icon: BarChart3, exact: true },
+  {
+    href: "/admin/reports/sales",
+    label: "Sales Report",
+    icon: TrendingUp,
+    exact: false,
+  },
+];
 
 export default function ReportsLayout({
   children,
@@ -11,42 +23,43 @@ export default function ReportsLayout({
 }) {
   const pathname = usePathname();
 
-  const navLinks = [
-    {
-      href: "/admin/reports",
-      label: "Generate Report",
-      active: pathname === "/admin/reports",
-    },
-    {
-      href: "/admin/reports/history",
-      label: "View History",
-      active: pathname === "/admin/reports/history",
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="border-b bg-muted/30">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
-          <ul className="flex w-full max-w-md mx-auto h-auto p-1 bg-transparent">
-            {navLinks.map((link) => (
-              <li key={link.href} className="flex-1">
-                <Link
-                  href={link.href}
-                  className={`block text-center text-sm sm:text-base py-3 px-4 rounded transition-colors ${
-                    link.active
-                      ? "bg-background shadow-sm font-semibold"
-                      : "hover:bg-muted/50 text-muted-foreground"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      {/* Page header */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Reports</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Generate and review business performance reports
+          </p>
         </div>
-      </nav>
-      <div className="p-4 sm:p-6">{children}</div>
+
+        {/* Pill tab switcher */}
+        <nav className="flex gap-1 p-1 bg-muted/60 rounded-xl w-fit shrink-0">
+          {NAV_LINKS.map(({ href, label, icon: Icon, exact }) => {
+            const active = exact
+              ? pathname === href
+              : pathname === href || pathname.startsWith(href + "/");
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150",
+                  active
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      {children}
     </div>
   );
 }

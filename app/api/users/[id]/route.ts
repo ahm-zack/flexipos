@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  getBusinessUserById, 
-  updateBusinessUser, 
+import {
+  getBusinessUserById,
+  updateBusinessUser,
   updateUserProfile,
   deleteBusinessUser,
   getCurrentUserBusinessId
 } from '@/lib/user-service-drizzle';
-import { requireAdmin, getCurrentUser } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
@@ -15,7 +15,7 @@ export async function GET(
   try {
     // Check if user is authorized (admin or higher)
     const { authorized, user, error: authCheckError } = await requireAdmin();
-    
+
     if (!authorized || !user) {
       console.error('Unauthorized API access attempt:', authCheckError);
       return NextResponse.json(
@@ -25,18 +25,18 @@ export async function GET(
     }
 
     const { id } = await params;
-    
+
     // Get business user by ID (this is the business_users.id, not user.id)
     const result = await getBusinessUserById(id);
-    
+
     if (!result.success) {
       return NextResponse.json(result, { status: result.error === 'Business user not found' ? 404 : 500 });
     }
 
     // Verify the business user belongs to the same business as the current user
     const businessResult = await getCurrentUserBusinessId(user.id);
-    if (businessResult.success && businessResult.data && 
-        result.data?.businessId !== businessResult.data) {
+    if (businessResult.success && businessResult.data &&
+      result.data?.businessId !== businessResult.data) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized: Cannot access users from other businesses' },
         { status: 403 }
@@ -60,7 +60,7 @@ export async function PATCH(
   try {
     // Check if user is authorized (admin or higher)
     const { authorized, user, error: authCheckError } = await requireAdmin();
-    
+
     if (!authorized || !user) {
       console.error('Unauthorized user update attempt:', authCheckError);
       return NextResponse.json(
@@ -71,7 +71,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    
+
     // Get the business user first to verify permissions
     const businessUserResult = await getBusinessUserById(id);
     if (!businessUserResult.success || !businessUserResult.data) {
@@ -83,8 +83,8 @@ export async function PATCH(
 
     // Verify the business user belongs to the same business as the current user
     const businessResult = await getCurrentUserBusinessId(user.id);
-    if (businessResult.success && businessResult.data && 
-        businessUserResult.data.businessId !== businessResult.data) {
+    if (businessResult.success && businessResult.data &&
+      businessUserResult.data.businessId !== businessResult.data) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized: Cannot update users from other businesses' },
         { status: 403 }
@@ -97,7 +97,7 @@ export async function PATCH(
       permissions?: Record<string, unknown>;
       isActive?: boolean;
     } = {};
-    
+
     const profileUpdates: {
       fullName?: string;
       phone?: string;
@@ -108,7 +108,7 @@ export async function PATCH(
     if (body.role !== undefined) businessUpdates.role = body.role;
     if (body.permissions !== undefined) businessUpdates.permissions = body.permissions;
     if (body.isActive !== undefined) businessUpdates.isActive = body.isActive;
-    
+
     if (body.fullName !== undefined || body.name !== undefined) {
       profileUpdates.fullName = body.fullName || body.name;
     }
@@ -137,7 +137,7 @@ export async function PATCH(
 
     // Fetch the updated business user
     result = await getBusinessUserById(id);
-    
+
     if (!result.success) {
       return NextResponse.json(result, { status: 500 });
     }
@@ -159,7 +159,7 @@ export async function DELETE(
   try {
     // Check if user is authorized (admin or higher)
     const { authorized, user, error: authCheckError } = await requireAdmin();
-    
+
     if (!authorized || !user) {
       console.error('Unauthorized user deletion attempt:', authCheckError);
       return NextResponse.json(
@@ -169,7 +169,7 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    
+
     // Get the business user first to verify permissions
     const businessUserResult = await getBusinessUserById(id);
     if (!businessUserResult.success || !businessUserResult.data) {
@@ -181,8 +181,8 @@ export async function DELETE(
 
     // Verify the business user belongs to the same business as the current user
     const businessResult = await getCurrentUserBusinessId(user.id);
-    if (businessResult.success && businessResult.data && 
-        businessUserResult.data.businessId !== businessResult.data) {
+    if (businessResult.success && businessResult.data &&
+      businessUserResult.data.businessId !== businessResult.data) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized: Cannot delete users from other businesses' },
         { status: 403 }
@@ -193,7 +193,7 @@ export async function DELETE(
     const result = await deleteBusinessUser(id, {
       deleteUserCompletely: true  // Will only delete user if not in other businesses
     });
-    
+
     if (!result.success) {
       return NextResponse.json(result, { status: 500 });
     }

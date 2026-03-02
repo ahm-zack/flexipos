@@ -9,7 +9,7 @@ export function CreatedOrderReciptModal() {
   if (!createdOrder) return null;
   return (
     <ReceiptModal
-      order={createdOrder}
+      order={createdOrder as any}
       onClose={() => {
         setCreatedOrder(null);
       }}

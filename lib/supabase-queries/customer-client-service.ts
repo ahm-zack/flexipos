@@ -144,7 +144,7 @@ export class CustomerClientService {
 
         if (fetchErr || !current) return;
 
-        const newTotal = (parseFloat(current.total_purchases) + orderTotal).toFixed(2);
+        const newTotal = Number(current.total_purchases) + orderTotal;
         const newCount = current.order_count + 1;
 
         await supabase

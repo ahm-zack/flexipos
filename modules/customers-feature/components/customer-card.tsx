@@ -85,7 +85,7 @@ export function CustomerCard({
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Total:</span>
             <span className="font-semibold">
-              <PriceDisplay price={parseFloat(customer.total_purchases)} />
+              <PriceDisplay price={Number(customer.total_purchases)} />
             </span>
           </div>
         </div>

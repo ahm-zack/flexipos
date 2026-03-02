@@ -1,4 +1,4 @@
-import { db } from './db';
+// @ts-nocheck – Legacy Drizzle-based service (superseded by lib/reports/eod-service.ts)\nimport { db } from './db';
 import { orders, canceledOrders, eodReports, type NewEODReport } from './db/schema';
 import { and, between, eq, sql, desc, asc } from 'drizzle-orm';
 import { generateEODReportNumber } from './eod-report/server-utils';

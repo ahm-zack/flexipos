@@ -1,34 +1,32 @@
-// EOD Report Module
-// Complete module for End of Day reporting with TanStack Query
+// EOD Report Module – Supabase + TanStack Query
 
-// Export all hooks
-export * from './hooks';
-
-// Export all components
-export * from './components';
-export { EODReportManager } from './components/eod-report-manager';
-
-// Export service functions for direct use
+// Export hooks
 export {
-  generateEODReport,
-  saveEODReportToDatabase,
-  getEODReportsHistory,
-  getEODReportById,
-  getReportPresets,
-  validateEODReportRequest,
-  formatCurrency,
-  formatPercentage,
-} from '@/lib/eod-report-service';
+  eodReportKeys,
+  useSmartEODPreview,
+  useGenerateEODReport,
+  useEODReportHistory,
+  useEODReportDetail,
+  useDeleteEODReport,
+} from './hooks/use-eod-reports';
 
-// Export types for convenience
+// Export utility hooks
+export {
+  useEODReportFormatters,
+  useEODReportAnalytics,
+} from './hooks/use-eod-report-utils';
+
+// Export components
+export { EODReportDashboard } from './components';
+
+// Export types
 export type {
-  EODReportRequest,
   EODReportData,
   SavedEODReport,
-  EODReportHistoryRequest,
-  BestSellingItem,
-  PaymentBreakdown,
-  HourlySales,
-  PaymentMethod,
-  OrderStatus,
-} from '@/lib/schemas';
+  SmartEODPreview,
+  ReportMetrics,
+  TopItem,
+  CategoryBreakdownItem,
+  HourlySalesItem,
+  PaymentBreakdownItem,
+} from '@/lib/reports/types';
