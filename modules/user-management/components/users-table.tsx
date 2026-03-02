@@ -37,7 +37,7 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
-import type { BusinessUserWithDetails } from "@/lib/user-service-drizzle";
+import type { BusinessUserWithDetails } from "@/lib/user-service";
 import { useDeleteUser } from "../hooks/use-users";
 import { EditUserDialog } from "./edit-user-dialog";
 import { toast } from "sonner";
@@ -120,7 +120,7 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
     return role.charAt(0).toUpperCase() + role.slice(1);
   };
 
-  const formatDate = (date: Date | null) => {
+  const formatDate = (date: Date | string | null) => {
     if (!date) return "Unknown";
     try {
       return formatDistanceToNow(new Date(date), { addSuffix: true });

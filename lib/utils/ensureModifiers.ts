@@ -1,5 +1,11 @@
 // Utility to ensure modifiers is always Modifier[]
-import type { Modifier } from "@/lib/db/schema";
+export interface Modifier {
+  id: string;
+  name: string;
+  price: number;
+  modifiers?: Modifier[];
+  [key: string]: unknown;
+}
 
 export function ensureModifiers<T extends { modifiers: unknown }>(row: T): Omit<T, 'modifiers'> & { modifiers: Modifier[] } {
   return {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getUserByEmail } from '@/lib/user-service-drizzle';
+import { getUserByEmail } from '@/lib/user-service';
 import { getCurrentUser } from '@/lib/auth';
 
 export async function GET() {

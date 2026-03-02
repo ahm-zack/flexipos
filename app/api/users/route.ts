@@ -3,7 +3,7 @@ import {
   getBusinessUsers,
   createBusinessUser,
   getCurrentUserBusinessId
-} from '@/lib/user-service-drizzle';
+} from '@/lib/user-service';
 import { requireAdmin } from '@/lib/auth';
 import { CreateUserSchema } from '@/lib/schemas';
 

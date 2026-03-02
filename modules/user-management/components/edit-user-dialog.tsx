@@ -19,8 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { BusinessUserWithDetails } from "@/lib/user-service-drizzle";
-import type { UserRole } from "@/lib/db/schema";
+import type { BusinessUserWithDetails } from "@/lib/user-service";
+import type { UserRole } from "@/lib/user-service";
 import { useUpdateUser } from "../hooks/use-users";
 import { toast } from "sonner";
 import { User as UserIcon, Mail, Shield, Edit } from "lucide-react";

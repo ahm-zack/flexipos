@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { db } from '@/lib/db';
-import { users } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
 
 export async function POST(request: Request) {
     try {
@@ -47,15 +44,12 @@ export async function POST(request: Request) {
         }
 
         // Check if orphaned user exists in users table (from failed previous attempt)
-        const [existingDbUser] = await db
-            .select()
-            .from(users)
-            .where(eq(users.email, email));
+        const { data: existingDbUser } = await adminClient.from('users').select('id').eq('email', email).maybeSingle();
 
         if (existingDbUser) {
             // Clean up orphaned user record
             console.log('🧹 Found orphaned user record, cleaning up:', existingDbUser.id);
-            await db.delete(users).where(eq(users.email, email));
+            await adminClient.from('users').delete().eq('email', email);
             console.log('✅ Orphaned record cleaned');
         }
 
@@ -102,27 +96,25 @@ export async function POST(request: Request) {
         console.log('✅ Auth user verified in database');
 
         // Check if this userId somehow already exists in users table (should never happen but let's be safe)
-        const [existingUserById] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, userId));
+        const { data: existingUserById } = await adminClient.from('users').select('id').eq('id', userId).maybeSingle();
 
         if (existingUserById) {
             console.log('🧹 Found orphaned user record with this ID, cleaning up:', existingUserById.id);
-            await db.delete(users).where(eq(users.id, userId));
+            await adminClient.from('users').delete().eq('id', userId);
             console.log('✅ Orphaned record by ID cleaned');
         }
 
         // Step 2: Create user record in users table
         console.log('📝 Creating user record in users table');
         try {
-            await db.insert(users).values({
+            const { error: insertError } = await adminClient.from('users').insert({
                 id: userId,
                 email: authData.user.email!,
-                fullName: email.split('@')[0], // Temporary name, can be updated later
+                full_name: email.split('@')[0], // Temporary name, can be updated later
                 role: 'admin',
-                isActive: true,
+                is_active: true,
             });
+            if (insertError) throw insertError;
 
             console.log('✅ User record created in users table');
             console.log('✅ Step 1 complete: User created in auth and users table');

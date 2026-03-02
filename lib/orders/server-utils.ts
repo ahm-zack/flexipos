@@ -3,8 +3,7 @@
  * This file contains functions that require database access and should only be used on the server
  */
 
-import { sql } from 'drizzle-orm';
-import { db } from '@/lib/db';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 /**
  * Generate a unique order number using database sequence (SERVER-SIDE ONLY)
@@ -12,15 +11,14 @@ import { db } from '@/lib/db';
  */
 export async function generateOrderNumber(): Promise<string> {
   try {
-    // Use the database function to generate the next order number
-    const result = await db.execute(sql`SELECT generate_order_number() as order_number`);
-    const orderNumber = result[0]?.order_number as string;
-    
-    if (!orderNumber) {
-      throw new Error('Failed to generate order number');
+    const adminClient = createAdminClient();
+    const { data, error } = await adminClient.rpc('generate_order_number');
+
+    if (error || !data) {
+      throw new Error(error?.message ?? 'Failed to generate order number');
     }
-    
-    return orderNumber;
+
+    return data as string;
   } catch (error) {
     console.error('Error generating order number using database function:', error);
     // Fallback to application-level generation if database function fails
@@ -35,23 +33,24 @@ export async function generateOrderNumber(): Promise<string> {
  */
 async function generateApplicationOrderNumber(): Promise<string> {
   try {
-    // Get the highest existing order number
-    const result = await db.execute(sql`
-      SELECT order_number 
-      FROM orders 
-      WHERE order_number ~ '^ORD-[0-9]+$'
-      ORDER BY order_number DESC 
-      LIMIT 1
-    `);
-    
+    const adminClient = createAdminClient();
+    // Fetch the highest ORD-XXXX order number (prefix filter is a good-enough proxy)
+    const { data } = await adminClient
+      .from('orders')
+      .select('order_number')
+      .like('order_number', 'ORD-%')
+      .order('order_number', { ascending: false })
+      .limit(1);
+
     let nextNumber = 1;
-    
-    if (result.length > 0 && result[0].order_number) {
-      const currentNumber = result[0].order_number as string;
+
+    if (data && data.length > 0 && data[0].order_number) {
+      const currentNumber = data[0].order_number as string;
       const numberPart = currentNumber.replace('ORD-', '');
-      nextNumber = parseInt(numberPart, 10) + 1;
+      const parsed = parseInt(numberPart, 10);
+      if (!isNaN(parsed)) nextNumber = parsed + 1;
     }
-    
+
     return `ORD-${nextNumber.toString().padStart(4, '0')}`;
   } catch (error) {
     console.error('Error generating application-level order number:', error);

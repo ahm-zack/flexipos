@@ -5,7 +5,7 @@ import {
   updateUserProfile,
   deleteBusinessUser,
   getCurrentUserBusinessId
-} from '@/lib/user-service-drizzle';
+} from '@/lib/user-service';
 import { requireAdmin } from '@/lib/auth';
 
 export async function GET(

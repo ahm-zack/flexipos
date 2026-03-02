@@ -1,6 +1,5 @@
-// @ts-nocheck – Legacy Drizzle-based service (superseded by lib/reports/eod-service.ts)\nimport { db } from './db';
-import { orders, canceledOrders, eodReports, type NewEODReport } from './db/schema';
-import { and, between, eq, sql, desc, asc } from 'drizzle-orm';
+// Supabase-native EOD report service
+import { createAdminClient } from '@/utils/supabase/admin';
 import { generateEODReportNumber } from './eod-report/server-utils';
 // import { createClient } from '@/utils/supabase/client'; // Temporarily disabled
 import {
@@ -79,21 +78,34 @@ export const validateEODReportRequest = (request: unknown): EODReportRequest => 
  * Fetches all orders within the specified date range
  */
 const fetchOrdersInRange = async (startDate: Date, endDate: Date): Promise<OrderWithDetails[]> => {
-  const result = await db
-    .select()
-    .from(orders)
-    .where(
-      and(
-        between(orders.createdAt, startDate, endDate),
-        sql`${orders.status} IN ('completed', 'modified')`
-      )
-    )
-    .orderBy(asc(orders.createdAt));
+  const adminClient = createAdminClient();
+  const { data: result, error } = await adminClient
+    .from('orders')
+    .select('*')
+    .gte('created_at', startDate.toISOString())
+    .lte('created_at', endDate.toISOString())
+    .in('status', ['completed', 'modified'])
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
 
   // Parse the items JSON field
-  return result.map(order => ({
+  return (result ?? []).map(order => ({
     ...order,
-    items: Array.isArray(order.items) ? order.items : JSON.parse(order.items as string)
+    // camelCase mapping
+    orderNumber: order.order_number,
+    customerName: order.customer_name,
+    totalAmount: order.total_amount,
+    paymentMethod: order.payment_method,
+    deliveryPlatform: order.delivery_platform,
+    createdAt: new Date(order.created_at),
+    updatedAt: new Date(order.updated_at),
+    createdBy: order.created_by,
+    cashAmount: order.cash_amount,
+    cardAmount: order.card_amount,
+    cashReceived: order.cash_received,
+    changeAmount: order.change_amount,
+    items: Array.isArray(order.items) ? order.items : JSON.parse(order.items as string),
   })) as OrderWithDetails[];
 };
 
@@ -101,18 +113,22 @@ const fetchOrdersInRange = async (startDate: Date, endDate: Date): Promise<Order
  * Fetches all canceled orders within the specified date range
  */
 const fetchCanceledOrdersInRange = async (startDate: Date, endDate: Date): Promise<CanceledOrderWithDetails[]> => {
-  const result = await db
-    .select()
-    .from(canceledOrders)
-    .where(
-      between(canceledOrders.canceledAt, startDate, endDate)
-    )
-    .orderBy(asc(canceledOrders.canceledAt));
+  const adminClient = createAdminClient();
+  const { data: result, error } = await adminClient
+    .from('canceled_orders')
+    .select('*')
+    .gte('canceled_at', startDate.toISOString())
+    .lte('canceled_at', endDate.toISOString())
+    .order('canceled_at', { ascending: true });
 
-  // Parse the orderData JSON field
-  return result.map(order => ({
+  if (error) throw error;
+
+  return (result ?? []).map(order => ({
     ...order,
-    orderData: typeof order.orderData === 'string' ? JSON.parse(order.orderData) : order.orderData
+    originalOrderId: order.original_order_id,
+    canceledAt: new Date(order.canceled_at),
+    canceledBy: order.canceled_by,
+    orderData: typeof order.order_data === 'string' ? JSON.parse(order.order_data) : order.order_data,
   })) as CanceledOrderWithDetails[];
 };
 
@@ -446,13 +462,11 @@ export const generateEODReport = async (request: EODReportRequest): Promise<EODR
  */
 const resetDailySerialSequence = async (): Promise<void> => {
   try {
-    // Use the database connection to call our reset function
-    await db.execute(sql`SELECT reset_daily_serial_sequence()`);
+    const adminClient = createAdminClient();
+    await adminClient.rpc('reset_daily_serial_sequence');
     console.log('✅ Daily serial sequence reset successfully');
   } catch (error) {
     console.error('⚠️ Failed to reset daily serial sequence:', error);
-    // Don't throw - EOD report generation is more important than serial reset
-    // The system can still function if this fails
   }
 };
 
@@ -470,7 +484,7 @@ export const saveEODReportToDatabase = async (
   const cashOrdersCount = reportData.paymentBreakdown.find(p => p.method === 'cash')?.orderCount || 0;
   const cardOrdersCount = reportData.paymentBreakdown.find(p => p.method === 'card')?.orderCount || 0;
 
-  const reportToSave: NewEODReport = {
+  const reportToSave = {
     reportNumber,
     reportDate: reportData.startDateTime.toISOString().split('T')[0],
     startDateTime: reportData.startDateTime,
@@ -500,7 +514,42 @@ export const saveEODReportToDatabase = async (
     generatedAt: new Date(),
   };
 
-  const result = await db.insert(eodReports).values(reportToSave).returning({ id: eodReports.id });
+  const adminClient = createAdminClient();
+  const { data: result, error } = await adminClient
+    .from('eod_reports')
+    .insert({
+      report_number: reportToSave.reportNumber,
+      report_date: reportToSave.reportDate,
+      start_date_time: reportToSave.startDateTime instanceof Date ? reportToSave.startDateTime.toISOString() : reportToSave.startDateTime,
+      end_date_time: reportToSave.endDateTime instanceof Date ? reportToSave.endDateTime.toISOString() : reportToSave.endDateTime,
+      total_orders: reportToSave.totalOrders,
+      completed_orders: reportToSave.completedOrders,
+      cancelled_orders: reportToSave.cancelledOrders,
+      total_revenue: reportToSave.totalRevenue,
+      total_with_vat: reportToSave.totalWithVat,
+      total_without_vat: reportToSave.totalWithoutVat,
+      vat_amount: reportToSave.vatAmount,
+      total_cash_orders: reportToSave.totalCashOrders,
+      total_card_orders: reportToSave.totalCardOrders,
+      cash_orders_count: reportToSave.cashOrdersCount,
+      card_orders_count: reportToSave.cardOrdersCount,
+      total_cash_received: reportToSave.totalCashReceived,
+      total_change_given: reportToSave.totalChangeGiven,
+      average_order_value: reportToSave.averageOrderValue,
+      peak_hour: reportToSave.peakHour,
+      order_completion_rate: reportToSave.orderCompletionRate,
+      order_cancellation_rate: reportToSave.orderCancellationRate,
+      payment_breakdown: reportToSave.paymentBreakdown,
+      delivery_platform_breakdown: reportToSave.deliveryPlatformBreakdown,
+      best_selling_items: reportToSave.bestSellingItems,
+      hourly_sales: reportToSave.hourlySales,
+      generated_by: reportToSave.generatedBy,
+      generated_at: reportToSave.generatedAt instanceof Date ? reportToSave.generatedAt.toISOString() : reportToSave.generatedAt,
+    })
+    .select('id')
+    .single();
+
+  if (error || !result) throw error ?? new Error('Failed to save EOD report');
 
   // Reset daily serial sequence after EOD report is generated
   // NOTE: Temporarily disabled as function doesn't exist in current schema
@@ -513,7 +562,7 @@ export const saveEODReportToDatabase = async (
     // Don't throw error - EOD report was saved successfully
   }
 
-  return result[0].id;
+  return result.id;
 };
 
 /**
@@ -527,56 +576,24 @@ export const getEODReportsHistory = async (
 ) => {
   const offset = (page - 1) * limit;
 
-  // Build the where condition
-  const whereCondition = startDate && endDate
-    ? between(eodReports.reportDate, startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0])
-    : undefined;
+  const adminClient = createAdminClient();
+  let query = adminClient
+    .from('eod_reports')
+    .select('*', { count: 'exact' });
 
-  const [reports, countResult] = await Promise.all([
-    db
-      .select({
-        id: eodReports.id,
-        reportNumber: eodReports.reportNumber,
-        reportDate: eodReports.reportDate,
-        startDateTime: eodReports.startDateTime,
-        endDateTime: eodReports.endDateTime,
-        totalOrders: eodReports.totalOrders,
-        completedOrders: eodReports.completedOrders,
-        cancelledOrders: eodReports.cancelledOrders,
-        totalRevenue: eodReports.totalRevenue,
-        totalWithVat: eodReports.totalWithVat,
-        totalWithoutVat: eodReports.totalWithoutVat,
-        vatAmount: eodReports.vatAmount,
-        totalCashOrders: eodReports.totalCashOrders,
-        totalCardOrders: eodReports.totalCardOrders,
-        totalCashReceived: eodReports.totalCashReceived,
-        totalChangeGiven: eodReports.totalChangeGiven,
-        averageOrderValue: eodReports.averageOrderValue,
-        peakHour: eodReports.peakHour,
-        orderCompletionRate: eodReports.orderCompletionRate,
-        orderCancellationRate: eodReports.orderCancellationRate,
-        paymentBreakdown: eodReports.paymentBreakdown,
-        deliveryPlatformBreakdown: eodReports.deliveryPlatformBreakdown,
-        bestSellingItems: eodReports.bestSellingItems,
-        hourlySales: eodReports.hourlySales,
-        generatedBy: eodReports.generatedBy,
-        generatedAt: eodReports.generatedAt,
-        reportType: eodReports.reportType,
-        createdAt: eodReports.createdAt,
-        updatedAt: eodReports.updatedAt,
-      })
-      .from(eodReports)
-      .where(whereCondition)
-      .orderBy(desc(eodReports.generatedAt))
-      .limit(limit)
-      .offset(offset),
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(eodReports)
-      .where(whereCondition)
-  ]);
+  if (startDate && endDate) {
+    query = query
+      .gte('report_date', startDate.toISOString().split('T')[0])
+      .lte('report_date', endDate.toISOString().split('T')[0]);
+  }
 
-  const totalCount = countResult[0]?.count || 0;
+  const { data: reports, count, error } = await query
+    .order('generated_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw error;
+
+  const totalCount = count ?? 0;
   const totalPages = Math.ceil(totalCount / limit);
 
   return {
@@ -596,57 +613,56 @@ export const getEODReportsHistory = async (
  * Retrieves a specific EOD report by ID
  */
 export const getEODReportById = async (reportId: string) => {
-  const result = await db
-    .select()
-    .from(eodReports)
-    .where(eq(eodReports.id, reportId))
-    .limit(1);
+  const adminClient = createAdminClient();
+  const { data: report, error } = await adminClient
+    .from('eod_reports')
+    .select('*')
+    .eq('id', reportId)
+    .single();
 
-  if (result.length === 0) {
+  if (error || !report) {
     throw new Error(`EOD report with ID ${reportId} not found`);
   }
 
-  const report = result[0];
-
   // Convert the database record back to EODReportData format
   const reportData: EODReportData = {
-    startDateTime: report.startDateTime,
-    endDateTime: report.endDateTime,
-    reportGeneratedAt: report.generatedAt,
+    startDateTime: report.start_date_time ? new Date(report.start_date_time) : report.startDateTime,
+    endDateTime: report.end_date_time ? new Date(report.end_date_time) : report.endDateTime,
+    reportGeneratedAt: report.generated_at ? new Date(report.generated_at) : report.generatedAt,
 
     // Core metrics
-    totalCashOrders: parseFloat(report.totalCashOrders),
-    totalCardOrders: parseFloat(report.totalCardOrders),
-    totalWithVat: parseFloat(report.totalWithVat),
-    totalWithoutVat: parseFloat(report.totalWithoutVat),
-    totalCancelledOrders: report.cancelledOrders,
-    totalOrders: report.totalOrders,
+    totalCashOrders: parseFloat(report.total_cash_orders ?? report.totalCashOrders),
+    totalCardOrders: parseFloat(report.total_card_orders ?? report.totalCardOrders),
+    totalWithVat: parseFloat(report.total_with_vat ?? report.totalWithVat),
+    totalWithoutVat: parseFloat(report.total_without_vat ?? report.totalWithoutVat),
+    totalCancelledOrders: report.cancelled_orders ?? report.cancelledOrders,
+    totalOrders: report.total_orders ?? report.totalOrders,
 
     // Detailed payment tracking
-    totalCashReceived: parseFloat(report.totalCashReceived || '0'),
-    totalChangeGiven: parseFloat(report.totalChangeGiven || '0'),
+    totalCashReceived: parseFloat(report.total_cash_received ?? report.totalCashReceived ?? '0'),
+    totalChangeGiven: parseFloat(report.total_change_given ?? report.totalChangeGiven ?? '0'),
 
     // Additional order statistics
-    completedOrders: report.completedOrders,
+    completedOrders: report.completed_orders ?? report.completedOrders,
 
     // Financial breakdown
-    vatAmount: parseFloat(report.vatAmount),
-    averageOrderValue: parseFloat(report.averageOrderValue),
+    vatAmount: parseFloat(report.vat_amount ?? report.vatAmount),
+    averageOrderValue: parseFloat(report.average_order_value ?? report.averageOrderValue),
 
     // Payment method breakdown
-    paymentBreakdown: JSON.parse(report.paymentBreakdown as string) as PaymentBreakdown[],
+    paymentBreakdown: JSON.parse((report.payment_breakdown ?? report.paymentBreakdown) as string) as PaymentBreakdown[],
 
     // Delivery platform breakdown
-    deliveryPlatformBreakdown: JSON.parse(report.deliveryPlatformBreakdown as string || '[]') as DeliveryPlatformBreakdown[],
+    deliveryPlatformBreakdown: JSON.parse(((report.delivery_platform_breakdown ?? report.deliveryPlatformBreakdown) as string) || '[]') as DeliveryPlatformBreakdown[],
 
     // Performance metrics
-    bestSellingItems: JSON.parse(report.bestSellingItems as string) as BestSellingItem[],
-    peakHour: report.peakHour || '12:00',
-    hourlySales: JSON.parse(report.hourlySales as string) as HourlySales[],
+    bestSellingItems: JSON.parse((report.best_selling_items ?? report.bestSellingItems) as string) as BestSellingItem[],
+    peakHour: report.peak_hour ?? report.peakHour ?? '12:00',
+    hourlySales: JSON.parse((report.hourly_sales ?? report.hourlySales) as string) as HourlySales[],
 
     // Operational metrics
-    orderCompletionRate: parseFloat(report.orderCompletionRate),
-    orderCancellationRate: parseFloat(report.orderCancellationRate),
+    orderCompletionRate: parseFloat(report.order_completion_rate ?? report.orderCompletionRate),
+    orderCancellationRate: parseFloat(report.order_cancellation_rate ?? report.orderCancellationRate),
   };
 
   return reportData;
@@ -704,12 +720,15 @@ export const formatPercentage = (percentage: number): string => {
  */
 export const deleteEODReport = async (reportId: string): Promise<void> => {
   try {
-    const result = await db
-      .delete(eodReports)
-      .where(eq(eodReports.id, reportId))
-      .returning();
+    const adminClient = createAdminClient();
+    const { data, error } = await adminClient
+      .from('eod_reports')
+      .delete()
+      .eq('id', reportId)
+      .select('id')
+      .single();
 
-    if (result.length === 0) {
+    if (error || !data) {
       throw new Error(`EOD report with ID ${reportId} not found`);
     }
 

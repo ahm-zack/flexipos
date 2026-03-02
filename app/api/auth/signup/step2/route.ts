@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { businesses, businessUsers, users } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 export async function POST(request: Request) {
     try {
@@ -23,11 +21,10 @@ export async function POST(request: Request) {
             );
         }
 
+        const adminClient = createAdminClient();
+
         // Verify user exists
-        const [existingUser] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, userId));
+        const { data: existingUser } = await adminClient.from('users').select('id, email, full_name').eq('id', userId).maybeSingle();
 
         if (!existingUser) {
             return NextResponse.json(
@@ -37,9 +34,7 @@ export async function POST(request: Request) {
         }
 
         // Check if user already has a business
-        const existingBusinessUser = await db.query.businessUsers.findFirst({
-            where: eq(businessUsers.userId, userId),
-        });
+        const { data: existingBusinessUser } = await adminClient.from('business_users').select('id').eq('user_id', userId).maybeSingle();
 
         if (existingBusinessUser) {
             return NextResponse.json(
@@ -60,20 +55,24 @@ export async function POST(request: Request) {
         const slug = business.slug || generateSlug(business.name);
 
         // Step 1: Create the business
-        const [newBusiness] = await db.insert(businesses).values({
-            name: business.name,
-            slug: slug,
-            description: business.description || null,
-            phone: business.phone || null,
-            address: business.address || null,
-            email: business.email || existingUser.email,
-            timezone: business.timezone || 'Asia/Riyadh',
-            currency: business.currency || 'SAR',
-            settings: business.settings || {},
-            isActive: true,
-        }).returning();
+        const { data: newBusiness, error: bizError } = await adminClient
+            .from('businesses')
+            .insert({
+                name: business.name,
+                slug,
+                description: business.description || null,
+                phone: business.phone || null,
+                address: business.address || null,
+                email: business.email || existingUser.email,
+                timezone: business.timezone || 'Asia/Riyadh',
+                currency: business.currency || 'SAR',
+                settings: business.settings || {},
+                is_active: true,
+            })
+            .select()
+            .single();
 
-        if (!newBusiness) {
+        if (bizError || !newBusiness) {
             return NextResponse.json(
                 { error: 'Failed to create business' },
                 { status: 500 }
@@ -83,23 +82,21 @@ export async function POST(request: Request) {
         console.log('✅ Business created:', newBusiness.id);
 
         // Step 2: Link user to business as admin
-        await db.insert(businessUsers).values({
-            businessId: newBusiness.id,
-            userId: userId,
-            role: 'admin', // Owner of the business
+        await adminClient.from('business_users').insert({
+            business_id: newBusiness.id,
+            user_id: userId,
+            role: 'admin',
             permissions: {},
-            isActive: true,
-            joinedAt: new Date(),
+            is_active: true,
+            joined_at: new Date().toISOString(),
         });
 
         console.log('✅ Step 2 complete: Business created and user linked');
 
-        // Update user's full name if business name provided
-        if (business.name && existingUser.fullName === existingUser.email.split('@')[0]) {
-            await db
-                .update(users)
-                .set({ fullName: business.name })
-                .where(eq(users.id, userId));
+        // Update user's full name if still using the default (email prefix)
+        const tempName = existingUser.email.split('@')[0];
+        if (business.name && existingUser.full_name === tempName) {
+            await adminClient.from('users').update({ full_name: business.name }).eq('id', userId);
         }
 
         return NextResponse.json({

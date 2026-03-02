@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { BusinessUserWithDetails } from '@/lib/user-service-drizzle';
+import type { BusinessUserWithDetails } from '@/lib/user-service';
 
 // API function types
 interface CreateUserData {

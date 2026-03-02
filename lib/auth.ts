@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { AppRole } from '@/lib/schemas';
-import { getUserByEmail } from '@/lib/user-service-drizzle';
+import { getUserByEmail } from '@/lib/user-service';
 
 export interface AuthUser {
   id: string;

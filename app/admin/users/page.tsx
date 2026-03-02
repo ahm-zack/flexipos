@@ -1,10 +1,7 @@
 import { requireManagerOrHigher } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { UsersPageContent } from "@/modules/user-management/components/users-page-content";
-import {
-  getBusinessUsers,
-  getCurrentUserBusinessId,
-} from "@/lib/user-service-drizzle";
+import { getBusinessUsers, getCurrentUserBusinessId } from "@/lib/user-service";
 import {
   HydrationBoundary,
   QueryClient,

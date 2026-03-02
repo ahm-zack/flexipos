@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { initializeCustomClaims } from '@/lib/user-service-drizzle';
+import { initializeCustomClaims } from '@/lib/user-service';
 import { requireSuperAdmin } from '@/lib/auth';
 
 /**
@@ -11,7 +11,7 @@ export async function POST() {
   try {
     // Check authorization
     const { authorized, error: authError } = await requireSuperAdmin();
-    
+
     if (!authorized) {
       console.error('Unauthorized initialize-claims attempt:', authError);
       return NextResponse.json(

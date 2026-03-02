@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserRole } from "@/lib/db";
+import type { UserRole } from "@/lib/user-service";
 import { useCreateUser } from "../hooks/use-users";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, User, Lock, Shield } from "lucide-react";

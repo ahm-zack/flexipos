@@ -15,7 +15,7 @@ import {
 import { useCreateUser } from "../hooks/use-users";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { UserRole } from "@/lib/db";
+import type { UserRole } from "@/lib/user-service";
 
 const roles: { value: UserRole; label: string }[] = [
   { value: "admin", label: "Admin" },

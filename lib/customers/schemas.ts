@@ -57,8 +57,27 @@ export type UpdateCustomer = z.infer<typeof updateCustomerSchema>;
 export type CustomerForm = z.infer<typeof customerFormSchema>;
 export type CustomerSearch = z.infer<typeof customerSearchSchema>;
 
-// Re-export database types for convenience
-export type {
-    Customer,
-    CustomerSearchResult,
-} from './db-schema';
+// Inline types (previously imported from db-schema.ts which was Drizzle-only)
+export interface Customer {
+    id: string;
+    businessId: string;
+    name: string;
+    phone: string;
+    address: string | null;
+    totalPurchases: string;
+    orderCount: number;
+    lastOrderAt: Date | string | null;
+    createdAt: Date | string;
+    updatedAt: Date | string;
+    createdBy: string;
+}
+
+export interface CustomerSearchResult {
+    id: string;
+    phone: string;
+    name: string;
+    address?: string;
+    totalPurchases: number;
+    orderCount: number;
+    lastOrderAt?: string;
+}
