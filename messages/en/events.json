@@ -1,0 +1,42 @@
+{
+    "title": "Event Discount Management",
+    "howItWorks": "How It Works",
+    "currentStatus": "Current Status",
+    "configuration": "Event Configuration",
+    "activationControl": "Activation Control",
+    "eventName": "Event Name",
+    "eventNamePlaceholder": "e.g., Grand Opening, Black Friday...",
+    "discountPercentage": "Discount Percentage",
+    "percentagePlaceholder": "Enter percentage (0-100)",
+    "updateSettings": "Update Discount Settings",
+    "activate": "Activate Event",
+    "deactivate": "Deactivate Event",
+    "active": "ACTIVE",
+    "inactive": "INACTIVE",
+    "currentlyActive": "Currently active",
+    "currentlyInactive": "Currently inactive",
+    "toggleLabel": "Event Discount Active",
+    "toggleDesc": "Toggle to activate/deactivate the event discount",
+    "allOrdersDiscount": "All orders will automatically receive this discount",
+    "discountActive": "{name} \u2014 {percentage}% discount active",
+    "tip": "Make sure to set both the event name and percentage before activating. The discount will be applied immediately to all new orders.",
+    "howItWorksItems": {
+        "eventName": "This will be displayed on receipts and order summaries",
+        "percentage": "Applied automatically to all orders when active",
+        "global": "The discount applies site-wide to all cart operations",
+        "history": "All orders will record the event discount for tracking"
+    },
+    "toasts": {
+        "invalidPercentage": "Please enter a valid percentage between 0 and 100",
+        "missingName": "Please enter an event name",
+        "updated": "Event discount updated successfully!",
+        "activated": "Event discount \"{name}\" activated at {percentage}%!",
+        "deactivated": "Event discount deactivated",
+        "missingNameBeforeActivate": "Please enter an event name before activating",
+        "missingPercentageBeforeActivate": "Please set a valid discount percentage before activating"
+    },
+    "statusLabel": "Event Discount Status",
+    "globalApplication": "Global Application",
+    "orderHistory": "Order History",
+    "tipLabel": "\ud83d\udca1 Tip:"
+}

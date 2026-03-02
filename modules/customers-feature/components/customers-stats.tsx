@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PriceDisplay } from "@/components/currency";
 import { Users, TrendingUp, ShoppingBag } from "lucide-react";
@@ -10,6 +11,7 @@ interface CustomersStatsProps {
 }
 
 export function CustomersStats({ customers }: CustomersStatsProps) {
+  const t = useTranslations("customers");
   const totalRevenue = customers.reduce(
     (sum, c) => sum + Number(c.total_purchases),
     0,
@@ -23,7 +25,7 @@ export function CustomersStats({ customers }: CustomersStatsProps) {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm text-muted-foreground font-normal flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Total Customers
+            {t("stats.total")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -35,7 +37,7 @@ export function CustomersStats({ customers }: CustomersStatsProps) {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm text-muted-foreground font-normal flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Total Revenue
+            {t("stats.totalRevenue")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -49,7 +51,7 @@ export function CustomersStats({ customers }: CustomersStatsProps) {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm text-muted-foreground font-normal flex items-center gap-2">
             <ShoppingBag className="h-4 w-4" />
-            Avg Order Value
+            {t("stats.avgOrderValue")}
           </CardTitle>
         </CardHeader>
         <CardContent>

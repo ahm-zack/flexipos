@@ -1,0 +1,90 @@
+{
+    "title": "الطلبات",
+    "newOrder": "طلب جديد",
+    "orderNumber": "طلب #",
+    "customer": "العميل",
+    "walkin": "زبون عابر",
+    "items": "العناصر",
+    "total": "الإجمالي",
+    "discount": "خصم",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "payment": "الدفع",
+    "cashier": "الصراف",
+    "paymentMethod": "طريقة الدفع",
+    "notes": "ملاحظات",
+    "noOrders": "لا توجد طلبات",
+    "noOrdersDesc": "ستظهر الطلبات هنا بمجرد أن يقوم العملاء بالشراء.",
+    "noMatchingOrders": "لا توجد طلبات مطابقة",
+    "noMatchingOrdersDesc": "لا توجد طلبات تطابق معايير البحث والتصفية الحالية.",
+    "clearFilters": "مسح الفلاتر",
+    "errorLoading": "خطأ في تحميل الطلبات",
+    "showLess": "عرض أقل",
+    "showMoreItems": "+{count} المزيد",
+    "loading": "جارٍ تحميل الطلبات...",
+    "serialNumber": "رقم تسلسلي #",
+    "filters": {
+        "all": "الكل",
+        "today": "اليوم",
+        "thisWeek": "هذا الأسبوع",
+        "thisMonth": "هذا الشهر",
+        "dateRange": "نطاق التاريخ",
+        "search": "ابحث عن طلب...",
+        "status": "الحالة",
+        "orderStatus": "حالة الطلب",
+        "completed": "مكتمل",
+        "canceled": "ملغى",
+        "modified": "معدّل",
+        "paymentLabel": "طريقة الدفع",
+        "cash": "نقدًا",
+        "card": "بطاقة",
+        "mixed": "مختلط",
+        "delivery": "توصيل",
+        "fromDate": "من تاريخ",
+        "toDate": "إلى تاريخ",
+        "fromTime": "من وقت",
+        "toTime": "إلى وقت"
+    },
+    "details": {
+        "title": "تفاصيل الطلب",
+        "orderItems": "عناصر الطلب",
+        "product": "المنتج",
+        "quantity": "الكمية",
+        "unitPrice": "سعر الوحدة",
+        "subtotal": "المجموع الجزئي",
+        "discount": "خصم",
+        "eventDiscount": "خصم الحدث",
+        "tax": "ضريبة",
+        "total": "الإجمالي"
+    },
+    "status": {
+        "pending": "قيد الانتظار",
+        "completed": "مكتمل",
+        "cancelled": "ملغى",
+        "canceled": "ملغى",
+        "refunded": "مُسترد",
+        "modified": "معدّل"
+    },
+    "paymentMethods": {
+        "cash": "نقدًا",
+        "card": "بطاقة",
+        "mixed": "مختلط",
+        "delivery": "توصيل"
+    },
+    "deliveryPlatforms": {
+        "keeta": "كيتا",
+        "hunger_station": "محطة الجوع",
+        "jahez": "جاهز"
+    },
+    "actions": {
+        "view": "عرض",
+        "edit": "تعديل",
+        "cancel": "إلغاء الطلب",
+        "refund": "استرداد",
+        "print": "طباعة"
+    },
+    "toasts": {
+        "cancelSuccess": "تم إلغاء الطلب",
+        "cancelFailed": "فشل إلغاء الطلب"
+    }
+}

@@ -1,0 +1,37 @@
+{
+    "appName": "FlexiPOS",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "export": "Export",
+    "print": "Print",
+    "refresh": "Refresh",
+    "yes": "Yes",
+    "no": "No",
+    "status": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "pending": "Pending",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "paid": "Paid",
+        "unpaid": "Unpaid",
+        "refunded": "Refunded"
+    },
+    "errors": {
+        "generic": "Something went wrong. Please try again.",
+        "notFound": "Not found.",
+        "unauthorized": "You are not authorized to perform this action.",
+        "networkError": "Network error. Check your connection."
+    }
+}

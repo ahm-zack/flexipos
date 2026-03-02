@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ export function EditProductForm({
   open,
   onOpenChange,
 }: EditProductFormProps) {
+  const t = useTranslations("menu");
   const [formData, setFormData] = useState<Partial<NewProduct>>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
@@ -69,11 +71,11 @@ export function EditProductForm({
       const file = event.target.files?.[0];
       if (file) {
         if (!file.type.startsWith("image/")) {
-          toast.error("Please select an image file");
+          toast.error(t("toasts.imageRequired"));
           return;
         }
         if (file.size > 5 * 1024 * 1024) {
-          toast.error("Image size should be less than 5MB");
+          toast.error(t("toasts.imageTooLarge"));
           return;
         }
         setSelectedFile(file);
@@ -101,7 +103,7 @@ export function EditProductForm({
     if (!product) return;
 
     if (!formData.name || !formData.price) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("toasts.requiredFields"));
       return;
     }
 
@@ -116,13 +118,13 @@ export function EditProductForm({
           if (uploadedUrl) {
             images = [uploadedUrl];
           } else {
-            toast.error("Failed to upload image");
+            toast.error(t("toasts.uploadFailed"));
             setIsUploading(false);
             return;
           }
         } catch (uploadError) {
           console.error("Error uploading image:", uploadError);
-          toast.error("Failed to upload image");
+          toast.error(t("toasts.uploadFailed"));
           setIsUploading(false);
           return;
         }
@@ -145,11 +147,11 @@ export function EditProductForm({
         );
       }
 
-      toast.success("Product updated successfully!");
+      toast.success(t("toasts.updateSuccess"));
       onOpenChange(false);
     } catch (error) {
       console.error("Error updating product:", error);
-      toast.error("Failed to update product");
+      toast.error(t("toasts.updateFailed"));
     }
   };
 
@@ -164,9 +166,9 @@ export function EditProductForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Product</DialogTitle>
+          <DialogTitle>{t("editProductDialogTitle")}</DialogTitle>
           <DialogDescription>
-            Update your product information.
+            {t("updateProductDesc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -174,26 +176,26 @@ export function EditProductForm({
           {/* Names */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name (English) *</Label>
+              <Label htmlFor="name">{t("labelNameEnglishRequired")}</Label>
               <Input
                 id="name"
                 value={formData.name || ""}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                placeholder="Enter product name"
+                placeholder={t("productNamePlaceholder")}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="nameAr">Name (Arabic)</Label>
+              <Label htmlFor="nameAr">{t("labelNameArabicOptional")}</Label>
               <Input
                 id="nameAr"
                 value={formData.nameAr || ""}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, nameAr: e.target.value }))
                 }
-                placeholder="اسم المنتج"
+                placeholder={t("nameArAltPlaceholder")}
                 dir="rtl"
               />
             </div>
@@ -201,7 +203,7 @@ export function EditProductForm({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t("description")}</Label>
             <Textarea
               id="description"
               value={formData.description || ""}
@@ -211,7 +213,7 @@ export function EditProductForm({
                   description: e.target.value,
                 }))
               }
-              placeholder="Enter product description"
+              placeholder={t("descriptionPlaceholder")}
               rows={3}
             />
           </div>
@@ -241,14 +243,14 @@ export function EditProductForm({
                       price: parseFloat(e.target.value) || 0,
                     }))
                   }
-                  placeholder="0.00"
+                  placeholder={t("pricePlaceholder")}
                   required
                   className="pl-8"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="stockQuantity">Stock Quantity</Label>
+              <Label htmlFor="stockQuantity">{t("stockQuantity")}</Label>
               <Input
                 id="stockQuantity"
                 type="number"
@@ -260,7 +262,7 @@ export function EditProductForm({
                     stockQuantity: parseInt(e.target.value) || 0,
                   }))
                 }
-                placeholder="0"
+                placeholder={t("stockQtyPlaceholder")}
               />
             </div>
           </div>
@@ -268,18 +270,18 @@ export function EditProductForm({
           {/* SKU & Barcode */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="sku">SKU</Label>
+              <Label htmlFor="sku">{t("sku")}</Label>
               <Input
                 id="sku"
                 value={formData.sku || ""}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, sku: e.target.value }))
                 }
-                placeholder="Product SKU"
+                placeholder={t("skuPlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="barcode">Barcode</Label>
+              <Label htmlFor="barcode">{t("barcode")}</Label>
               <Input
                 id="barcode"
                 value={formData.barcode || ""}
@@ -289,14 +291,14 @@ export function EditProductForm({
                     barcode: e.target.value,
                   }))
                 }
-                placeholder="Product barcode"
+                placeholder={t("barcodePlaceholder")}
               />
             </div>
           </div>
 
           {/* Product Image */}
           <div className="space-y-2">
-            <Label htmlFor="editProductImageFile">Product Image</Label>
+            <Label htmlFor="editProductImageFile">{t("productImage")}</Label>
             <div className="space-y-3">
               <Input
                 id="editProductImageFile"
@@ -310,7 +312,7 @@ export function EditProductForm({
                 <div className="relative w-full h-48 border-2 border-dashed border-gray-200 rounded-lg overflow-hidden">
                   <Image
                     src={displayPreview}
-                    alt="Product preview"
+                    alt={t("productPreview")}
                     fill
                     className="object-cover"
                   />
@@ -319,7 +321,7 @@ export function EditProductForm({
                       type="button"
                       onClick={removeImage}
                       className="p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
-                      title="Remove image"
+                      title={t("removeImage")}
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -346,7 +348,7 @@ export function EditProductForm({
 
           {/* Modifiers */}
           <div className="space-y-2">
-            <Label>Modifiers</Label>
+            <Label>{t("modifiers")}</Label>
             <ModifierManager
               modifiers={(formData.modifiers || []).map((mod) => ({
                 id: mod.id,
@@ -396,7 +398,7 @@ export function EditProductForm({
                   setFormData((prev) => ({ ...prev, isActive: checked }))
                 }
               />
-              <Label htmlFor="isActive">Active</Label>
+              <Label htmlFor="isActive">{t("labelActive")}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch
@@ -406,7 +408,7 @@ export function EditProductForm({
                   setFormData((prev) => ({ ...prev, isFeatured: checked }))
                 }
               />
-              <Label htmlFor="isFeatured">Featured</Label>
+              <Label htmlFor="isFeatured">{t("labelFeatured")}</Label>
             </div>
           </div>
 
@@ -416,17 +418,17 @@ export function EditProductForm({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               type="submit"
               disabled={isUploading || updateProductMutation.isPending}
             >
               {isUploading
-                ? "Uploading..."
+                ? t("uploading")
                 : updateProductMutation.isPending
-                  ? "Saving..."
-                  : "Update Product"}
+                  ? t("saving")
+                  : t("updateProduct")}
             </Button>
           </DialogFooter>
         </form>

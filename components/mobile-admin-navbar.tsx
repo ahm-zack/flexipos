@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Command,
   UtensilsCrossed,
@@ -17,10 +17,12 @@ import {
   ChevronDown,
   Moon,
   Sun,
+  Languages,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
+import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/modules/cart/hooks/use-cart";
 import { CartPanel } from "@/modules/cart";
@@ -38,9 +40,17 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
   const { theme, setTheme } = useTheme();
   const { cart } = useCart();
   const pathname = usePathname();
+  const router = useRouter();
+  const locale = useLocale();
   const [activeDropdown, setActiveDropdown] = useState<
     "menu" | "avatar" | "cart" | null
   >(null);
+
+  const toggleLocale = () => {
+    const next = locale === "en" ? "ar" : "en";
+    document.cookie = `NEXT_LOCALE=${next};path=/;max-age=31536000;samesite=lax`;
+    router.refresh();
+  };
 
   // Fetch categories with caching
   const { data: categories = [], isLoading, error } = useCategories(); // Now uses authenticated user's businessId from context
@@ -349,10 +359,21 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
 
                   <button
                     onClick={() => {
+                      toggleLocale();
+                      closeDropdowns();
+                    }}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors w-full text-start"
+                  >
+                    <Languages className="size-4" />
+                    <span>{locale === "en" ? "عربي" : "English"}</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
                       setTheme(theme === "dark" ? "light" : "dark");
                       closeDropdowns();
                     }}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left"
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors w-full text-start"
                   >
                     {theme === "dark" ? (
                       <>

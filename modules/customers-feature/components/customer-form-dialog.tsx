@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +36,7 @@ export function CustomerFormDialog({
   isSaving,
   title,
 }: CustomerFormDialogProps) {
+  const t = useTranslations("customers");
   const [form, setForm] = useState<CustomerFormData>(initial);
 
   const handleOpenChange = (v: boolean) => {
@@ -44,8 +46,8 @@ export function CustomerFormDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim()) return toast.error("Name is required");
-    if (!form.phone.trim()) return toast.error("Phone is required");
+    if (!form.name.trim()) return toast.error(t("toasts.nameRequired"));
+    if (!form.phone.trim()) return toast.error(t("toasts.phoneRequired"));
     onSave(form);
   };
 
@@ -57,19 +59,19 @@ export function CustomerFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-1.5">
-            <Label htmlFor="cust-name">Name *</Label>
+            <Label htmlFor="cust-name">{t("nameRequired")}</Label>
             <Input
               id="cust-name"
-              placeholder="Customer name"
+              placeholder={t("namePlaceholder")}
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="cust-phone">Phone *</Label>
+            <Label htmlFor="cust-phone">{t("phoneRequired")}</Label>
             <Input
               id="cust-phone"
-              placeholder="+966 5xxxxxxxx"
+              placeholder={t("phonePlaceholder")}
               value={form.phone}
               onChange={(e) =>
                 setForm((f) => ({ ...f, phone: e.target.value }))
@@ -77,10 +79,10 @@ export function CustomerFormDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="cust-address">Address</Label>
+            <Label htmlFor="cust-address">{t("address")}</Label>
             <Input
               id="cust-address"
-              placeholder="Optional delivery address"
+              placeholder={t("addressPlaceholder")}
               value={form.address}
               onChange={(e) =>
                 setForm((f) => ({ ...f, address: e.target.value }))
@@ -93,10 +95,10 @@ export function CustomerFormDialog({
               variant="outline"
               onClick={() => handleOpenChange(false)}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isSaving}>
-              {isSaving ? "Saving…" : "Save"}
+              {isSaving ? t("form.saving") : t("form.save")}
             </Button>
           </div>
         </form>

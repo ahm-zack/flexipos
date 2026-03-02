@@ -28,6 +28,7 @@ import {
 import { DateTimePicker } from "@/components/date-time-picker";
 import { useOrdersContext } from "../contexts/orders-context";
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 // Debounce hook
 function useDebouncedValue<T>(value: T, delay: number): T {
@@ -40,6 +41,7 @@ function useDebouncedValue<T>(value: T, delay: number): T {
 }
 
 export function OrdersHeader() {
+  const t = useTranslations("orders");
   const {
     filters,
     setSearchTerm,
@@ -67,7 +69,7 @@ export function OrdersHeader() {
     <div className="space-y-4 mb-6">
       {/* Title Row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-3xl font-bold">Orders</h1>
+        <h1 className="text-3xl font-bold">{t("title")}</h1>
       </div>
 
       {/* Search and Filters Row */}
@@ -79,7 +81,7 @@ export function OrdersHeader() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               type="text"
-              placeholder="Search orders..."
+              placeholder={t("filters.search")}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               className="pl-10"
@@ -107,7 +109,7 @@ export function OrdersHeader() {
                   className="gap-2 flex-shrink-0 min-w-fit"
                 >
                   <Filter className="h-4 w-4" />
-                  Status
+                  {t("filters.status")}
                   {filters.activeFilters.size > 0 && (
                     <span className="ml-1 bg-primary text-primary-foreground text-xs rounded-full px-2 py-0.5 min-w-[20px] h-5 flex items-center justify-center">
                       {filters.activeFilters.size}
@@ -116,58 +118,62 @@ export function OrdersHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuLabel>Order Status</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  {t("filters.orderStatus")}
+                </DropdownMenuLabel>
                 <DropdownMenuCheckboxItem
                   checked={filters.activeFilters.has("completed")}
                   onCheckedChange={() => toggleFilter("completed")}
                 >
-                  <Check className="mr-2 h-4 w-4" />
-                  Completed
+                  <Check className="me-2 h-4 w-4" />
+                  {t("filters.completed")}
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
                   checked={filters.activeFilters.has("canceled")}
                   onCheckedChange={() => toggleFilter("canceled")}
                 >
-                  <X className="mr-2 h-4 w-4" />
-                  Canceled
+                  <X className="me-2 h-4 w-4" />
+                  {t("filters.canceled")}
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
                   checked={filters.activeFilters.has("modified")}
                   onCheckedChange={() => toggleFilter("modified")}
                 >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Modified
+                  <Edit className="me-2 h-4 w-4" />
+                  {t("filters.modified")}
                 </DropdownMenuCheckboxItem>
 
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Payment Method</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  {t("filters.paymentLabel")}
+                </DropdownMenuLabel>
                 <DropdownMenuCheckboxItem
                   checked={filters.activeFilters.has("cash")}
                   onCheckedChange={() => toggleFilter("cash")}
                 >
-                  <Banknote className="mr-2 h-4 w-4" />
-                  Cash
+                  <Banknote className="me-2 h-4 w-4" />
+                  {t("filters.cash")}
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
                   checked={filters.activeFilters.has("card")}
                   onCheckedChange={() => toggleFilter("card")}
                 >
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Card
+                  <CreditCard className="me-2 h-4 w-4" />
+                  {t("filters.card")}
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
                   checked={filters.activeFilters.has("mixed")}
                   onCheckedChange={() => toggleFilter("mixed")}
                 >
-                  <Split className="mr-2 h-4 w-4" />
-                  Mixed
+                  <Split className="me-2 h-4 w-4" />
+                  {t("filters.mixed")}
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
                   checked={filters.activeFilters.has("delivery")}
                   onCheckedChange={() => toggleFilter("delivery")}
                 >
-                  <Truck className="mr-2 h-4 w-4" />
-                  Delivery
+                  <Truck className="me-2 h-4 w-4" />
+                  {t("filters.delivery")}
                 </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -181,10 +187,10 @@ export function OrdersHeader() {
           onFromDateChange={setDateFrom}
           onToDateChange={setDateTo}
           onClearDates={clearDateFilters}
-          fromDateLabel="From Date"
-          toDateLabel="To Date"
-          fromTimeLabel="From Time"
-          toTimeLabel="To Time"
+          fromDateLabel={t("filters.fromDate")}
+          toDateLabel={t("filters.toDate")}
+          fromTimeLabel={t("filters.fromTime")}
+          toTimeLabel={t("filters.toTime")}
           showRange={true}
           showClearButton={true}
           className=""

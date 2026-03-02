@@ -9,8 +9,10 @@ import Link from "next/link";
 import { Command } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 export default function LoginPage() {
+  const t = useTranslations("auth");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -20,14 +22,14 @@ export default function LoginPage() {
     const formData = new FormData(e.currentTarget);
 
     // Show loading toast with spinner
-    const toastId = toast.loading("Logging in...", {});
+    const toastId = toast.loading(t("login.toasts.loading"), {});
 
     try {
       const result = await login(formData);
 
       // If we get here, it means there was an error (success redirects on server)
       if (result && !result.success) {
-        toast.error(result.error || "Login failed. Please try again.", {
+        toast.error(result.error || t("login.toasts.failed"), {
           id: toastId,
         });
       }
@@ -40,13 +42,13 @@ export default function LoginPage() {
         (error && typeof error === "object" && "digest" in error)
       ) {
         // This is a successful redirect, update toast to success
-        toast.success("Login successful!", {
+        toast.success(t("login.toasts.success"), {
           id: toastId,
         });
         return;
       }
 
-      toast.error("An unexpected error occurred. Please try again.", {
+      toast.error(t("login.toasts.unexpected"), {
         id: toastId,
       });
       console.error("Login error:", error);
@@ -76,25 +78,25 @@ export default function LoginPage() {
           <div className="w-full max-w-xs">
             <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
               <div className="flex flex-col items-center gap-2 text-center">
-                <h1 className="text-2xl font-bold">Login to your account</h1>
+                <h1 className="text-2xl font-bold">{t("login.title")}</h1>
                 <p className="text-muted-foreground text-sm text-balance">
-                  Enter your email below to login to your account
+                  {t("login.subtitle")}
                 </p>
               </div>
               <div className="grid gap-6">
                 <div className="grid gap-3">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t("login.email")}</Label>
                   <Input
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="m@example.com"
+                    placeholder={t("login.emailPlaceholder")}
                     required
                   />
                 </div>
                 <div className="grid gap-3">
                   <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{t("login.password")}</Label>
                   </div>
                   <Input
                     id="password"
@@ -104,13 +106,13 @@ export default function LoginPage() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Login"}
+                  {isLoading ? t("login.signingIn") : t("login.submit")}
                 </Button>
               </div>
               <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
+                {t("login.noAccount")}{" "}
                 <Link href="/signup" className="underline underline-offset-4">
-                  Sign up
+                  {t("login.signUp")}
                 </Link>
               </div>
             </form>

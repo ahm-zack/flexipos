@@ -1,0 +1,90 @@
+{
+    "title": "Orders",
+    "newOrder": "New Order",
+    "orderNumber": "Order #",
+    "customer": "Customer",
+    "walkin": "Walk-in",
+    "items": "Items",
+    "total": "Total",
+    "discount": "Discount",
+    "date": "Date",
+    "time": "Time",
+    "payment": "Payment",
+    "cashier": "Cashier",
+    "paymentMethod": "Payment Method",
+    "notes": "Notes",
+    "noOrders": "No orders found",
+    "noOrdersDesc": "Orders will appear here once customers make purchases.",
+    "noMatchingOrders": "No matching orders",
+    "noMatchingOrdersDesc": "No orders match your current search and filter criteria.",
+    "clearFilters": "Clear filters",
+    "errorLoading": "Error Loading Orders",
+    "showLess": "Show less",
+    "showMoreItems": "+{count} more",
+    "loading": "Loading orders...",
+    "serialNumber": "Serial #",
+    "filters": {
+        "all": "All",
+        "today": "Today",
+        "thisWeek": "This Week",
+        "thisMonth": "This Month",
+        "dateRange": "Date Range",
+        "search": "Search orders...",
+        "status": "Status",
+        "orderStatus": "Order Status",
+        "completed": "Completed",
+        "canceled": "Canceled",
+        "modified": "Modified",
+        "paymentLabel": "Payment Method",
+        "cash": "Cash",
+        "card": "Card",
+        "mixed": "Mixed",
+        "delivery": "Delivery",
+        "fromDate": "From Date",
+        "toDate": "To Date",
+        "fromTime": "From Time",
+        "toTime": "To Time"
+    },
+    "details": {
+        "title": "Order Details",
+        "orderItems": "Order Items",
+        "product": "Product",
+        "quantity": "Quantity",
+        "unitPrice": "Unit Price",
+        "subtotal": "Subtotal",
+        "discount": "Discount",
+        "eventDiscount": "Event Discount",
+        "tax": "Tax",
+        "total": "Total"
+    },
+    "status": {
+        "pending": "Pending",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "canceled": "Canceled",
+        "refunded": "Refunded",
+        "modified": "Modified"
+    },
+    "paymentMethods": {
+        "cash": "Cash",
+        "card": "Card",
+        "mixed": "Mixed",
+        "delivery": "Delivery"
+    },
+    "deliveryPlatforms": {
+        "keeta": "Keeta",
+        "hunger_station": "Hunger Station",
+        "jahez": "Jahez"
+    },
+    "actions": {
+        "view": "View",
+        "edit": "Edit",
+        "cancel": "Cancel Order",
+        "refund": "Refund",
+        "print": "Print"
+    },
+    "toasts": {
+        "cancelSuccess": "Order cancelled",
+        "cancelFailed": "Failed to cancel order"
+    }
+}

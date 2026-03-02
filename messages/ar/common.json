@@ -1,0 +1,37 @@
+{
+    "appName": "فليكسي بوس",
+    "loading": "جارٍ التحميل...",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "close": "إغلاق",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "next": "التالي",
+    "search": "بحث",
+    "filter": "تصفية",
+    "clear": "مسح",
+    "export": "تصدير",
+    "print": "طباعة",
+    "refresh": "تحديث",
+    "yes": "نعم",
+    "no": "لا",
+    "status": {
+        "active": "نشط",
+        "inactive": "غير نشط",
+        "pending": "معلّق",
+        "completed": "مكتمل",
+        "cancelled": "ملغي",
+        "paid": "مدفوع",
+        "unpaid": "غير مدفوع",
+        "refunded": "مسترد"
+    },
+    "errors": {
+        "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+        "notFound": "غير موجود.",
+        "unauthorized": "ليس لديك صلاحية لتنفيذ هذا الإجراء.",
+        "networkError": "خطأ في الشبكة. تحقق من اتصالك."
+    }
+}

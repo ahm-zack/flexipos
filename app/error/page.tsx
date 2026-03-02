@@ -3,18 +3,22 @@
 // import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function ErrorPage() {
+  const t = useTranslations("auth");
   // const searchParams = useSearchParams();
   // const message = searchParams.get("message") || "Something went wrong";
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6">
       <div className="w-full max-w-md text-center">
-        <h1 className="text-2xl font-bold text-red-600 mb-4">Login Error</h1>
-        <p className="text-gray-600 mb-6">An Error happened please try again</p>
+        <h1 className="text-2xl font-bold text-red-600 mb-4">
+          {t("error.title")}
+        </h1>
+        <p className="text-gray-600 mb-6">{t("error.message")}</p>
         <Button asChild>
-          <Link href="/login">Try Again</Link>
+          <Link href="/login">{t("error.tryAgain")}</Link>
         </Button>
       </div>
     </div>

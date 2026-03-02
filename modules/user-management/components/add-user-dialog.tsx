@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,26 +30,14 @@ interface AddUserDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const roles: { value: UserRole; label: string; description: string }[] = [
-  {
-    value: "admin",
-    label: "Admin",
-    description: "System administration and full access",
-  },
-  {
-    value: "manager",
-    label: "Manager",
-    description: "Manage staff and oversee operations",
-  },
-  {
-    value: "staff",
-    label: "Staff",
-    description: "Handle orders and daily operations",
-  },
-];
-
 export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
+  const t = useTranslations("users");
   const createUserMutation = useCreateUser();
+  const roles: { value: UserRole; label: string; description: string }[] = [
+    { value: "admin", label: t("roles.admin"), description: t("roleDescriptions.admin") },
+    { value: "manager", label: t("roles.manager"), description: t("roleDescriptions.manager") },
+    { value: "staff", label: t("roles.staff"), description: t("roleDescriptions.staff") },
+  ];
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -77,36 +66,36 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
 
     // Name validation
     if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
+      newErrors.name = t("errors.nameRequired");
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = "Name must be at least 2 characters";
+      newErrors.name = t("errors.nameTooShort");
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = t("errors.emailRequired");
     } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = t("errors.emailInvalid");
     }
 
     // Role validation
     if (!formData.role) {
-      newErrors.role = "Please select a role";
+      newErrors.role = t("errors.roleRequired");
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = t("errors.passwordRequired");
     } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+      newErrors.password = t("errors.passwordTooShort");
     }
 
     // Confirm password validation
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
+      newErrors.confirmPassword = t("errors.confirmRequired");
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = t("errors.passwordMismatch");
     }
 
     setErrors(newErrors);
@@ -128,11 +117,11 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
         password: formData.password,
       });
 
-      toast.success(`User ${formData.name} created successfully`);
+      toast.success(t("toasts.addSuccess", { name: formData.name }));
       handleClose();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create user",
+        error instanceof Error ? error.message : t("toasts.addFailed"),
       );
     }
   };
@@ -165,10 +154,10 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Add New User
+            {t("addUser")}
           </DialogTitle>
           <DialogDescription>
-            Create a new user account. All fields are required.
+            {t("form.createDesc")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -176,13 +165,13 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
             {/* Name Field */}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium">
-                Full Name
+                {t("fullName")}
               </Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="name"
-                  placeholder="Enter full name"
+                  placeholder={t("form.fullNamePlaceholder")}
                   value={formData.name}
                   onChange={(e) => {
                     setFormData({ ...formData, name: e.target.value });
@@ -200,14 +189,14 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
             {/* Email Field */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
-                Email Address
+                {t("email")}
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter email address"
+                  placeholder={t("form.emailPlaceholder")}
                   value={formData.email}
                   onChange={(e) => {
                     setFormData({ ...formData, email: e.target.value });
@@ -225,7 +214,7 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
             {/* Role Field */}
             <div className="space-y-2">
               <Label htmlFor="role" className="text-sm font-medium">
-                Role
+                {t("role")}
               </Label>
               <Select
                 value={formData.role}
@@ -238,7 +227,7 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
                 <SelectTrigger className={errors.role ? "border-red-500" : ""}>
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-gray-400" />
-                    <SelectValue placeholder="Select a role" />
+                    <SelectValue placeholder={t("form.selectRole")} />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
@@ -262,14 +251,14 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
             {/* Password Field */}
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium">
-                Password
+                {t("password")}
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter password (min. 8 characters)"
+                  placeholder={t("form.passwordPlaceholder")}
                   value={formData.password}
                   onChange={(e) => {
                     setFormData({ ...formData, password: e.target.value });
@@ -300,14 +289,14 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
             {/* Confirm Password Field */}
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                Confirm Password
+                {t("confirmPassword")}
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="confirmPassword"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
+                  placeholder={t("form.confirmPasswordPlaceholder")}
                   value={formData.confirmPassword}
                   onChange={(e) => {
                     setFormData({
@@ -336,16 +325,16 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
               onClick={handleClose}
               disabled={isLoading}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full border-2 border-t-transparent border-white h-4 w-4" />
-                  Creating...
+                  {t("form.submitting")}
                 </div>
               ) : (
-                "Create User"
+                t("addUser")
               )}
             </Button>
           </DialogFooter>

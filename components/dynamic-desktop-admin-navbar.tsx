@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Command,
   Users,
@@ -16,6 +16,7 @@ import {
   UtensilsCrossed,
   ChevronDown,
   Grid3X3,
+  Languages,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -27,6 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
+import { useLocale, useTranslations } from "next-intl";
 import { useCategories } from "@/hooks/useCategories";
 import { logout } from "@/app/logout/actions";
 
@@ -41,18 +43,23 @@ interface ModernAdminNavbarProps {
 export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
+  const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("dashboard");
   const [isMenuExpanded, setIsMenuExpanded] = React.useState(false);
 
   const logOut = () => {
     logout();
   };
 
+  const toggleLocale = () => {
+    const next = locale === "en" ? "ar" : "en";
+    document.cookie = `NEXT_LOCALE=${next};path=/;max-age=31536000;samesite=lax`;
+    router.refresh();
+  };
+
   // Fetch categories with caching
-  const {
-    data: categories = [],
-    isLoading,
-    error,
-  } = useCategories(); // Now uses authenticated user's businessId from context
+  const { data: categories = [], isLoading, error } = useCategories(); // Now uses authenticated user's businessId from context
 
   // Generate dynamic menu items from categories
   const dynamicMenuItems = React.useMemo(() => {
@@ -108,7 +115,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
               >
                 <ShoppingBag className="size-4" />
                 <span className="text-sm font-medium hidden lg:inline">
-                  Orders
+                  {t("nav.orders")}
                 </span>
               </Link>
 
@@ -124,7 +131,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
               >
                 <Grid3X3 className="size-4" />
                 <span className="text-sm font-medium hidden lg:inline">
-                  Menu
+                  {t("nav.menu")}
                 </span>
                 <ChevronDown
                   className={`size-3 transition-transform duration-200 ${
@@ -144,7 +151,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
               >
                 <UserCheck className="size-4" />
                 <span className="text-sm font-medium hidden lg:inline">
-                  Customers
+                  {t("nav.customers")}
                 </span>
               </Link>
             </div>
@@ -259,15 +266,20 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                 >
                   {theme === "light" ? (
                     <>
-                      <Moon className="size-4 mr-2" />
+                      <Moon className="size-4 me-2" />
                       Dark Mode
                     </>
                   ) : (
                     <>
-                      <Sun className="size-4 mr-2" />
+                      <Sun className="size-4 me-2" />
                       Light Mode
                     </>
                   )}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={toggleLocale}>
+                  <Languages className="size-4 me-2" />
+                  {locale === "en" ? "عربي" : "English"}
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />

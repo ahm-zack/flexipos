@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,35 +32,19 @@ interface EditUserDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const roles: { value: string; label: string; description: string }[] = [
-  {
-    value: "admin",
-    label: "Admin",
-    description: "System administration and full access",
-  },
-  {
-    value: "manager",
-    label: "Manager",
-    description: "Manage staff and oversee operations",
-  },
-  {
-    value: "staff",
-    label: "Staff",
-    description: "Handle orders and daily operations",
-  },
-  {
-    value: "cashier",
-    label: "Cashier",
-    description: "Handle customer transactions",
-  },
-];
-
 export function EditUserDialog({
   user,
   open,
   onOpenChange,
 }: EditUserDialogProps) {
+  const t = useTranslations("users");
   const updateUserMutation = useUpdateUser();
+  const roles: { value: string; label: string; description: string }[] = [
+    { value: "admin", label: t("roles.admin"), description: t("roleDescriptions.admin") },
+    { value: "manager", label: t("roles.manager"), description: t("roleDescriptions.manager") },
+    { value: "staff", label: t("roles.staff"), description: t("roleDescriptions.staff") },
+    { value: "cashier", label: t("roles.cashier"), description: t("roleDescriptions.cashier") },
+  ];
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -93,7 +78,7 @@ export function EditUserDialog({
 
     // Name validation
     if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
+      newErrors.name = t("errors.nameRequired");
     } else if (formData.name.trim().length < 2) {
       newErrors.name = "Name must be at least 2 characters";
     }
@@ -101,14 +86,14 @@ export function EditUserDialog({
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = t("errors.emailRequired");
     } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = t("errors.emailInvalid");
     }
 
     // Role validation
     if (!formData.role) {
-      newErrors.role = "Please select a role";
+      newErrors.role = t("errors.roleRequired");
     }
 
     setErrors(newErrors);
@@ -135,7 +120,7 @@ export function EditUserDialog({
     }
 
     if (!isDirty) {
-      toast.info("No changes to save");
+      toast.info(t("toasts.noChanges"));
       onOpenChange(false);
       return;
     }
@@ -149,11 +134,11 @@ export function EditUserDialog({
         },
       });
 
-      toast.success(`User ${formData.name} updated successfully`);
+      toast.success(t("toasts.editSuccess", { name: formData.name }));
       onOpenChange(false);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update user",
+        error instanceof Error ? error.message : t("toasts.editFailed"),
       );
     }
   };
@@ -181,10 +166,10 @@ export function EditUserDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Edit className="h-5 w-5" />
-            Edit User
+            {t("editUser")}
           </DialogTitle>
           <DialogDescription>
-            Make changes to the user account. Click save when you&apos;re done.
+            {t("form.editDesc")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -192,13 +177,13 @@ export function EditUserDialog({
             {/* Name Field */}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium">
-                Full Name
+                {t("fullName")}
               </Label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="name"
-                  placeholder="Enter full name"
+                  placeholder={t("form.fullNamePlaceholder")}
                   value={formData.name}
                   onChange={(e) => {
                     const newFormData = { ...formData, name: e.target.value };
@@ -218,14 +203,14 @@ export function EditUserDialog({
             {/* Email Field */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
-                Email Address
+                {t("email")}
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter email address"
+                  placeholder={t("form.emailPlaceholder")}
                   value={formData.email}
                   onChange={(e) => {
                     const newFormData = { ...formData, email: e.target.value };
@@ -245,7 +230,7 @@ export function EditUserDialog({
             {/* Role Field */}
             <div className="space-y-2">
               <Label htmlFor="role" className="text-sm font-medium">
-                Role
+                {t("role")}
               </Label>
               <Select
                 value={formData.role}
@@ -260,7 +245,7 @@ export function EditUserDialog({
                 <SelectTrigger className={errors.role ? "border-red-500" : ""}>
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-gray-400" />
-                    <SelectValue placeholder="Select a role" />
+                    <SelectValue placeholder={t("form.selectRole")} />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
@@ -288,16 +273,16 @@ export function EditUserDialog({
               onClick={handleCancel}
               disabled={isLoading}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isLoading || !isDirty}>
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full border-2 border-t-transparent border-white h-4 w-4" />
-                  Saving...
+                  {t("form.submitting")}
                 </div>
               ) : (
-                "Save Changes"
+                t("form.saveChanges")
               )}
             </Button>
           </DialogFooter>

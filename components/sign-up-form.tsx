@@ -21,6 +21,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 type BusinessFormData = {
   name: string;
@@ -31,20 +32,21 @@ type BusinessFormData = {
   country: string;
 };
 
-const businessTypes = [
-  { value: "restaurant", label: "Restaurant" },
-  { value: "retail", label: "Retail" },
-  { value: "service", label: "Service" },
-  { value: "cafe", label: "Cafe" },
-  { value: "bakery", label: "Bakery" },
-  { value: "pharmacy", label: "Pharmacy" },
-  { value: "grocery", label: "Grocery" },
-];
+const BUSINESS_TYPE_VALUES = [
+  "restaurant",
+  "retail",
+  "service",
+  "cafe",
+  "bakery",
+  "pharmacy",
+  "grocery",
+] as const;
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const t = useTranslations("auth");
   const [step, setStep] = useState(1);
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -67,12 +69,12 @@ export function SignUpForm({
     setError(null);
 
     if (password !== repeatPassword) {
-      setError("Passwords do not match");
+      setError(t("signup.errors.passwordsMismatch"));
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t("signup.errors.passwordTooShort"));
       return;
     }
 
@@ -94,7 +96,7 @@ export function SignUpForm({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create account");
+        throw new Error(data.error || t("signup.errors.createAccountFailed"));
       }
 
       // Store userId and move to step 2
@@ -114,7 +116,7 @@ export function SignUpForm({
     setError(null);
 
     if (!userId) {
-      setError("Session expired. Please start again.");
+      setError(t("signup.errors.sessionExpired"));
       setStep(1);
       setIsLoading(false);
       return;
@@ -144,7 +146,7 @@ export function SignUpForm({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create business");
+        throw new Error(data.error || t("signup.errors.createBusinessFailed"));
       }
 
       console.log("✅ Step 2 complete: Business created");
@@ -175,12 +177,12 @@ export function SignUpForm({
       <Card>
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl">
-            {step === 1 ? "Create Account" : "Business Information"}
+            {step === 1 ? t("signup.step1Title") : t("signup.step2Title")}
           </CardTitle>
           <CardDescription>
             {step === 1
-              ? "Step 1 of 2: Enter your credentials"
-              : "Step 2 of 2: Tell us about your business"}
+              ? t("signup.step1Description")
+              : t("signup.step2Description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="pb-6">
@@ -188,45 +190,47 @@ export function SignUpForm({
             <form onSubmit={handleNextStep}>
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t("signup.email")}</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="m@example.com"
+                    placeholder={t("signup.emailPlaceholder")}
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t("signup.password")}</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="At least 6 characters"
+                    placeholder={t("signup.passwordPlaceholder")}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
                   {password && password.length < 6 && (
                     <p className="text-xs text-muted-foreground">
-                      Password must be at least 6 characters
+                      {t("signup.passwordTooShort")}
                     </p>
                   )}
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
+                  <Label htmlFor="repeat-password">
+                    {t("signup.repeatPassword")}
+                  </Label>
                   <Input
                     id="repeat-password"
                     type="password"
-                    placeholder="Confirm your password"
+                    placeholder={t("signup.repeatPasswordPlaceholder")}
                     required
                     value={repeatPassword}
                     onChange={(e) => setRepeatPassword(e.target.value)}
                   />
                   {repeatPassword && password !== repeatPassword && (
                     <p className="text-xs text-destructive">
-                      Passwords do not match
+                      {t("signup.passwordsMismatch")}
                     </p>
                   )}
                 </div>
@@ -236,13 +240,13 @@ export function SignUpForm({
                   className="w-full"
                   disabled={!isStep1Valid || isLoading}
                 >
-                  {isLoading ? "Creating account..." : "Next"}
+                  {isLoading ? t("signup.creatingAccount") : t("signup.next")}
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">
-                Already have an account?{" "}
+                {t("signup.alreadyHaveAccount")}{" "}
                 <Link href="/login" className="underline underline-offset-4">
-                  Login
+                  {t("signup.loginLink")}
                 </Link>
               </div>
             </form>
@@ -250,11 +254,13 @@ export function SignUpForm({
             <form onSubmit={handleSignUp}>
               <div className="flex flex-col gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="business-name">Business Name *</Label>
+                  <Label htmlFor="business-name">
+                    {t("signup.businessNameRequired")}
+                  </Label>
                   <Input
                     id="business-name"
                     type="text"
-                    placeholder="My Business"
+                    placeholder={t("signup.businessNamePlaceholder")}
                     required
                     value={businessData.name}
                     onChange={(e) =>
@@ -263,7 +269,9 @@ export function SignUpForm({
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="business-type">Business Type *</Label>
+                  <Label htmlFor="business-type">
+                    {t("signup.businessType")}
+                  </Label>
                   <Select
                     value={businessData.type}
                     onValueChange={(value) =>
@@ -271,23 +279,25 @@ export function SignUpForm({
                     }
                   >
                     <SelectTrigger id="business-type">
-                      <SelectValue placeholder="Select business type" />
+                      <SelectValue
+                        placeholder={t("signup.businessTypePlaceholder")}
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {businessTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
+                      {BUSINESS_TYPE_VALUES.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {t(`signup.businessTypes.${value}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Label htmlFor="phone">{t("signup.phone")}</Label>
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+966 123 456 789"
+                    placeholder={t("signup.phonePlaceholder")}
                     required
                     value={businessData.phone}
                     onChange={(e) =>
@@ -299,11 +309,11 @@ export function SignUpForm({
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="address">Street Address</Label>
+                  <Label htmlFor="address">{t("signup.address")}</Label>
                   <Input
                     id="address"
                     type="text"
-                    placeholder="123 Main Street"
+                    placeholder={t("signup.addressPlaceholder")}
                     value={businessData.address}
                     onChange={(e) =>
                       setBusinessData({
@@ -315,11 +325,11 @@ export function SignUpForm({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city">{t("signup.city")}</Label>
                     <Input
                       id="city"
                       type="text"
-                      placeholder="Riyadh"
+                      placeholder={t("signup.cityPlaceholder")}
                       value={businessData.city}
                       onChange={(e) =>
                         setBusinessData({
@@ -330,11 +340,11 @@ export function SignUpForm({
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="country">Country</Label>
+                    <Label htmlFor="country">{t("signup.country")}</Label>
                     <Input
                       id="country"
                       type="text"
-                      placeholder="Saudi Arabia"
+                      placeholder={t("signup.countryPlaceholder")}
                       value={businessData.country}
                       onChange={(e) =>
                         setBusinessData({
@@ -364,14 +374,16 @@ export function SignUpForm({
                     className="w-full"
                     disabled={!isStep2Valid || isLoading}
                   >
-                    {isLoading ? "Creating account..." : "Sign Up"}
+                    {isLoading
+                      ? t("signup.creatingAccount")
+                      : t("signup.signUp")}
                   </Button>
                 </div>
               </div>
               <div className="mt-4 text-center text-sm">
-                Already have an account?{" "}
+                {t("signup.alreadyHaveAccount")}{" "}
                 <Link href="/login" className="underline underline-offset-4">
-                  Login
+                  {t("signup.loginLink")}
                 </Link>
               </div>
             </form>

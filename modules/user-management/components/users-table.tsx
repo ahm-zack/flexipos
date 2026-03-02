@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -61,6 +62,7 @@ const roleColors = {
 } as const;
 
 export function UsersCards({ users, currentUserId }: UsersTableProps) {
+  const t = useTranslations("users");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
@@ -87,12 +89,12 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
 
     try {
       await deleteUserMutation.mutateAsync(userToDelete.id);
-      toast.success(`User ${userToDelete.user.fullName} deleted successfully`);
+      toast.success(t("toasts.deleteSuccess", { name: userToDelete.user.fullName ?? "" }));
       setDeleteDialogOpen(false);
       setUserToDelete(null);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete user",
+        error instanceof Error ? error.message : t("toasts.deleteFailed"),
       );
     }
   };
@@ -116,16 +118,18 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
   };
 
   const formatRoleName = (role: string | null) => {
-    if (!role) return "Unknown";
-    return role.charAt(0).toUpperCase() + role.slice(1);
+    if (!role) return t("unknown");
+    // Use localized role name where available
+    const key = `roles.${role}` as `roles.${"superadmin" | "admin" | "cashier" | "manager" | "staff" | "kitchen"}`;
+    try { return t(key); } catch { return role.charAt(0).toUpperCase() + role.slice(1); }
   };
 
   const formatDate = (date: Date | string | null) => {
-    if (!date) return "Unknown";
+    if (!date) return t("unknown");
     try {
       return formatDistanceToNow(new Date(date), { addSuffix: true });
     } catch {
-      return "Unknown";
+      return t("unknown");
     }
   };
 
@@ -164,12 +168,12 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
       );
       await Promise.all(deletePromises);
 
-      toast.success(`${selectedUsers.size} user(s) deleted successfully`);
+      toast.success(t("toasts.bulkDeleteSuccess", { count: selectedUsers.size }));
       setSelectedUsers(new Set());
       setBulkDeleteDialogOpen(false);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete users",
+        error instanceof Error ? error.message : t("toasts.bulkDeleteFailed"),
       );
     }
   };
@@ -183,10 +187,10 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
       <div className="text-center py-12">
         <div className="text-6xl mb-4">👥</div>
         <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-          No users found
+          {t("noUsersYet")}
         </h3>
         <p className="text-muted-foreground">
-          Create your first user to get started.
+          {t("createFirstUser")}
         </p>
       </div>
     );
@@ -212,8 +216,8 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
                   />
                   <span className="text-sm text-muted-foreground">
                     {selectedUsers.size === 0
-                      ? "Select all"
-                      : `${selectedUsers.size} of ${selectableUsersCount} selected`}
+                      ? t("selectAll")
+                      : t("selectedCount", { count: selectedUsers.size, total: selectableUsersCount })}
                   </span>
                 </div>
               </div>
@@ -227,14 +231,14 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
                     disabled={deleteUserMutation.isPending}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Selected ({selectedUsers.size})
+                    {t("deleteSelected", { count: selectedUsers.size })}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedUsers(new Set())}
                   >
-                    Clear Selection
+                    {t("clearSelection")}
                   </Button>
                 </div>
               )}
@@ -276,7 +280,7 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
                           variant="outline"
                           className="text-xs px-1.5 py-0.5"
                         >
-                          You
+                          {t("you")}
                         </Badge>
                       )}
                     </div>
@@ -296,14 +300,14 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleEditClick(user)}>
                         <Edit className="mr-2 h-4 w-4" />
-                        Edit
+                        {t("edit")}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600"
                         onClick={() => handleDeleteClick(user)}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
+                        {t("delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -318,11 +322,11 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>Created {formatDate(user.createdAt)}</span>
+                  <span>{t("createdDate")} {formatDate(user.createdAt)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  <span>Updated {formatDate(user.updatedAt)}</span>
+                  <span>{t("updatedDate")} {formatDate(user.updatedAt)}</span>
                 </div>
               </div>
             </CardContent>
@@ -333,12 +337,9 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
+            <DialogTitle>{t("deleteUserTitle")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete user &quot;
-              {userToDelete?.user.fullName}
-              &quot;? This action cannot be undone and will remove the user from
-              both the database and authentication system.
+              {t("deleteUserDesc", { name: userToDelete?.user.fullName ?? "" })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -347,14 +348,14 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteUserMutation.isPending}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDeleteConfirm}
               disabled={deleteUserMutation.isPending}
             >
-              {deleteUserMutation.isPending ? "Deleting..." : "Delete"}
+              {deleteUserMutation.isPending ? t("deleting") : t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -373,14 +374,12 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Multiple Users</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteMultipleTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {selectedUsers.size} user(s)? This
-              action cannot be undone and will remove the users from both the
-              database and authentication system.
+              {t("deleteMultipleDesc", { count: selectedUsers.size })}
               <br />
               <br />
-              <strong>Users to be deleted:</strong>
+              <strong>{t("usersToBeDeleted")}</strong>
               <ul className="mt-2 list-disc list-inside">
                 {Array.from(selectedUsers).map((userId) => {
                   const user = users.find((u) => u.id === userId);
@@ -395,7 +394,7 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteUserMutation.isPending}>
-              Cancel
+              {t("cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleBulkDeleteConfirm}
@@ -405,10 +404,10 @@ export function UsersCards({ users, currentUserId }: UsersTableProps) {
               {deleteUserMutation.isPending ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full border-2 border-t-transparent border-white h-4 w-4" />
-                  Deleting...
+                  {t("deleting")}
                 </div>
               ) : (
-                `Delete ${selectedUsers.size} Users`
+                t("deleteCountUsers", { count: selectedUsers.size })
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

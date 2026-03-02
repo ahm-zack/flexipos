@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { getReliableImageUrl } from "@/lib/image-utils";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export function CreateProductForm({
   businessId,
   categoryId,
 }: CreateProductFormProps) {
+  const t = useTranslations("menu");
   const [formData, setFormData] = useState<Omit<NewProduct, "businessId">>({
     categoryId: categoryId || "",
     name: "",
@@ -65,7 +67,7 @@ export function CreateProductForm({
     e.preventDefault();
 
     if (!formData.name || !formData.nameAr || !formData.price) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("toasts.requiredFields"));
       return;
     }
 
@@ -80,7 +82,7 @@ export function CreateProductForm({
           imageUrl = uploadedUrl || "";
         } catch (uploadError) {
           console.error("Error uploading image:", uploadError);
-          toast.error("Failed to upload image");
+          toast.error(t("toasts.uploadFailed"));
           setIsUploading(false);
           return;
         }
@@ -97,8 +99,8 @@ export function CreateProductForm({
 
       await createProductMutation.mutateAsync(productData);
 
-      toast.success("Product created successfully! 🎉", {
-        description: "The product will appear in the list automatically",
+      toast.success(t("toasts.createSuccess"), {
+        description: t("toasts.createSuccessDesc"),
       });
 
       // Reset form
@@ -124,7 +126,7 @@ export function CreateProductForm({
       onOpenChange(false);
     } catch (error) {
       console.error("Error creating product:", error);
-      toast.error("Failed to create product");
+      toast.error(t("toasts.createFailed"));
     }
   };
 
@@ -134,13 +136,13 @@ export function CreateProductForm({
       if (file) {
         // Validate file type
         if (!file.type.startsWith("image/")) {
-          toast.error("Please select an image file");
+          toast.error(t("toasts.imageRequired"));
           return;
         }
 
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-          toast.error("Image size should be less than 5MB");
+          toast.error(t("toasts.imageTooLarge"));
           return;
         }
 
@@ -173,9 +175,9 @@ export function CreateProductForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Product</DialogTitle>
+          <DialogTitle>{t("createNewProduct")}</DialogTitle>
           <DialogDescription>
-            Add a new product to your inventory.
+            {t("addToInventoryDesc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -183,28 +185,28 @@ export function CreateProductForm({
           <div className="grid grid-cols-1 gap-4">
             {/* English Name */}
             <div className="space-y-2">
-              <Label htmlFor="name">English Name *</Label>
+              <Label htmlFor="name">{t("labelEnglishNameRequired")}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                placeholder="e.g., Premium Coffee"
+                placeholder={t("productNamePlaceholder")}
                 required
               />
             </div>
 
             {/* Arabic Name */}
             <div className="space-y-2">
-              <Label htmlFor="nameAr">Arabic Name *</Label>
+              <Label htmlFor="nameAr">{t("labelArabicNameRequired")}</Label>
               <Input
                 id="nameAr"
                 value={formData.nameAr}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, nameAr: e.target.value }))
                 }
-                placeholder="e.g., قهوة فاخرة"
+                placeholder={t("productNameArPlaceholder")}
                 dir="rtl"
                 required
               />
@@ -213,7 +215,7 @@ export function CreateProductForm({
             {/* Image Upload */}
             <div className="space-y-2">
               <Label htmlFor="createProductImageFile">
-                Product Image (Optional)
+                {t("productImageOptional")}
               </Label>
               <div className="space-y-3">
                 <Input
@@ -236,7 +238,7 @@ export function CreateProductForm({
                           "product",
                         )
                       }
-                      alt="Product preview"
+                      alt={t("productPreview")}
                       fill
                       className="object-cover"
                     />
@@ -245,7 +247,7 @@ export function CreateProductForm({
                         type="button"
                         onClick={removeImage}
                         className="p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
-                        title="Remove image"
+                        title={t("removeImage")}
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -280,7 +282,7 @@ export function CreateProductForm({
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t("description")}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -290,7 +292,7 @@ export function CreateProductForm({
                     description: e.target.value,
                   }))
                 }
-                placeholder="Enter product description"
+                placeholder={t("descriptionPlaceholder")}
                 rows={3}
               />
             </div>
@@ -319,7 +321,7 @@ export function CreateProductForm({
                       price: parseFloat(e.target.value) || 0,
                     }))
                   }
-                  placeholder="0.00"
+                  placeholder={t("pricePlaceholder")}
                   required
                   className="pl-8"
                 />
@@ -333,19 +335,19 @@ export function CreateProductForm({
             {/* SKU and Barcode */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="sku">SKU</Label>
+                <Label htmlFor="sku">{t("sku")}</Label>
                 <Input
                   id="sku"
                   value={formData.sku}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, sku: e.target.value }))
                   }
-                  placeholder="Product SKU"
+                  placeholder={t("skuPlaceholder")}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="stockQuantity">Stock Quantity</Label>
+                <Label htmlFor="stockQuantity">{t("stockQuantity")}</Label>
                 <Input
                   id="stockQuantity"
                   type="number"
@@ -357,27 +359,27 @@ export function CreateProductForm({
                       stockQuantity: parseInt(e.target.value) || 0,
                     }))
                   }
-                  placeholder="0"
+                  placeholder={t("stockQtyPlaceholder")}
                 />
               </div>
             </div>
 
             {/* Additional Fields */}
             <div className="space-y-2">
-              <Label htmlFor="barcode">Barcode</Label>
+              <Label htmlFor="barcode">{t("barcode")}</Label>
               <Input
                 id="barcode"
                 value={formData.barcode}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, barcode: e.target.value }))
                 }
-                placeholder="Product barcode"
+                placeholder={t("barcodePlaceholder")}
               />
             </div>
 
             {/* Modifiers */}
             <div className="space-y-2">
-              <Label>Modifiers</Label>
+              <Label>{t("modifiers")}</Label>
               <ModifierManager
                 modifiers={(formData.modifiers || []).map((mod) => ({
                   id: mod.id,
@@ -427,7 +429,7 @@ export function CreateProductForm({
                     setFormData((prev) => ({ ...prev, isActive: checked }))
                   }
                 />
-                <Label htmlFor="isActive">Active</Label>
+                <Label htmlFor="isActive">{t("labelActive")}</Label>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -438,7 +440,7 @@ export function CreateProductForm({
                     setFormData((prev) => ({ ...prev, isFeatured: checked }))
                   }
                 />
-                <Label htmlFor="isFeatured">Featured</Label>
+                <Label htmlFor="isFeatured">{t("labelFeatured")}</Label>
               </div>
             </div>
           </div>
@@ -449,7 +451,7 @@ export function CreateProductForm({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               type="submit"
@@ -459,12 +461,12 @@ export function CreateProductForm({
               {isUploading ? (
                 <>
                   <Upload className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading...
+                  {t("uploading")}
                 </>
               ) : createProductMutation.isPending ? (
-                "Creating..."
+                t("creating")
               ) : (
-                "Create Product"
+                t("create")
               )}
             </Button>
           </DialogFooter>

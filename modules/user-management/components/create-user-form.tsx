@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,15 +18,15 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import type { UserRole } from "@/lib/user-service";
 
-const roles: { value: UserRole; label: string }[] = [
-  { value: "admin", label: "Admin" },
-  { value: "manager", label: "Manager" },
-  { value: "staff", label: "Staff" },
-];
-
 export function CreateUserForm() {
+  const t = useTranslations("users");
   const router = useRouter();
   const createUserMutation = useCreateUser();
+  const roles: { value: UserRole; label: string }[] = [
+    { value: "admin", label: t("roles.admin") },
+    { value: "manager", label: t("roles.manager") },
+    { value: "staff", label: t("roles.staff") },
+  ];
   const [formData, setFormData] = useState({
     email: "",
     name: "",
@@ -37,7 +38,7 @@ export function CreateUserForm() {
     e.preventDefault();
 
     if (!formData.role) {
-      toast.error("Please select a role");
+      toast.error(t("errors.roleRequired"));
       return;
     }
 
@@ -49,7 +50,7 @@ export function CreateUserForm() {
         password: formData.password,
       });
 
-      toast.success("User created successfully");
+      toast.success(t("toasts.createSuccess"));
       // Reset form
       setFormData({
         email: "",
@@ -61,7 +62,7 @@ export function CreateUserForm() {
       router.push("/admin/users");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create user",
+        error instanceof Error ? error.message : t("toasts.addFailed"),
       );
     }
   };
@@ -71,17 +72,17 @@ export function CreateUserForm() {
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Create New User</CardTitle>
+        <CardTitle>{t("form.createTitle")}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t("fullName")}</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Enter full name"
+                placeholder={t("form.fullNamePlaceholder")}
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -92,11 +93,11 @@ export function CreateUserForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter email address"
+                placeholder={t("form.emailPlaceholder")}
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
@@ -109,7 +110,7 @@ export function CreateUserForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
+              <Label htmlFor="role">{t("role")}</Label>
               <Select
                 value={formData.role}
                 onValueChange={(value: UserRole) =>
@@ -118,7 +119,7 @@ export function CreateUserForm() {
                 disabled={isLoading}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
+                  <SelectValue placeholder={t("form.selectRole")} />
                 </SelectTrigger>
                 <SelectContent>
                   {roles.map((role) => (
@@ -131,11 +132,11 @@ export function CreateUserForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter password (min 6 characters)"
+                placeholder={t("form.passwordPlaceholder")}
                 value={formData.password}
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
@@ -149,7 +150,7 @@ export function CreateUserForm() {
 
           <div className="flex gap-4">
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create User"}
+              {isLoading ? t("form.submitting") : t("addUser")}
             </Button>
             <Button
               type="button"
@@ -157,7 +158,7 @@ export function CreateUserForm() {
               onClick={() => router.push("/admin/users")}
               disabled={isLoading}
             >
-              Cancel
+              {t("cancel")}
             </Button>
           </div>
         </form>

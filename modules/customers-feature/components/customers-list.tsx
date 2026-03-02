@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ import { CustomerFormDialog } from "./customer-form-dialog";
 import { CustomersStats } from "./customers-stats";
 
 export function CustomersList() {
+  const t = useTranslations("customers");
   const {
     allCustomers,
     displayCustomers,
@@ -47,15 +49,13 @@ export function CustomersList() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Users className="h-6 w-6" />
-            Customers
+            {t("title")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage your business customers and purchase history.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">{t("subtitle")}</p>
         </div>
         <Button onClick={() => setAddOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
-          Add Customer
+          {t("addCustomer")}
         </Button>
       </div>
 
@@ -68,7 +68,7 @@ export function CustomersList() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search by name or phone…"
+          placeholder={t("search")}
           className="pl-9"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -80,19 +80,17 @@ export function CustomersList() {
         <div className="flex items-center justify-center py-20 text-muted-foreground">
           <div className="flex flex-col items-center gap-2">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            <span className="text-sm">Loading customers…</span>
+            <span className="text-sm">{t("loading")}</span>
           </div>
         </div>
       ) : displayCustomers.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
           <Users className="h-12 w-12 mb-3 opacity-30" />
           <p className="font-medium">
-            {isSearching ? "No customers found" : "No customers yet"}
+            {isSearching ? t("noCustomers") : t("noCustomersYet")}
           </p>
           <p className="text-sm">
-            {isSearching
-              ? "Try a different search term"
-              : "Customers are added automatically when you checkout with their info."}
+            {isSearching ? t("noCustomersSearchHint") : t("noCustomersYetHint")}
           </p>
         </div>
       ) : (
@@ -112,7 +110,7 @@ export function CustomersList() {
       <CustomerFormDialog
         open={addOpen}
         onOpenChange={setAddOpen}
-        title="Add Customer"
+        title={t("addCustomer")}
         initial={{ name: "", phone: "", address: "" }}
         onSave={handleCreate}
         isSaving={isCreating}
@@ -123,7 +121,7 @@ export function CustomersList() {
         <CustomerFormDialog
           open={!!editTarget}
           onOpenChange={(v) => !v && setEditTarget(null)}
-          title="Edit Customer"
+          title={t("editCustomer")}
           initial={{
             name: editTarget.name,
             phone: editTarget.phone,
@@ -141,20 +139,21 @@ export function CustomersList() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+            <AlertDialogTitle>{t("confirmDeleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <strong>{deleteTarget?.name}</strong>? This action cannot be
-              undone.
+              {t.rich("confirmDeleteDesc", {
+                name: deleteTarget?.name ?? "",
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

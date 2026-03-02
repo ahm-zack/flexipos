@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, RefreshCw, Search, Users, Filter } from "lucide-react";
@@ -21,6 +22,7 @@ interface UsersPageContentProps {
 }
 
 export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
+  const t = useTranslations("users");
   const { data: users, isLoading, error, refetch } = useUsers();
   const [addUserOpen, setAddUserOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,7 +46,7 @@ export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-            <p className="text-muted-foreground">Loading users...</p>
+            <p className="text-muted-foreground">{t("loading")}</p>
           </div>
         </div>
       </div>
@@ -58,16 +60,16 @@ export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-600">
               <Users className="h-5 w-5" />
-              Error Loading Users
+              {t("errorLoadingUsers")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              {error instanceof Error ? error.message : "Failed to load users"}
+              {error instanceof Error ? error.message : t("failedToLoadUsers")}
             </p>
             <Button onClick={() => refetch()} variant="outline">
               <RefreshCw className="h-4 w-4 mr-2" />
-              Try Again
+              {t("tryAgain")}
             </Button>
           </CardContent>
         </Card>
@@ -82,15 +84,15 @@ export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Users className="h-8 w-8 text-primary" />
-            User Management
+            {t("title")}
           </h1>
           <p className="text-muted-foreground">
-            Manage system users and their permissions
+            {t("subtitle")}
           </p>
         </div>
         <Button onClick={() => setAddUserOpen(true)} className="shrink-0">
           <Plus className="h-4 w-4 mr-2" />
-          Add User
+          {t("addUser")}
         </Button>
       </div>
 
@@ -101,7 +103,7 @@ export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Search users by name or email..."
+                placeholder={t("search")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -111,21 +113,21 @@ export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
               <Filter className="h-4 w-4 text-muted-foreground" />
               <Select value={roleFilter} onValueChange={setRoleFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Filter by role" />
+                  <SelectValue placeholder={t("filterByRole")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="superadmin">Super Admin</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="cashier">Cashier</SelectItem>
-                  <SelectItem value="kitchen">Kitchen Staff</SelectItem>
+                  <SelectItem value="all">{t("allRoles")}</SelectItem>
+                  <SelectItem value="superadmin">{t("roles.superadmin")}</SelectItem>
+                  <SelectItem value="admin">{t("roles.admin")}</SelectItem>
+                  <SelectItem value="manager">{t("roles.manager")}</SelectItem>
+                  <SelectItem value="cashier">{t("roles.cashier")}</SelectItem>
+                  <SelectItem value="kitchen">{t("roles.kitchen")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <Button variant="outline" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+              {t("refresh")}
             </Button>
           </div>
         </CardContent>
@@ -135,8 +137,8 @@ export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           {filteredUsers.length === users?.length
-            ? `Showing all ${filteredUsers.length} users`
-            : `Showing ${filteredUsers.length} of ${users?.length || 0} users`}
+            ? t("showingAll", { count: filteredUsers.length })
+            : t("showingFiltered", { filtered: filteredUsers.length, total: users?.length || 0 })}
         </p>
         {(searchTerm || roleFilter !== "all") && (
           <Button
@@ -147,7 +149,7 @@ export function UsersPageContent({ currentUserId }: UsersPageContentProps) {
               setRoleFilter("all");
             }}
           >
-            Clear Filters
+            {t("clearFilters")}
           </Button>
         )}
       </div>

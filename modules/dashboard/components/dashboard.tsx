@@ -20,6 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const SAR = (n: number | null | undefined) =>
@@ -245,25 +246,18 @@ function Section({
   );
 }
 
-// ─── Period tabs ──────────────────────────────────────────────────────────────
-const PERIODS: { key: Period; label: string }[] = [
-  { key: "today", label: "Today" },
-  { key: "week", label: "This Week" },
-  { key: "month", label: "This Month" },
-  { key: "alltime", label: "All Time" },
-];
-
 // ─── Empty state (no metrics row yet, i.e. no orders ever placed) ─────────────
 function EmptyState() {
+  const t = useTranslations("dashboard");
   return (
     <div className="text-center py-20 space-y-4">
       <div className="p-5 bg-muted rounded-full w-fit mx-auto">
         <BarChart3 className="h-10 w-10 text-muted-foreground/40" />
       </div>
       <div>
-        <p className="text-base font-semibold">No data yet</p>
+        <p className="text-base font-semibold">{t("noDataYet")}</p>
         <p className="text-sm text-muted-foreground mt-1">
-          Dashboard metrics will appear here once you start taking orders.
+          {t("noDataHint")}
         </p>
       </div>
     </div>
@@ -274,8 +268,16 @@ function EmptyState() {
 // Main Dashboard
 // ─────────────────────────────────────────────────────────────────────────────
 export function Dashboard() {
+  const t = useTranslations("dashboard");
   const [period, setPeriod] = useState<Period>("today");
   const { data: metrics, isLoading, error } = useDashboardMetrics();
+
+  const PERIODS: { key: Period; label: string }[] = [
+    { key: "today", label: t("periodToday") },
+    { key: "week", label: t("periodWeek") },
+    { key: "month", label: t("periodMonth") },
+    { key: "alltime", label: t("periodAlltime") },
+  ];
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (isLoading) {
@@ -301,7 +303,7 @@ export function Dashboard() {
       <div className="p-6">
         <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/5 rounded-xl p-4">
           <AlertCircle className="h-4 w-4 shrink-0" />
-          Failed to load dashboard metrics. {(error as Error).message}
+          {t("failedLoad")} {(error as Error).message}
         </div>
       </div>
     );
@@ -317,9 +319,9 @@ export function Dashboard() {
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Real-time business performance
+            {t("realtimeTitle")}
           </p>
         </div>
         {/* Realtime live indicator */}
@@ -328,7 +330,7 @@ export function Dashboard() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
           </span>
-          Live
+          {t("live")}
         </div>
       </div>
 
@@ -359,27 +361,27 @@ export function Dashboard() {
           {/* KPI cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <StatCard
-              label="Total Revenue"
+              label={t("totalRevenue")}
               value={d.revenue}
               icon={TrendingUp}
               color="green"
               currency
             />
             <StatCard
-              label="Orders"
+              label={t("orders")}
               value={d.orders}
               icon={ShoppingCart}
               color="blue"
             />
             <StatCard
-              label="Avg. Order"
+              label={t("avgOrder")}
               value={avgOrder}
               icon={BarChart3}
               color="purple"
               currency
             />
             <StatCard
-              label="Delivery Revenue"
+              label={t("deliveryRevenue")}
               value={d.delivery}
               icon={Truck}
               color="orange"
@@ -390,36 +392,36 @@ export function Dashboard() {
           {/* Payment + Delivery grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* Payment breakdown */}
-            <Section title="Payment Methods" icon={Layers}>
+            <Section title={t("paymentMethods")} icon={Layers}>
               {payTotal === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No orders in this period
+                  {t("noOrdersInPeriod")}
                 </p>
               ) : (
                 <div className="space-y-4">
                   <PayBar
-                    label="Cash"
+                    label={t("cash")}
                     amount={d.cash}
                     total={payTotal}
                     color="text-emerald-500"
                     icon={Banknote}
                   />
                   <PayBar
-                    label="Card"
+                    label={t("card")}
                     amount={d.card}
                     total={payTotal}
                     color="text-blue-500"
                     icon={CreditCard}
                   />
                   <PayBar
-                    label="Mixed"
+                    label={t("mixed")}
                     amount={d.mixed}
                     total={payTotal}
                     color="text-violet-500"
                     icon={Zap}
                   />
                   <PayBar
-                    label="Delivery"
+                    label={t("delivery")}
                     amount={d.delivery}
                     total={payTotal}
                     color="text-orange-500"
@@ -430,29 +432,29 @@ export function Dashboard() {
             </Section>
 
             {/* Delivery platform breakdown */}
-            <Section title="Delivery Platforms" icon={Truck}>
+            <Section title={t("deliveryPlatforms")} icon={Truck}>
               {delivTotal === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No delivery orders in this period
+                  {t("noDeliveryOrders")}
                 </p>
               ) : (
                 <div className="space-y-4">
                   <PayBar
-                    label="Keeta"
+                    label={t("keeta")}
                     amount={d.keeta}
                     total={delivTotal}
                     color="text-red-500"
                     icon={Bike}
                   />
                   <PayBar
-                    label="Hunger Station"
+                    label={t("hungerStation")}
                     amount={d.hunger_station}
                     total={delivTotal}
                     color="text-orange-500"
                     icon={Flame}
                   />
                   <PayBar
-                    label="Jahez"
+                    label={t("jahez")}
                     amount={d.jahez}
                     total={delivTotal}
                     color="text-yellow-500"
@@ -468,7 +470,7 @@ export function Dashboard() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="rounded-xl border border-border/50 bg-background p-4 space-y-1">
                 <p className="text-xs text-muted-foreground font-medium">
-                  All-Time Revenue
+                  {t("allTimeRevenue")}
                 </p>
                 <p className="text-lg font-bold flex items-center gap-1">
                   <SaudiRiyalSymbol className="h-3.5 w-3.5 opacity-60" />
@@ -477,13 +479,13 @@ export function Dashboard() {
               </div>
               <div className="rounded-xl border border-border/50 bg-background p-4 space-y-1">
                 <p className="text-xs text-muted-foreground font-medium">
-                  All-Time Orders
+                  {t("allTimeOrders")}
                 </p>
                 <p className="text-lg font-bold">{metrics.total_orders}</p>
               </div>
               <div className="rounded-xl border border-border/50 bg-background p-4 space-y-1">
                 <p className="text-xs text-muted-foreground font-medium">
-                  Total Delivery
+                  {t("totalDelivery")}
                 </p>
                 <p className="text-lg font-bold flex items-center gap-1">
                   <SaudiRiyalSymbol className="h-3.5 w-3.5 opacity-60" />
@@ -492,7 +494,7 @@ export function Dashboard() {
               </div>
               <div className="rounded-xl border border-border/50 bg-background p-4 space-y-1">
                 <p className="text-xs text-muted-foreground font-medium">
-                  Mixed Payments
+                  {t("mixedPayments")}
                 </p>
                 <p className="text-lg font-bold flex items-center gap-1">
                   <SaudiRiyalSymbol className="h-3.5 w-3.5 opacity-60" />
@@ -504,7 +506,7 @@ export function Dashboard() {
 
           {/* Footer timestamp */}
           <p className="text-xs text-muted-foreground text-right">
-            Last updated{" "}
+            {t("lastUpdated")}{" "}
             {new Date(metrics.updated_at).toLocaleString("en-US", {
               month: "short",
               day: "numeric",

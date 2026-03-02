@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,6 +28,7 @@ export function CustomerCard({
   onEdit,
   onDelete,
 }: CustomerCardProps) {
+  const t = useTranslations("customers");
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-5">
@@ -76,14 +78,14 @@ export function CustomerCard({
         <div className="flex gap-4 mt-4 pt-4 border-t">
           <div className="flex items-center gap-1.5 text-sm">
             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Orders:</span>
+            <span className="text-muted-foreground">{t("card.orders")}</span>
             <Badge variant="secondary" className="font-mono">
               {customer.order_count}
             </Badge>
           </div>
           <div className="flex items-center gap-1.5 text-sm">
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Total:</span>
+            <span className="text-muted-foreground">{t("card.total")}</span>
             <span className="font-semibold">
               <PriceDisplay price={Number(customer.total_purchases)} />
             </span>
@@ -94,7 +96,7 @@ export function CustomerCard({
           <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
             <Calendar className="h-3 w-3" />
             <span>
-              Last order{" "}
+              {t("card.lastOrder")}{" "}
               {formatDistanceToNow(new Date(customer.last_order_at), {
                 addSuffix: true,
               })}

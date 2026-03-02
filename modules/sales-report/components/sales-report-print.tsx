@@ -6,6 +6,7 @@
  */
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { useBusiness } from "@/hooks/useBusinessId";
 import type { SavedSalesReport } from "@/lib/reports/types";
 import { vatUtils } from "@/lib/vat-config";
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export function SalesReportPrintView({ report }: Props) {
+  const t = useTranslations("reports");
   const { businessName } = useBusiness();
 
   const topItems = Array.isArray(report.top_items)
@@ -81,21 +83,22 @@ export function SalesReportPrintView({ report }: Props) {
               {businessName ?? "FlexiPOS"}
             </h1>
             <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: "9pt" }}>
-              Sales Report
+              {t("salesReport")}
             </p>
           </div>
           <div style={{ textAlign: "right" }}>
             <p style={{ margin: 0, fontWeight: 600 }}>
-              {report.report_name ?? "Sales Report"}
+              {report.report_name ?? t("salesReport")}
             </p>
             <p style={{ margin: "2px 0 0", color: "#64748b", fontSize: "9pt" }}>
-              Generated:{" "}
+              {t("print.generated")}{" "}
               {new Date(report.created_at).toLocaleDateString("en-US")}
             </p>
           </div>
         </div>
         <div style={{ marginTop: "8px", color: "#64748b", fontSize: "9pt" }}>
-          Period: {fmtDate(report.period_start)} — {fmtDate(report.period_end)}
+          {t("print.period")} {fmtDate(report.period_start)} —{" "}
+          {fmtDate(report.period_end)}
         </div>
       </div>
 
@@ -110,21 +113,21 @@ export function SalesReportPrintView({ report }: Props) {
       >
         {[
           {
-            label: "Total Revenue",
+            label: t("print.totalRevenue"),
             value: report.total_revenue,
             currency: true,
           },
           {
-            label: "Completed Orders",
+            label: t("print.completedOrders"),
             value: report.completed_orders.toString(),
           },
           {
-            label: "Avg. Order Value",
+            label: t("print.avgOrderValue"),
             value: report.average_order_value,
             currency: true,
           },
           {
-            label: "Cancelled Orders",
+            label: t("print.cancelledOrders"),
             value: report.cancelled_orders.toString(),
           },
         ].map(({ label, value, currency }) => (
@@ -171,9 +174,9 @@ export function SalesReportPrintView({ report }: Props) {
         }}
       >
         {[
-          { label: "Cash Revenue", value: report.cash_revenue },
-          { label: "Card Revenue", value: report.card_revenue },
-          { label: "Delivery Revenue", value: report.delivery_revenue },
+          { label: t("print.cashRevenue"), value: report.cash_revenue },
+          { label: t("print.cardRevenue"), value: report.card_revenue },
+          { label: t("print.deliveryRevenue"), value: report.delivery_revenue },
         ].map(({ label, value }) => (
           <div
             key={label}
@@ -204,7 +207,7 @@ export function SalesReportPrintView({ report }: Props) {
               color: "#1e293b",
             }}
           >
-            VAT Breakdown (15%)
+            {t("sales.vatBreakdown")}
           </h2>
           <table
             style={{
@@ -215,7 +218,7 @@ export function SalesReportPrintView({ report }: Props) {
           >
             <thead>
               <tr style={{ background: "#f8fafc" }}>
-                {["Revenue incl. VAT", "VAT Amount", "Revenue excl. VAT"].map(
+                {[t("revenueInclVat"), t("vatAmount"), t("revenueExclVat")].map(
                   (h) => (
                     <th
                       key={h}
@@ -260,7 +263,7 @@ export function SalesReportPrintView({ report }: Props) {
               color: "#1e293b",
             }}
           >
-            Payment Methods
+            {t("paymentMethods")}
           </h2>
           <table
             style={{
@@ -271,7 +274,12 @@ export function SalesReportPrintView({ report }: Props) {
           >
             <thead>
               <tr style={{ background: "#f8fafc" }}>
-                {["Method", "Orders", "Amount", "Share"].map((h) => (
+                {[
+                  t("print.methodHeader"),
+                  t("print.ordersHeader"),
+                  t("print.amountHeader"),
+                  t("print.shareHeader"),
+                ].map((h) => (
                   <th
                     key={h}
                     style={{
@@ -325,7 +333,7 @@ export function SalesReportPrintView({ report }: Props) {
               color: "#1e293b",
             }}
           >
-            Daily Sales
+            {t("dailySales")}
           </h2>
           <table
             style={{
@@ -336,7 +344,11 @@ export function SalesReportPrintView({ report }: Props) {
           >
             <thead>
               <tr style={{ background: "#f8fafc" }}>
-                {["Date", "Orders", "Revenue"].map((h) => (
+                {[
+                  t("print.dateHeader"),
+                  t("print.ordersHeader"),
+                  t("revenue"),
+                ].map((h) => (
                   <th
                     key={h}
                     style={{
@@ -377,7 +389,7 @@ export function SalesReportPrintView({ report }: Props) {
               {/* Totals row */}
               <tr style={{ fontWeight: 600, background: "#f1f5f9" }}>
                 <td style={{ padding: "6px 8px", border: "1px solid #e2e8f0" }}>
-                  Total
+                  {t("total")}
                 </td>
                 <td style={{ padding: "6px 8px", border: "1px solid #e2e8f0" }}>
                   {report.completed_orders}
@@ -402,7 +414,7 @@ export function SalesReportPrintView({ report }: Props) {
               color: "#1e293b",
             }}
           >
-            Top Selling Items
+            {t("topSellingItems")}
           </h2>
           <table
             style={{
@@ -413,7 +425,13 @@ export function SalesReportPrintView({ report }: Props) {
           >
             <thead>
               <tr style={{ background: "#f8fafc" }}>
-                {["#", "Item", "Category", "Qty", "Revenue"].map((h) => (
+                {[
+                  t("print.rankHeader"),
+                  t("print.itemHeader"),
+                  t("print.categoryHeader"),
+                  t("print.qtyHeader"),
+                  t("revenue"),
+                ].map((h) => (
                   <th
                     key={h}
                     style={{
@@ -485,7 +503,7 @@ export function SalesReportPrintView({ report }: Props) {
               color: "#1e293b",
             }}
           >
-            Category Breakdown
+            {t("categoryBreakdown")}
           </h2>
           <table
             style={{
@@ -496,7 +514,11 @@ export function SalesReportPrintView({ report }: Props) {
           >
             <thead>
               <tr style={{ background: "#f8fafc" }}>
-                {["Category", "Items Sold", "Revenue"].map((h) => (
+                {[
+                  t("print.categoryHeader"),
+                  t("print.itemsSoldHeader"),
+                  t("revenue"),
+                ].map((h) => (
                   <th
                     key={h}
                     style={{

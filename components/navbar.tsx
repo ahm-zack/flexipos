@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/mode-toggle";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 import { LogOut, Store, Users, Calendar } from "lucide-react";
 import Link from "next/link";
 import type { User } from "@/lib/user-service";
@@ -50,6 +51,7 @@ export function Navbar({ logoutAction, currentUser }: NavbarProps) {
         </div>
 
         <div className="flex items-center space-x-2">
+          <LocaleSwitcher />
           <ModeToggle />
           <form action={logoutAction}>
             <Button

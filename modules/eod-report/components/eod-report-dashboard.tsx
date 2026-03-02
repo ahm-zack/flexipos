@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -199,6 +200,7 @@ function Section({
 
 // ─── Report View ──────────────────────────────────────────────────────────────
 function ReportView({ report }: { report: SavedEODReport }) {
+  const t = useTranslations("reports");
   const topItems = Array.isArray(report.top_items)
     ? report.top_items.slice(0, 10)
     : [];
@@ -224,7 +226,7 @@ function ReportView({ report }: { report: SavedEODReport }) {
       <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-0.5 uppercase tracking-wide">
-            EOD Report
+            {t("eod.reportLabel")}
           </p>
           <h2 className="text-xl font-bold">{report.report_number}</h2>
           <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
@@ -236,34 +238,34 @@ function ReportView({ report }: { report: SavedEODReport }) {
         </div>
         <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 gap-1.5 px-3 py-1.5 text-xs font-medium">
           <CheckCircle2 className="h-3.5 w-3.5" />
-          Completed
+          {t("completed")}
         </Badge>
       </div>
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard
-          label="Total Revenue"
+          label={t("totalRevenue")}
           value={report.total_revenue}
           icon={TrendingUp}
           color="green"
           currency
         />
         <StatCard
-          label="Orders"
+          label={t("totalOrders")}
           value={report.completed_orders}
           icon={ShoppingCart}
           color="blue"
         />
         <StatCard
-          label="Avg. Order"
+          label={t("avgOrder")}
           value={report.average_order_value}
           icon={BarChart3}
           color="purple"
           currency
         />
         <StatCard
-          label="Cancelled"
+          label={t("cancelled")}
           value={report.cancelled_orders}
           icon={XCircle}
           color="red"
@@ -273,21 +275,21 @@ function ReportView({ report }: { report: SavedEODReport }) {
       {/* Revenue split */}
       <div className="grid grid-cols-3 gap-3">
         <StatCard
-          label="Cash"
+          label={t("cash")}
           value={report.cash_revenue}
           icon={Banknote}
           color="green"
           currency
         />
         <StatCard
-          label="Card"
+          label={t("card")}
           value={report.card_revenue}
           icon={CreditCard}
           color="blue"
           currency
         />
         <StatCard
-          label="Delivery"
+          label={t("delivery")}
           value={report.delivery_revenue}
           icon={Truck}
           color="orange"
@@ -297,12 +299,12 @@ function ReportView({ report }: { report: SavedEODReport }) {
 
       {/* VAT */}
       {vatUtils.shouldShowVAT() && (
-        <Section title="VAT Breakdown (15%)">
+        <Section title={t("eod.vatBreakdown")}>
           <div className="grid grid-cols-3 gap-6">
             {[
-              { label: "Revenue incl. VAT", value: report.total_revenue },
-              { label: "VAT Amount", value: report.total_vat },
-              { label: "Revenue excl. VAT", value: report.revenue_ex_vat },
+              { label: t("revenueInclVat"), value: report.total_revenue },
+              { label: t("vatAmount"), value: report.total_vat },
+              { label: t("revenueExclVat"), value: report.revenue_ex_vat },
             ].map(({ label, value }) => (
               <div key={label}>
                 <p className="text-xs text-muted-foreground mb-1">{label}</p>
@@ -318,7 +320,7 @@ function ReportView({ report }: { report: SavedEODReport }) {
 
       {/* Payment breakdown */}
       {payBreak.length > 0 && (
-        <Section title="Payment Methods" icon={CreditCard}>
+        <Section title={t("paymentMethods")} icon={CreditCard}>
           <div className="space-y-4">
             {payBreak.map((p) => {
               const Icon = PAY_ICONS[p.method] ?? Banknote;
@@ -363,7 +365,7 @@ function ReportView({ report }: { report: SavedEODReport }) {
 
       {/* Top items */}
       {topItems.length > 0 && (
-        <Section title="Top Selling Items" icon={Package}>
+        <Section title={t("topSellingItems")} icon={Package}>
           <div className="space-y-2">
             {topItems.map((item, i) => (
               <div
@@ -410,7 +412,7 @@ function ReportView({ report }: { report: SavedEODReport }) {
 
       {/* Category breakdown */}
       {catBreak.length > 0 && (
-        <Section title="Category Breakdown" icon={BarChart3}>
+        <Section title={t("categoryBreakdown")} icon={BarChart3}>
           <div className="space-y-2">
             {catBreak.map((cat, i) => (
               <div key={i} className="flex items-center justify-between py-1.5">
@@ -429,7 +431,7 @@ function ReportView({ report }: { report: SavedEODReport }) {
 
       {/* Hourly chart */}
       {hourly.some((h) => h.orderCount > 0) && (
-        <Section title="Hourly Activity" icon={Clock}>
+        <Section title={t("hourlyActivity")} icon={Clock}>
           <div className="flex items-end gap-px h-24">
             {hourly.map((h) => (
               <div
@@ -453,7 +455,7 @@ function ReportView({ report }: { report: SavedEODReport }) {
                     <span className="font-medium">{h.label}</span>
                     <span className="text-muted-foreground ml-1">·</span>
                     <span className="text-muted-foreground ml-1">
-                      {h.orderCount} orders
+                      {h.orderCount} {t("orders")}
                     </span>
                   </div>
                 )}
@@ -483,6 +485,7 @@ function HistoryRow({
   onSelect: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations("reports");
   return (
     <div
       className="group flex items-center gap-3 p-3.5 rounded-xl border border-border/50 bg-background hover:border-border hover:shadow-sm transition-all duration-150 cursor-pointer"
@@ -504,7 +507,7 @@ function HistoryRow({
           {fmt(report.total_revenue)}
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {report.completed_orders} orders
+          {report.completed_orders} {t("orders")}
         </p>
       </div>
       <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -531,6 +534,7 @@ function HistoryRow({
 
 // ─── Main dashboard ───────────────────────────────────────────────────────────
 export function EODReportDashboard() {
+  const t = useTranslations("reports");
   const [selectedReport, setSelectedReport] = useState<SavedEODReport | null>(
     null,
   );
@@ -546,26 +550,26 @@ export function EODReportDashboard() {
     generate.mutate(undefined, {
       onSuccess: (report) => {
         setSelectedReport(report);
-        toast.success(`${report.report_number} generated successfully`);
+        toast.success(
+          `${report.report_number} ${t("tabGenerate").toLowerCase()}`,
+        );
       },
       onError: (err) =>
         toast.error(
-          err instanceof Error ? err.message : "Failed to generate report",
+          err instanceof Error ? err.message : t("eod.failedGenerate"),
         ),
     });
   };
 
   const handleDelete = (reportId: string) => {
-    if (!confirm("Delete this EOD report? This cannot be undone.")) return;
+    if (!confirm(t("eod.confirmDelete"))) return;
     deleteReport.mutate(reportId, {
       onSuccess: () => {
-        toast.success("Report deleted");
+        toast.success(t("reportDeleted"));
         if (selectedReport?.id === reportId) setSelectedReport(null);
       },
       onError: (err) =>
-        toast.error(
-          err instanceof Error ? err.message : "Failed to delete report",
-        ),
+        toast.error(err instanceof Error ? err.message : t("eod.failedDelete")),
     });
   };
 
@@ -592,7 +596,7 @@ export function EODReportDashboard() {
             ) : (
               <FileText className="h-3.5 w-3.5" />
             )}
-            {tab === "generate" ? "Generate" : "Saved Reports"}
+            {tab === "generate" ? t("tabGenerate") : t("tabSaved")}
           </button>
         ))}
       </div>
@@ -608,7 +612,7 @@ export function EODReportDashboard() {
                 onClick={() => setSelectedReport(null)}
                 className="gap-1.5 -ml-2"
               >
-                <ArrowLeft className="h-3.5 w-3.5" /> Back
+                <ArrowLeft className="h-3.5 w-3.5" /> {t("back")}
               </Button>
               <ReportView report={selectedReport} />
             </>
@@ -619,10 +623,10 @@ export function EODReportDashboard() {
                   <div className="p-1.5 bg-primary/10 rounded-lg">
                     <Zap className="h-4 w-4 text-primary" />
                   </div>
-                  Smart EOD Generation
+                  {t("eod.smartEODTitle")}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Automatically picks up all orders since your last EOD report.
+                  {t("eod.smartEODDesc")}
                 </p>
               </CardHeader>
               <Separator
@@ -643,7 +647,7 @@ export function EODReportDashboard() {
                 ) : preview.error ? (
                   <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/5 rounded-lg p-3">
                     <AlertCircle className="h-4 w-4 shrink-0" />
-                    Failed to load preview data
+                    {t("eod.failedLoadPreview")}
                   </div>
                 ) : preview.data ? (
                   <>
@@ -652,7 +656,7 @@ export function EODReportDashboard() {
                       <div className="flex items-center gap-2 text-sm">
                         <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                         <span className="text-muted-foreground">
-                          Last report:{" "}
+                          {t("eod.lastReport")}{" "}
                           <span className="font-medium text-foreground">
                             {preview.data.lastReportNumber}
                           </span>
@@ -666,8 +670,7 @@ export function EODReportDashboard() {
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <AlertCircle className="h-4 w-4 shrink-0" />
-                        No previous reports — will cover all orders from the
-                        beginning
+                        {t("eod.noPreviousReports")}
                       </div>
                     )}
 
@@ -683,7 +686,7 @@ export function EODReportDashboard() {
                               {preview.data.pendingOrdersCount}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              orders
+                              {t("orders")}
                             </p>
                           </div>
                           <div>
@@ -692,7 +695,7 @@ export function EODReportDashboard() {
                               {fmt(preview.data.pendingRevenue)}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              revenue
+                              {t("revenue")}
                             </p>
                           </div>
                         </div>
@@ -708,8 +711,7 @@ export function EODReportDashboard() {
                       <div className="rounded-xl bg-amber-500/8 border border-amber-200 dark:border-amber-800 p-4 flex items-start gap-3 text-sm">
                         <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                         <p className="text-amber-700 dark:text-amber-400">
-                          No new orders since the last EOD report. Nothing to
-                          generate.
+                          {t("eod.noNewOrders")}
                         </p>
                       </div>
                     )}
@@ -725,12 +727,12 @@ export function EODReportDashboard() {
                         {generate.isPending ? (
                           <>
                             <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                            Generating…
+                            {t("eod.generatingBtn")}
                           </>
                         ) : (
                           <>
                             <Zap className="h-4 w-4 mr-2" />
-                            Generate EOD Report
+                            {t("eod.generateBtn")}
                           </>
                         )}
                       </Button>
@@ -768,7 +770,7 @@ export function EODReportDashboard() {
                 onClick={() => setSelectedReport(null)}
                 className="gap-1.5 -ml-2"
               >
-                <ArrowLeft className="h-3.5 w-3.5" /> Back to History
+                <ArrowLeft className="h-3.5 w-3.5" /> {t("backToHistory")}
               </Button>
               <ReportView report={selectedReport} />
             </>
@@ -786,7 +788,7 @@ export function EODReportDashboard() {
               ) : history.error ? (
                 <div className="flex items-center gap-2 text-destructive text-sm p-4 bg-destructive/5 rounded-xl">
                   <AlertCircle className="h-4 w-4" />
-                  Failed to load report history
+                  {t("failedLoadHistory")}
                 </div>
               ) : (history.data?.reports?.length ?? 0) === 0 ? (
                 <div className="text-center py-16 text-muted-foreground space-y-3">
@@ -794,10 +796,10 @@ export function EODReportDashboard() {
                     <FileText className="h-8 w-8 opacity-40" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium">No EOD reports yet</p>
-                    <p className="text-xs mt-1">
-                      Generate your first report from the Generate tab
+                    <p className="text-sm font-medium">
+                      {t("eod.noReportsYet")}
                     </p>
+                    <p className="text-xs mt-1">{t("eod.generateFirstHint")}</p>
                   </div>
                 </div>
               ) : (
@@ -818,7 +820,7 @@ export function EODReportDashboard() {
                         disabled={historyPage === 1}
                         onClick={() => setHistoryPage((p) => p - 1)}
                       >
-                        Previous
+                        {t("previous")}
                       </Button>
                       <span className="text-sm text-muted-foreground tabular-nums">
                         {historyPage} / {history.data?.totalPages}
@@ -831,7 +833,7 @@ export function EODReportDashboard() {
                         }
                         onClick={() => setHistoryPage((p) => p + 1)}
                       >
-                        Next
+                        {t("next")}
                       </Button>
                     </div>
                   )}

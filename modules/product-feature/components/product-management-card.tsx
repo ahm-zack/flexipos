@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export function ProductManagementCard({
   onEdit,
   onDelete,
 }: ProductManagementCardProps) {
+  const t = useTranslations("menu");
   const stockQty = product.stockQuantity ?? 0;
   const hasStock =
     product.stockQuantity !== undefined && product.stockQuantity !== null
@@ -39,7 +41,7 @@ export function ProductManagementCard({
         ) : (
           <div className="h-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <Package className="w-10 h-10 opacity-30" />
-            <span className="text-xs">No Image</span>
+            <span className="text-xs">{t("noImage")}</span>
           </div>
         )}
 
@@ -48,7 +50,7 @@ export function ProductManagementCard({
           {product.isFeatured && (
             <Badge className="bg-amber-500 hover:bg-amber-500 text-white text-[10px] px-1.5 py-0 gap-1">
               <Star className="w-2.5 h-2.5 fill-white" />
-              Featured
+              {t("featured")}
             </Badge>
           )}
           {product.modifiers && product.modifiers.length > 0 && (
@@ -57,7 +59,7 @@ export function ProductManagementCard({
               className="text-[10px] px-1.5 py-0 gap-1"
             >
               <Layers className="w-2.5 h-2.5" />
-              Modifiers
+              {t("modifiers")}
             </Badge>
           )}
         </div>
@@ -74,7 +76,7 @@ export function ProductManagementCard({
             <span
               className={`w-1.5 h-1.5 rounded-full ${product.isActive ? "bg-green-500" : "bg-muted-foreground"}`}
             />
-            {product.isActive ? "Active" : "Inactive"}
+            {product.isActive ? t("status.active") : t("status.inactive")}
           </span>
         </div>
       </div>
@@ -108,7 +110,7 @@ export function ProductManagementCard({
                 variant={hasStock ? "outline" : "destructive"}
                 className={`text-[10px] ${hasStock ? "border-green-500 text-green-700 dark:text-green-400" : ""}`}
               >
-                {hasStock ? `Stock: ${stockQty}` : "Out of Stock"}
+                {hasStock ? t("stock", { qty: stockQty }) : t("outOfStock")}
               </Badge>
             )}
         </div>
@@ -130,7 +132,7 @@ export function ProductManagementCard({
               className="flex-1 h-8 text-xs gap-1.5"
             >
               <Edit className="h-3.5 w-3.5" />
-              Edit
+              {t("edit")}
             </Button>
           )}
           {onDelete && (
@@ -141,7 +143,7 @@ export function ProductManagementCard({
               className="flex-1 h-8 text-xs gap-1.5 text-destructive hover:bg-destructive/10 hover:border-destructive/40"
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Delete
+              {t("delete")}
             </Button>
           )}
         </div>

@@ -7,6 +7,7 @@ import { useSearchStore } from "@/hooks/useSearchStore";
 import type { Product } from "../services/product-supabase-service";
 import { useStockStore } from "@/modules/stock/store/stock-store";
 import { useCartStore } from "@/modules/cart/store/cart-store";
+import { useTranslations } from "next-intl";
 
 interface ProductCashierViewProps {
   products: Product[];
@@ -20,6 +21,7 @@ export function ProductCashierView({
   error,
 }: ProductCashierViewProps) {
   const { filterProducts } = useSearchStore();
+  const t = useTranslations("pos");
   const initializeStock = useStockStore((s) => s.initializeStock);
 
   // Seed the global stock store whenever the product list changes (fresh from DB).
@@ -43,12 +45,14 @@ export function ProductCashierView({
           <div className="text-center py-12">
             <div className="text-4xl sm:text-6xl mb-4">❌</div>
             <h3 className="text-lg font-semibold text-red-600 mb-2">
-              Error loading products
+              {t("errorLoadingProducts")}
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground mb-4">
               {error.message}
             </p>
-            <Button onClick={() => window.location.reload()}>Try Again</Button>
+            <Button onClick={() => window.location.reload()}>
+              {t("tryAgain")}
+            </Button>
           </div>
         </div>
       </div>
@@ -71,10 +75,10 @@ export function ProductCashierView({
           <div className="text-center py-12">
             <div className="text-6xl mb-4">�</div>
             <h3 className="text-lg font-medium text-muted-foreground mb-2">
-              No products found
+              {t("noProducts")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Try adjusting your search or check back later.
+              {t("noProductsHint")}
             </p>
           </div>
         ) : (

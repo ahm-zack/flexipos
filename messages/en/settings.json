@@ -1,0 +1,29 @@
+{
+  "title": "Settings",
+  "businessSettings": "Restaurant Settings",
+  "businessName": "Restaurant Name",
+  "businessLogo": "Business Logo",
+  "currency": "Currency",
+  "timezone": "Timezone",
+  "taxRate": "Tax Rate",
+  "serviceCharge": "Service Charge",
+  "receiptSettings": "Receipt Settings",
+  "receiptHeader": "Receipt Header",
+  "receiptFooter": "Receipt Footer",
+  "printReceipt": "Auto-print Receipt",
+  "language": "Language",
+  "theme": "Theme",
+  "systemSettings": "System Settings",
+  "themes": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "Auto (Light/Dark)"
+  },
+  "languages": {
+    "en": "English",
+    "ar": "Arabic"
+  },
+  "save": "Save Settings",
+  "saved": "Settings saved!",
+  "usd": "USD ($)"
+}

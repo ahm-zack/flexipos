@@ -9,8 +9,10 @@ import { useEventDiscountStore } from "@/hooks/use-event-discount";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Percent, Calendar, Settings } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function EventDiscountPage() {
+  const t = useTranslations("events");
   const {
     isActive,
     discountPercentage,
@@ -28,42 +30,40 @@ export default function EventDiscountPage() {
   const handleUpdateDiscount = () => {
     const percentage = parseFloat(tempPercentage);
     if (isNaN(percentage) || percentage < 0 || percentage > 100) {
-      toast.error("Please enter a valid percentage between 0 and 100");
+      toast.error(t("toasts.invalidPercentage"));
       return;
     }
 
     if (!tempEventName.trim()) {
-      toast.error("Please enter an event name");
+      toast.error(t("toasts.missingName"));
       return;
     }
 
     updateDiscount(percentage, tempEventName.trim());
-    toast.success("Event discount updated successfully!");
+    toast.success(t("toasts.updated"));
   };
 
   const handleActivate = () => {
     if (!tempEventName.trim()) {
-      toast.error("Please enter an event name before activating");
+      toast.error(t("toasts.missingNameBeforeActivate"));
       return;
     }
 
     const percentage = parseFloat(tempPercentage);
     if (isNaN(percentage) || percentage <= 0) {
-      toast.error("Please set a valid discount percentage before activating");
+      toast.error(t("toasts.missingPercentageBeforeActivate"));
       return;
     }
 
     // Update first, then activate
     updateDiscount(percentage, tempEventName.trim());
     activate();
-    toast.success(
-      `Event discount "${tempEventName}" activated at ${percentage}%!`
-    );
+    toast.success(t("toasts.activated", { name: tempEventName, percentage }));
   };
 
   const handleDeactivate = () => {
     deactivate();
-    toast.success("Event discount deactivated");
+    toast.success(t("toasts.deactivated"));
   };
 
   return (
@@ -72,7 +72,7 @@ export default function EventDiscountPage() {
         <div className="flex items-center gap-2">
           <Calendar className="h-6 w-6" />
           <h1 className="text-2xl sm:text-3xl font-bold">
-            Event Discount Management
+            {t("title")}
           </h1>
         </div>
 
@@ -81,32 +81,30 @@ export default function EventDiscountPage() {
           {/* How It Works Card */}
           <Card>
             <CardHeader>
-              <CardTitle>How It Works</CardTitle>
+              <CardTitle>{t("howItWorks")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="text-sm space-y-2">
                 <p>
-                  • <strong>Event Name:</strong> This will be displayed on
-                  receipts and order summaries
+                  &bull; <strong>{t("eventName")}:</strong>{" "}
+                  {t("howItWorksItems.eventName")}
                 </p>
                 <p>
-                  • <strong>Discount Percentage:</strong> Applied automatically
-                  to all orders when active
+                  &bull; <strong>{t("discountPercentage")}:</strong>{" "}
+                  {t("howItWorksItems.percentage")}
                 </p>
                 <p>
-                  • <strong>Global Application:</strong> The discount applies
-                  site-wide to all cart operations
+                  &bull; <strong>{t("globalApplication")}:</strong>{" "}
+                  {t("howItWorksItems.global")}
                 </p>
                 <p>
-                  • <strong>Order History:</strong> All orders will record the
-                  event discount for tracking
+                  &bull; <strong>{t("orderHistory")}:</strong>{" "}
+                  {t("howItWorksItems.history")}
                 </p>
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <p className="text-sm text-blue-800">
-                  <strong>💡 Tip:</strong> Make sure to set both the event name
-                  and percentage before activating. The discount will be applied
-                  immediately to all new orders.
+                  <strong>{t("tipLabel")}</strong> {t("tip")}
                 </p>
               </div>
             </CardContent>
@@ -117,15 +115,15 @@ export default function EventDiscountPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings className="h-5 w-5" />
-                Current Status
+                {t("currentStatus")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <p className="font-medium">Event Discount Status</p>
+                  <p className="font-medium">{t("statusLabel")}</p>
                   <p className="text-sm text-muted-foreground">
-                    {isActive ? "Currently active" : "Currently inactive"}
+                    {isActive ? t("currentlyActive") : t("currentlyInactive")}
                   </p>
                 </div>
                 <div
@@ -135,7 +133,7 @@ export default function EventDiscountPage() {
                       : "bg-gray-100 text-gray-600 border border-gray-200"
                   }`}
                 >
-                  {isActive ? "ACTIVE" : "INACTIVE"}
+                  {isActive ? t("active") : t("inactive")}
                 </div>
               </div>
 
@@ -144,12 +142,11 @@ export default function EventDiscountPage() {
                   <div className="flex items-center gap-2 text-green-800">
                     <Percent className="h-4 w-4" />
                     <span className="font-medium">
-                      &ldquo;{eventName}&rdquo; - {discountPercentage}% discount
-                      active
+                      {t("discountActive", { name: eventName, percentage: discountPercentage })}
                     </span>
                   </div>
                   <p className="text-sm text-green-600 mt-1">
-                    All orders will automatically receive this discount
+                    {t("allOrdersDiscount")}
                   </p>
                 </div>
               )}
@@ -162,26 +159,26 @@ export default function EventDiscountPage() {
           {/* Configuration Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Event Configuration</CardTitle>
+              <CardTitle>{t("configuration")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="eventName">Event Name</Label>
+                <Label htmlFor="eventName">{t("eventName")}</Label>
                 <Input
                   id="eventName"
-                  placeholder="e.g., Grand Opening, Black Friday, etc."
+                  placeholder={t("eventNamePlaceholder")}
                   value={tempEventName}
                   onChange={(e) => setTempEventName(e.target.value)}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="discountPercentage">Discount Percentage</Label>
+                <Label htmlFor="discountPercentage">{t("discountPercentage")}</Label>
                 <div className="relative">
                   <Input
                     id="discountPercentage"
                     type="number"
-                    placeholder="Enter percentage (0-100)"
+                    placeholder={t("percentagePlaceholder")}
                     min="0"
                     max="100"
                     step="0.1"
@@ -193,7 +190,7 @@ export default function EventDiscountPage() {
               </div>
 
               <Button onClick={handleUpdateDiscount} className="w-full">
-                Update Discount Settings
+                {t("updateSettings")}
               </Button>
             </CardContent>
           </Card>
@@ -201,16 +198,16 @@ export default function EventDiscountPage() {
           {/* Control Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Activation Control</CardTitle>
+              <CardTitle>{t("activationControl")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex-1">
                   <Label className="text-base font-medium">
-                    Event Discount Active
+                    {t("toggleLabel")}
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Toggle to activate/deactivate the event discount
+                    {t("toggleDesc")}
                   </p>
                 </div>
                 <div className="flex justify-center sm:justify-end">
@@ -234,7 +231,7 @@ export default function EventDiscountPage() {
                   className="w-full"
                   variant={isActive ? "secondary" : "default"}
                 >
-                  Activate Event
+                  {t("activate")}
                 </Button>
                 <Button
                   onClick={handleDeactivate}
@@ -242,7 +239,7 @@ export default function EventDiscountPage() {
                   className="w-full"
                   variant={isActive ? "destructive" : "secondary"}
                 >
-                  Deactivate Event
+                  {t("deactivate")}
                 </Button>
               </div>
             </CardContent>

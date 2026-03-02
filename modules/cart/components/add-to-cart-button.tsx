@@ -6,6 +6,7 @@ import { useCart } from "../hooks/use-cart";
 import { CartItem } from "../types/cart.types";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface AddToCartButtonProps {
   item: Omit<CartItem, "quantity">;
@@ -23,6 +24,7 @@ export function AddToCartButton({
   showIcon = true,
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
+  const t = useTranslations("pos");
   const [isAdded, setIsAdded] = useState(false);
 
   const handleAddToCart = () => {
@@ -43,16 +45,16 @@ export function AddToCartButton({
       className={cn(
         "transition-all duration-200 active:scale-95",
         isAdded && "bg-green-600 hover:bg-green-700",
-        className
+        className,
       )}
     >
       {showIcon &&
         (isAdded ? (
-          <Check className="h-4 w-4 mr-2" />
+          <Check className="h-4 w-4 me-2" />
         ) : (
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 me-2" />
         ))}
-      {isAdded ? "Added!" : "Add to Cart"}
+      {isAdded ? t("added") : t("addToCart")}
     </Button>
   );
 }

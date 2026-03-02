@@ -20,6 +20,7 @@ import {
   Truck,
 } from "lucide-react";
 import { getOrderStatusText } from "@/lib/orders/utils";
+import type { Order as ApiOrder } from "@/lib/orders";
 import { EditOrderDialog } from "@/components/edit-order-dialog";
 import { cn } from "@/lib/utils";
 import { useOrdersContext } from "../contexts/orders-context";
@@ -28,6 +29,7 @@ import React, { useState, useMemo } from "react";
 import { useOrders } from "../hooks/use-orders";
 import { Dialog } from "@/components/ui/dialog";
 import { RestaurantReceipt } from "@/components/restaurant-receipt";
+import { useTranslations } from "next-intl";
 // Using database types directly with snake_case field names
 
 // Type for saved modifiers in order items
@@ -39,6 +41,7 @@ interface SavedModifier {
 }
 
 export function OrdersList() {
+  const t = useTranslations("orders");
   const {
     // Context
     filters,
@@ -97,21 +100,38 @@ export function OrdersList() {
   ) => {
     switch (paymentMethod) {
       case "cash":
-        return { icon: Banknote, text: "Cash", color: "text-green-600" };
+        return {
+          icon: Banknote,
+          text: t("paymentMethods.cash"),
+          color: "text-green-600",
+        };
       case "card":
-        return { icon: CreditCard, text: "Card", color: "text-blue-600" };
+        return {
+          icon: CreditCard,
+          text: t("paymentMethods.card"),
+          color: "text-blue-600",
+        };
       case "mixed":
-        return { icon: Split, text: "Mixed", color: "text-purple-600" };
-      case "delivery":
+        return {
+          icon: Split,
+          text: t("paymentMethods.mixed"),
+          color: "text-purple-600",
+        };
+      case "delivery": {
         const platformText = deliveryPlatform
           ? formatDeliveryPlatform(deliveryPlatform)
           : "";
         const displayText = platformText
-          ? `Delivery(${platformText})`
-          : "Delivery";
+          ? `${t("paymentMethods.delivery")}(${platformText})`
+          : t("paymentMethods.delivery");
         return { icon: Truck, text: displayText, color: "text-yellow-600" };
+      }
       default:
-        return { icon: Banknote, text: "Cash", color: "text-green-600" };
+        return {
+          icon: Banknote,
+          text: t("paymentMethods.cash"),
+          color: "text-green-600",
+        };
     }
   };
 
@@ -119,11 +139,11 @@ export function OrdersList() {
   const formatDeliveryPlatform = (platform: string): string => {
     switch (platform) {
       case "keeta":
-        return "Keeta";
+        return t("deliveryPlatforms.keeta");
       case "hunger_station":
-        return "Hunger Station";
+        return t("deliveryPlatforms.hunger_station");
       case "jahez":
-        return "Jahez";
+        return t("deliveryPlatforms.jahez");
       default:
         return platform;
     }
@@ -221,13 +241,13 @@ export function OrdersList() {
   if (error) {
     return (
       <div className="p-6">
-        <h1 className="text-3xl font-bold mb-6">Orders</h1>
+        <h1 className="text-3xl font-bold mb-6">{t("title")}</h1>
         <div className="flex items-center justify-center min-h-[400px]">
           <Card className="w-full max-w-sm border-red-200 dark:border-red-800">
             <CardContent className="p-8 text-center">
               <div className="text-4xl mb-4">⚠️</div>
               <h3 className="text-lg font-semibold text-red-700 dark:text-red-300 mb-2">
-                Error Loading Orders
+                {t("errorLoading")}
               </h3>
               <p className="text-sm text-red-600 dark:text-red-400">
                 {error.message}
@@ -293,12 +313,12 @@ export function OrdersList() {
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleEditOrder(order as any);
+                              handleEditOrder(order as unknown as ApiOrder);
                             }}
                             className="cursor-pointer"
                           >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
+                            <Edit className="me-2 h-4 w-4" />
+                            {t("actions.edit")}
                           </DropdownMenuItem>
                         )}
                         {/* Print is always available for all orders */}
@@ -309,8 +329,8 @@ export function OrdersList() {
                           }}
                           className="cursor-pointer"
                         >
-                          <Printer className="mr-2 h-4 w-4" />
-                          Print
+                          <Printer className="me-2 h-4 w-4" />
+                          {t("actions.print")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -319,7 +339,9 @@ export function OrdersList() {
 
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Total</span>
+                    <span className="text-sm text-muted-foreground">
+                      {t("total")}
+                    </span>
                     <span className="text-lg font-bold flex items-center gap-1 transition-transform duration-200 group-hover:scale-105">
                       <SaudiRiyalSymbol size={16} />
                       <span className="text-green-600">
@@ -331,7 +353,9 @@ export function OrdersList() {
                   {/* Discount Information */}
                   {order.discount_amount && order.discount_amount > 0 && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Discount</span>
+                      <span className="text-muted-foreground">
+                        {t("discount")}
+                      </span>
                       <div className="flex items-center gap-1">
                         <span className="text-red-600 font-medium">
                           -{order.discount_amount.toFixed(2)}
@@ -351,14 +375,14 @@ export function OrdersList() {
                   )}
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Date</span>
+                    <span className="text-muted-foreground">{t("date")}</span>
                     <span className="text-foreground">
                       {new Date(order.created_at).toLocaleDateString()}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Time</span>
+                    <span className="text-muted-foreground">{t("time")}</span>
                     <span className="text-foreground">
                       {new Date(order.created_at).toLocaleTimeString([], {
                         hour: "2-digit",
@@ -369,7 +393,9 @@ export function OrdersList() {
 
                   {order.customer_name && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Customer</span>
+                      <span className="text-muted-foreground">
+                        {t("customer")}
+                      </span>
                       <span className="text-foreground truncate max-w-[150px]">
                         {order.customer_name}
                       </span>
@@ -380,7 +406,9 @@ export function OrdersList() {
 
                   {/* Payment Method Display */}
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Payment</span>
+                    <span className="text-muted-foreground">
+                      {t("payment")}
+                    </span>
                     <div className="flex items-center gap-1">
                       {(() => {
                         const paymentDisplay = getPaymentMethodDisplay(
@@ -408,7 +436,7 @@ export function OrdersList() {
                     <div className="pt-2 border-t">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-muted-foreground">
-                          Items
+                          {t("items")}
                         </span>
                         <span className="text-xs bg-muted px-2 py-1 rounded-full">
                           {order.items.length}
@@ -474,8 +502,10 @@ export function OrdersList() {
                                 className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded transition-colors duration-150"
                               >
                                 {expandedOrders.has(order.id)
-                                  ? "Show less"
-                                  : `+${order.items.length - 2} more`}
+                                  ? t("showLess")
+                                  : t("showMoreItems", {
+                                      count: order.items.length - 2,
+                                    })}
                               </button>
                             </div>
                           )}
@@ -505,13 +535,13 @@ export function OrdersList() {
                 <>
                   <div className="text-4xl mb-4">🔍</div>
                   <h3 className="text-lg font-semibold mb-2">
-                    No matching orders
+                    {t("noMatchingOrders")}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    No orders match your current search and filter criteria.
+                    {t("noMatchingOrdersDesc")}
                   </p>
                   <Button variant="outline" onClick={clearAllFilters}>
-                    Clear filters
+                    {t("clearFilters")}
                   </Button>
                 </>
               ) : (
@@ -519,10 +549,10 @@ export function OrdersList() {
                 <>
                   <div className="text-4xl mb-4">�📦</div>
                   <h3 className="text-lg font-semibold mb-2">
-                    No orders found
+                    {t("noOrders")}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Orders will appear here once customers make purchases.
+                    {t("noOrdersDesc")}
                   </p>
                 </>
               )}

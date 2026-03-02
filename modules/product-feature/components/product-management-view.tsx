@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Search,
   Plus,
@@ -43,6 +44,7 @@ export function ProductManagementView({
   categoryId,
 }: ProductManagementViewProps) {
   const router = useRouter();
+  const t = useTranslations("menu");
   const deleteProductMutation = useDeleteProduct();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,12 +78,12 @@ export function ProductManagementView({
 
     try {
       await deleteProductMutation.mutateAsync(productToDelete.id);
-      toast.success(`${productToDelete.name} deleted successfully`);
+      toast.success(t("toasts.deleteSuccess", { name: productToDelete.name }));
       setDeleteDialogOpen(false);
       setProductToDelete(null);
     } catch (error) {
       console.error("Error deleting product:", error);
-      toast.error("Failed to delete product");
+      toast.error(t("toasts.deleteFailed"));
     }
   };
 
@@ -120,17 +122,17 @@ export function ProductManagementView({
             className="gap-1.5 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            All Categories
+            {t("allCategories")}
           </Button>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-1">
-              {categoryName}&nbsp;Products
+              {t("categoryProducts", { name: categoryName ?? "" })}
             </h1>
             <p className="text-muted-foreground text-sm">
-              Manage products, add new items, and update details.
+              {t("manageProductsDesc")}
             </p>
           </div>
 
@@ -139,7 +141,7 @@ export function ProductManagementView({
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            Add Product
+            {t("addProduct")}
           </Button>
         </div>
 
@@ -148,7 +150,7 @@ export function ProductManagementView({
           <div className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2">
             <Package className="w-4 h-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-xs text-muted-foreground">{t("total")}</p>
               <p className="text-lg font-bold leading-none">
                 {products.length}
               </p>
@@ -157,14 +159,18 @@ export function ProductManagementView({
           <div className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2">
             <CheckCircle2 className="w-4 h-4 text-green-500" />
             <div>
-              <p className="text-xs text-muted-foreground">Active</p>
+              <p className="text-xs text-muted-foreground">
+                {t("status.active")}
+              </p>
               <p className="text-lg font-bold leading-none">{activeCount}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2">
             <XCircle className="w-4 h-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Inactive</p>
+              <p className="text-xs text-muted-foreground">
+                {t("status.inactive")}
+              </p>
               <p className="text-lg font-bold leading-none">{inactiveCount}</p>
             </div>
           </div>
@@ -174,7 +180,7 @@ export function ProductManagementView({
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Search products..."
+              placeholder={t("searchProducts")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -194,10 +200,11 @@ export function ProductManagementView({
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Delete Product</DialogTitle>
+              <DialogTitle>{t("confirmDeleteProductTitle")}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete &quot;{productToDelete?.name}
-                &quot;? This action cannot be undone.
+                {t("confirmDeleteProductDesc", {
+                  name: productToDelete?.name ?? "",
+                })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -205,14 +212,14 @@ export function ProductManagementView({
                 variant="outline"
                 onClick={() => setDeleteDialogOpen(false)}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDeleteConfirm}
                 disabled={deleteProductMutation.isPending}
               >
-                {deleteProductMutation.isPending ? "Deleting..." : "Delete"}
+                {deleteProductMutation.isPending ? t("deleting") : t("delete")}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -48,6 +48,7 @@ import { useEventDiscountStore } from "@/hooks/use-event-discount";
 import { ParkOrderDialog } from "@/components/park-order-dialog";
 import { ParkedOrdersPanel } from "@/components/parked-orders-panel";
 import { ParkedOrder, useParkedOrders } from "@/hooks/use-parked-orders";
+import { useTranslations } from "next-intl";
 
 interface CartPanelProps {
   className?: string;
@@ -91,6 +92,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
 
   // Parked orders hook to get count for notification badge
   const { parkedOrders } = useParkedOrders();
+  const t = useTranslations("pos");
 
   const [paymentMethod, setPaymentMethod] = useState<
     "cash" | "card" | "mixed" | "delivery"
@@ -177,9 +179,10 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
     openCart();
 
     toast.success(
-      `Order restored${order.customerName ? ` for ${order.customerName}` : ""}`,
+      t("toasts.orderRestored") +
+        (order.customerName ? ` for ${order.customerName}` : ""),
       {
-        description: "All items and settings have been restored to your cart.",
+        description: t("toasts.orderRestoredDesc"),
       },
     );
   };
@@ -264,7 +267,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
   // Handle order creation
   const handleProceedToCheckout = async () => {
     if (!currentUser) {
-      toast.error("Please log in to create an order");
+      toast.error(t("toasts.loginRequired"));
       return;
     }
 
@@ -298,7 +301,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
     overrideDeliveryPlatform?: "keeta" | "hunger_station" | "jahez",
   ) => {
     if (!currentUser) {
-      toast.error("Please log in to create an order");
+      toast.error(t("toasts.loginRequired"));
       return;
     }
 
@@ -374,37 +377,38 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
     createOrder.mutate(orderData, {
       onSuccess: async (data) => {
         if (!data) {
-          toast.error("Order created but no data returned");
+          toast.error(t("toasts.noData"));
           return;
         }
         // Show payment-specific notifications
         if (paymentMethod === "cash" && changeAmount > 0) {
           toast.success(
-            `Order #${
-              data.orderNumber
-            } created! Cash received: ${cashReceived.toFixed(
-              2,
-            )} SAR | Change: ${changeAmount.toFixed(2)} SAR`,
+            t("toasts.orderCreatedCash", {
+              number: data.orderNumber,
+              cash: cashReceived.toFixed(2),
+              change: changeAmount.toFixed(2),
+            }),
             { duration: 8000 },
           );
         } else if (paymentMethod === "mixed") {
           toast.success(
-            `Order #${
-              data.orderNumber
-            } created! Mixed Payment - Cash: ${mixedCashAmount.toFixed(
-              2,
-            )} SAR | Card: ${mixedCardAmount.toFixed(2)} SAR`,
+            t("toasts.orderCreatedMixed", {
+              number: data.orderNumber,
+              cash: mixedCashAmount.toFixed(2),
+              card: mixedCardAmount.toFixed(2),
+            }),
             { duration: 8000 },
           );
         } else if (paymentMethod === "delivery") {
           toast.success(
-            `Order #${
-              data.orderNumber
-            } created! 🚚 Delivery Order - Total: ${finalTotal.toFixed(2)} SAR`,
+            t("toasts.orderCreatedDelivery", {
+              number: data.orderNumber,
+              total: finalTotal.toFixed(2),
+            }),
             { duration: 8000 },
           );
         } else {
-          toast.success(`Order #${data.orderNumber} created successfully!`);
+          toast.success(t("toasts.orderCreated", { number: data.orderNumber }));
         }
 
         // Update customer purchase totals if customer is selected
@@ -444,7 +448,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
           } catch (error) {
             console.error("Error updating customer purchases:", error);
             // Don't fail the order creation for this
-            toast.warning("Order created but customer stats update failed");
+            toast.warning(t("toasts.customerStatsFailed"));
           }
         }
 
@@ -503,7 +507,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
         console.log("Order created and PDF downloaded:", data);
       },
       onError: (error) => {
-        toast.error(`Failed to create order: ${error.message}`);
+        toast.error(t("toasts.orderCreateFailed", { error: error.message }));
       },
     });
   };
@@ -588,7 +592,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
           <div className="flex items-center justify-between p-6 pb-3">
             <div className="flex items-center gap-2">
               <ShoppingBag className="h-5 w-5" />
-              <h2 className="text-xl font-semibold">Your Order</h2>
+              <h2 className="text-xl font-semibold">{t("cart.title")}</h2>
             </div>
             {(!sidebarMode || onClose) && (
               <Button
@@ -598,7 +602,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                 className="h-8 w-8 p-0"
               >
                 <X className="h-4 w-4" />
-                <span className="sr-only">Close cart</span>
+                <span className="sr-only">{t("cart.closeAria")}</span>
               </Button>
             )}
           </div>
@@ -633,8 +637,8 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                     className="flex-1"
                     disabled={cart.items.length === 0}
                   >
-                    <ParkingCircle className="h-4 w-4 mr-2" />
-                    Park Order
+                    <ParkingCircle className="h-4 w-4 me-2" />
+                    {t("cart.parkOrder")}
                   </Button>
                 }
               />
@@ -643,8 +647,8 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                 trigger={
                   <div className="relative flex-1">
                     <Button variant="outline" size="sm" className="w-full">
-                      <ParkingCircle className="h-4 w-4 mr-2" />
-                      Parked
+                      <ParkingCircle className="h-4 w-4 me-2" />
+                      {t("cart.parked")}
                     </Button>
                     {parkedOrders.length > 0 && (
                       <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium animate-pulse">
@@ -663,12 +667,12 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
           {cart.items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <ShoppingBag className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">Your cart is empty</h3>
+              <h3 className="text-lg font-medium mb-2">{t("cart.empty")}</h3>
               <p className="text-muted-foreground mb-4">
-                Add some delicious items to get started!
+                {t("cart.emptySubtitle")}
               </p>
               <Button onClick={closeCart} variant="outline">
-                Continue Shopping
+                {t("cart.continueShopping")}
               </Button>
             </div>
           ) : (
@@ -786,7 +790,9 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                       className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Remove {item.name}</span>
+                      <span className="sr-only">
+                        {t("cart.removeItemAria", { name: item.name })}
+                      </span>
                     </Button>
                   </div>
                 </Card>
@@ -803,8 +809,8 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                   }}
                   className="w-full text-muted-foreground hover:text-destructive"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear Cart
+                  <Trash2 className="h-4 w-4 me-2" />
+                  {t("cart.clearCart")}
                 </Button>
               )}
             </div>
@@ -820,7 +826,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                 <div className="flex items-center gap-2">
                   <User className="h-3.5 w-3.5 text-primary" />
                   <Label className="text-xs font-medium text-foreground">
-                    Customer Info
+                    {t("cart.customerInfo")}
                   </Label>
                   {customerName && (
                     <span className="text-xs text-muted-foreground">
@@ -860,7 +866,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                     <div className="relative flex-1">
                       <Input
                         type="tel"
-                        placeholder="Phone"
+                        placeholder={t("cart.phonePlaceholder")}
                         value={customerPhone}
                         onChange={(e) => setCustomerPhone(e.target.value)}
                         className="h-8 text-xs placeholder:text-xs w-full"
@@ -898,7 +904,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                       ) : (
                         <Input
                           type="text"
-                          placeholder="Name"
+                          placeholder={t("cart.namePlaceholder")}
                           value={customerName}
                           onChange={(e) => setCustomerName(e.target.value)}
                           className="h-8 text-xs placeholder:text-xs w-full"
@@ -914,13 +920,13 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                         📍
                       </span>
                       <span className="text-slate-800 dark:text-slate-200 truncate">
-                        {customerAddress || "No address on file"}
+                        {customerAddress || t("cart.noAddress")}
                       </span>
                     </div>
                   ) : (
                     <Input
                       type="text"
-                      placeholder="Address (optional)"
+                      placeholder={t("cart.addressPlaceholder")}
                       value={customerAddress}
                       onChange={(e) => setCustomerAddress(e.target.value)}
                       className="h-8 text-xs placeholder:text-xs w-full"
@@ -929,7 +935,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
 
                   {customerPhone.length > 0 && customerPhone.length < 4 && (
                     <p className="text-xs text-amber-600 dark:text-amber-400">
-                      Enter at least 4 digits
+                      {t("cart.phoneMinLength")}
                     </p>
                   )}
                 </div>
@@ -942,7 +948,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                 <div className="flex items-center gap-2">
                   <Percent className="h-3.5 w-3.5 text-primary" />
                   <Label className="text-xs font-medium text-foreground">
-                    Discount
+                    {t("cart.discount")}
                   </Label>
                   {discountAmount > 0 && (
                     <span className="text-xs text-green-600 font-medium">
@@ -1031,7 +1037,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                   {/* Discount Preview */}
                   {discountAmount > 0 && (
                     <div className="flex items-center justify-between text-xs text-green-600 bg-green-50 dark:bg-green-950/50 px-2 py-1 rounded">
-                      <span>Discount Applied:</span>
+                      <span>{t("cart.discountApplied")}</span>
                       <span className="font-medium">
                         -{discountAmount.toFixed(2)} SAR
                       </span>
@@ -1046,7 +1052,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                       onClick={() => setDiscountValue("")}
                       className="w-full h-6 text-xs text-muted-foreground hover:text-red-600"
                     >
-                      Clear Discount
+                      {t("cart.clearDiscount")}
                     </Button>
                   )}
                 </div>
@@ -1054,7 +1060,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Subtotal ({cart.itemCount} items)</span>
+                <span>{t("cart.subtotal", { count: cart.itemCount })}</span>
                 <PriceDisplay price={cart.total} symbolSize={14} />
               </div>
 
@@ -1065,7 +1071,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                     Order Discount (
                     {discountType === "percentage"
                       ? `${discountValue}%`
-                      : "Amount"}
+                      : t("cart.amount")}
                     )
                   </span>
                   <span className="flex items-center">
@@ -1107,7 +1113,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
               </div> */}
               <Separator />
               <div className="flex justify-between font-semibold text-lg">
-                <span>Total</span>
+                <span>{t("cart.total")}</span>
                 <PriceDisplay
                   price={finalTotal}
                   symbolSize={16}
@@ -1118,7 +1124,9 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
 
             {/* Payment Method Selection */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Payment Method</Label>
+              <Label className="text-sm font-medium">
+                {t("cart.paymentMethod")}
+              </Label>
               <RadioGroup
                 value={paymentMethod}
                 onValueChange={(value) =>
@@ -1143,7 +1151,9 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                     <RadioGroupItem value="cash" id="cash" />
                     <div className="flex items-center gap-2 flex-1">
                       <Banknote className="h-4 w-4" />
-                      <span className="text-xs font-medium">Cash</span>
+                      <span className="text-xs font-medium">
+                        {t("cart.cash")}
+                      </span>
                     </div>
                   </Label>
                 </div>
@@ -1162,7 +1172,9 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                     <RadioGroupItem value="card" id="card" />
                     <div className="flex items-center gap-2 flex-1">
                       <CreditCard className="h-4 w-4" />
-                      <span className="text-xs font-medium">Card</span>
+                      <span className="text-xs font-medium">
+                        {t("cart.card")}
+                      </span>
                     </div>
                   </Label>
                 </div>
@@ -1181,7 +1193,9 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                     <RadioGroupItem value="mixed" id="mixed" />
                     <div className="flex items-center gap-2 flex-1">
                       <Split className="h-4 w-4" />
-                      <span className="text-xs font-medium">Mixed</span>
+                      <span className="text-xs font-medium">
+                        {t("cart.mixed")}
+                      </span>
                     </div>
                   </Label>
                 </div>
@@ -1200,7 +1214,9 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
                     <RadioGroupItem value="delivery" id="delivery" />
                     <div className="flex items-center gap-2 flex-1">
                       <Truck className="h-4 w-4" />
-                      <span className="text-xs font-medium">Delivery</span>
+                      <span className="text-xs font-medium">
+                        {t("cart.delivery")}
+                      </span>
                     </div>
                   </Label>
                 </div>
@@ -1214,12 +1230,12 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
               disabled={createOrder.isPending || userLoading || !currentUser}
             >
               {createOrder.isPending
-                ? "Creating Order..."
+                ? t("cart.creatingOrder")
                 : userLoading
-                  ? "Loading..."
+                  ? t("cart.loading")
                   : !currentUser
-                    ? "Please Login to Checkout"
-                    : "Proceed to Checkout"}
+                    ? t("cart.loginRequired")
+                    : t("cart.checkout")}
             </Button>
           </div>
         )}
