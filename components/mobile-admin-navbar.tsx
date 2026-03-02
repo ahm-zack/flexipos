@@ -374,7 +374,10 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
             {activeDropdown === "cart" && (
               <div className="p-0 overflow-hidden rounded-2xl border border-border">
                 <div className="max-h-[85vh] overflow-y-auto">
-                  <CartPanel sidebarMode />
+                  <CartPanel
+                    sidebarMode
+                    onClose={() => setActiveDropdown(null)}
+                  />
                 </div>
               </div>
             )}

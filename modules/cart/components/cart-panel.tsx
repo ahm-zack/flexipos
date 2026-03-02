@@ -53,6 +53,8 @@ interface CartPanelProps {
   className?: string;
   /** When true the panel renders inline (no fixed overlay, always visible) */
   sidebarMode?: boolean;
+  /** Called when the X close button is clicked (use in mobile dropdown to close the panel) */
+  onClose?: () => void;
 }
 
 export function ReceiptModal({
@@ -75,7 +77,7 @@ export function ReceiptModal({
   );
 }
 
-export function CartPanel({ className, sidebarMode }: CartPanelProps) {
+export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
   const {
     cart,
     isOpen,
@@ -588,15 +590,17 @@ export function CartPanel({ className, sidebarMode }: CartPanelProps) {
               <ShoppingBag className="h-5 w-5" />
               <h2 className="text-xl font-semibold">Your Order</h2>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={closeCart}
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close cart</span>
-            </Button>
+            {(!sidebarMode || onClose) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose ?? closeCart}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close cart</span>
+              </Button>
+            )}
           </div>
 
           {/* Park Order and Parked Orders Section - Always Visible */}
