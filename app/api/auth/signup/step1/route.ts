@@ -107,15 +107,18 @@ export async function POST(request: Request) {
         // Step 2: Create/update user record in users table
         // The on_auth_user_created trigger may have already inserted this row,
         // so use upsert to avoid a duplicate-key conflict.
-        console.log('📝 Upserting user record in users table');
+        console.log('📝 Upserting user record in users table for userId:', userId);
         try {
-            const { error: insertError } = await adminClient.from('users').upsert({
+            const upsertPayload = {
                 id: userId,
                 email: authData.user.email!,
-                full_name: email.split('@')[0], // Temporary name, can be updated later
+                full_name: email.split('@')[0],
                 role: 'admin',
                 is_active: true,
-            }, { onConflict: 'id' });
+            };
+            console.log('📝 Upsert payload:', JSON.stringify(upsertPayload));
+            const { data: upsertData, error: insertError } = await adminClient.from('users').upsert(upsertPayload, { onConflict: 'id' }).select();
+            console.log('📝 Upsert result - data:', JSON.stringify(upsertData), 'error:', JSON.stringify(insertError));
             if (insertError) throw insertError;
 
             console.log('✅ User record created in users table');
