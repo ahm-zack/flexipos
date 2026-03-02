@@ -154,8 +154,15 @@ export async function POST(request: Request) {
                 );
             }
 
+            const dbErrMsg = typeof dbError === 'object' && dbError !== null && 'message' in dbError
+                ? (dbError as { message: string }).message
+                : String(dbError);
+            const dbErrCode = typeof dbError === 'object' && dbError !== null && 'code' in dbError
+                ? (dbError as { code: string }).code
+                : undefined;
+
             return NextResponse.json(
-                { error: 'Failed to create user record. Please try again.' },
+                { error: 'Failed to create user record. Please try again.', detail: dbErrMsg, code: dbErrCode },
                 { status: 500 }
             );
         }
