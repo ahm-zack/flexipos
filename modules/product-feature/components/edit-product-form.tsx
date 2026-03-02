@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
+import { SaudiRiyalSymbol } from "@/components/currency";
 import { useUpdateProduct } from "../hooks/useProducts";
 import { uploadMenuImage, deleteMenuImage } from "@/lib/image-upload";
 import type { Product, NewProduct } from "../services/product-supabase-service";
@@ -218,22 +219,33 @@ export function EditProductForm({
           {/* Price & Stock */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Price *</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.price || ""}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    price: parseFloat(e.target.value) || 0,
-                  }))
-                }
-                placeholder="0.00"
-                required
-              />
+              <Label htmlFor="price">
+                Price <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <SaudiRiyalSymbol
+                    size={14}
+                    className="text-muted-foreground"
+                  />
+                </div>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price || ""}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      price: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="0.00"
+                  required
+                  className="pl-8"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="stockQuantity">Stock Quantity</Label>

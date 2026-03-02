@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
+import { SaudiRiyalSymbol } from "@/components/currency";
 import { useCreateProduct } from "../hooks/useProducts";
 import { uploadMenuImage } from "@/lib/image-upload";
 import type { NewProduct } from "../services/product-supabase-service";
@@ -153,7 +154,7 @@ export function CreateProductForm({
         reader.readAsDataURL(file);
       }
     },
-    []
+    [],
   );
 
   const removeImage = useCallback(() => {
@@ -163,7 +164,7 @@ export function CreateProductForm({
 
     // Reset file input
     const fileInput = document.getElementById(
-      "createProductImageFile"
+      "createProductImageFile",
     ) as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   }, []);
@@ -232,7 +233,7 @@ export function CreateProductForm({
                         previewUrl ||
                         getReliableImageUrl(
                           (formData.images || [])[0],
-                          "product"
+                          "product",
                         )
                       }
                       alt="Product preview"
@@ -296,22 +297,33 @@ export function CreateProductForm({
 
             {/* Price */}
             <div className="space-y-2">
-              <Label htmlFor="price">Price (SAR) *</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.price}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    price: parseFloat(e.target.value) || 0,
-                  }))
-                }
-                placeholder="0.00"
-                required
-              />
+              <Label htmlFor="price">
+                Price <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <SaudiRiyalSymbol
+                    size={14}
+                    className="text-muted-foreground"
+                  />
+                </div>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      price: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="0.00"
+                  required
+                  className="pl-8"
+                />
+              </div>
               <p className="text-xs text-muted-foreground">
                 Note: Modifier prices are separate and will be added to this
                 base price during checkout.

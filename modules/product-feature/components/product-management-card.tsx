@@ -4,7 +4,8 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getReliableImageUrl } from "@/lib/image-utils";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Package, Star, Layers } from "lucide-react";
+import { SaudiRiyalSymbol } from "@/components/currency";
 import type { Product } from "../services/product-supabase-service";
 
 interface ProductManagementCardProps {
@@ -18,10 +19,13 @@ export function ProductManagementCard({
   onEdit,
   onDelete,
 }: ProductManagementCardProps) {
+  const stockQty = product.stockQuantity ?? 0;
+  const hasStock = product.trackStock ? stockQty > 0 : true;
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow duration-200">
+    <div className="group relative bg-card rounded-xl border border-border/60 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
       {/* Product Image */}
-      <div className="relative h-48 bg-gray-100 dark:bg-gray-700">
+      <div className="relative h-44 bg-muted">
         {product.images && product.images.length > 0 ? (
           <Image
             src={getReliableImageUrl(product.images[0], "product")}
@@ -30,63 +34,90 @@ export function ProductManagementCard({
             className="object-cover"
           />
         ) : (
-          <div className="h-full flex items-center justify-center">
-            <span className="text-gray-400 text-sm">No Image</span>
+          <div className="h-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            <Package className="w-10 h-10 opacity-30" />
+            <span className="text-xs">No Image</span>
           </div>
         )}
+
+        {/* Floating badges top-right */}
+        <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+          {product.isFeatured && (
+            <Badge className="bg-amber-500 hover:bg-amber-500 text-white text-[10px] px-1.5 py-0 gap-1">
+              <Star className="w-2.5 h-2.5 fill-white" />
+              Featured
+            </Badge>
+          )}
+          {product.hasModifiers && (
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 gap-1">
+              <Layers className="w-2.5 h-2.5" />
+              Modifiers
+            </Badge>
+          )}
+        </div>
+
+        {/* Status dot top-left */}
+        <div className="absolute top-2 left-2">
+          <span
+            className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+              product.isActive
+                ? "bg-green-500/20 text-green-700 dark:text-green-400"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${product.isActive ? "bg-green-500" : "bg-muted-foreground"}`}
+            />
+            {product.isActive ? "Active" : "Inactive"}
+          </span>
+        </div>
       </div>
 
       {/* Product Details */}
       <div className="p-4 space-y-3">
-        {/* Product Names */}
+        {/* Names */}
         <div>
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white line-clamp-1">
+          <h3 className="font-semibold text-sm leading-tight text-foreground line-clamp-1">
             {product.name}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-1">
-            {product.nameAr}
-          </p>
+          {product.nameAr && (
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1" dir="rtl">
+              {product.nameAr}
+            </p>
+          )}
         </div>
 
-        {/* Category Badge */}
-        <div className="flex items-center gap-2">
-          <Badge
-            variant="secondary"
-            className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-blue-200 dark:border-blue-800"
-          >
-            {product.categoryId}
-          </Badge>
-        </div>
-
-        {/* Price */}
+        {/* Price + Stock row */}
         <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-            ${product.price.toFixed(2)}
-          </span>
-
-          {/* Status Indicator */}
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                product.isActive ? "bg-green-500" : "bg-gray-400"
-              }`}
-            />
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              {product.isActive ? "Active" : "Inactive"}
-            </span>
+          <div className="flex items-center gap-1 text-lg font-bold text-foreground">
+            <SaudiRiyalSymbol size={14} className="text-primary mt-0.5" />
+            <span>{product.price.toFixed(2)}</span>
           </div>
+          {product.trackStock && (
+            <Badge
+              variant={hasStock ? "outline" : "destructive"}
+              className={`text-[10px] ${hasStock ? "border-green-500 text-green-700 dark:text-green-400" : ""}`}
+            >
+              {hasStock ? `Stock: ${stockQty}` : "Out of Stock"}
+            </Badge>
+          )}
         </div>
+
+        {/* Description snippet */}
+        {product.description && (
+          <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
+        )}
 
         {/* Action Buttons */}
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-1">
           {onEdit && (
             <Button
               onClick={() => onEdit(product)}
               variant="outline"
               size="sm"
-              className="flex-1 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-900/20"
+              className="flex-1 h-8 text-xs gap-1.5"
             >
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="h-3.5 w-3.5" />
               Edit
             </Button>
           )}
@@ -95,9 +126,9 @@ export function ProductManagementCard({
               onClick={() => onDelete(product)}
               variant="outline"
               size="sm"
-              className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-300 dark:hover:bg-red-900/20"
+              className="flex-1 h-8 text-xs gap-1.5 text-destructive hover:bg-destructive/10 hover:border-destructive/40"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="h-3.5 w-3.5" />
               Delete
             </Button>
           )}

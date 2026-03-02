@@ -5,17 +5,35 @@ import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, Edit, Trash2, Grid3X3 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Plus,
+  Package,
+  Edit,
+  Trash2,
+  ChevronRight,
+  LayoutGrid,
+  AlertCircle,
+} from "lucide-react";
 import { type Category } from "../services/category-supabase-service";
 import { useCategories, useDeleteCategory } from "@/hooks/useCategories";
 import { CategoryForm } from "./category-form";
+import { toast } from "sonner";
 
 interface CategoryCardProps {
   category: Category;
@@ -24,91 +42,100 @@ interface CategoryCardProps {
   onClick: (categoryId: string) => void;
 }
 
-function CategoryCard({
-  category,
-  onEdit,
-  onDelete,
-  onClick,
-}: CategoryCardProps) {
+function CategoryCard({ category, onEdit, onDelete, onClick }: CategoryCardProps) {
   return (
     <Card
-      className="hover:shadow-lg transition-all duration-200 cursor-pointer group relative overflow-hidden"
+      className="group relative overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 border-border/60"
       onClick={() => onClick(category.id)}
     >
-      {/* Color accent bar */}
+      {/* Top colour accent */}
       <div
-        className="absolute top-0 left-0 w-full h-1"
+        className="absolute inset-x-0 top-0 h-1 rounded-t-lg"
         style={{ backgroundColor: category.color || "#6366f1" }}
       />
 
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2 pt-5">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl"
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-white text-xl shadow-sm shrink-0"
               style={{ backgroundColor: category.color || "#6366f1" }}
             >
               {category.icon ? (
                 <span>{category.icon}</span>
               ) : (
-                <Package className="w-6 h-6" />
+                <Package className="w-5 h-5" />
               )}
             </div>
-            <div>
-              <CardTitle className="text-lg group-hover:text-primary transition-colors">
+            <div className="min-w-0">
+              <CardTitle className="text-base leading-tight group-hover:text-primary transition-colors truncate">
                 {category.name}
               </CardTitle>
               {category.nameAr && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground mt-0.5 truncate" dir="rtl">
                   {category.nameAr}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(category);
-              }}
-              className="h-8 w-8 p-0"
+              className="h-7 w-7 p-0 rounded-md"
+              onClick={(e) => { e.stopPropagation(); onEdit(category); }}
             >
-              <Edit className="w-4 h-4" />
+              <Edit className="w-3.5 h-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(category);
-              }}
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              className="h-7 w-7 p-0 rounded-md text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={(e) => { e.stopPropagation(); onDelete(category); }}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="py-2">
-        {category.description && (
-          <CardDescription className="text-sm line-clamp-2">
+      {category.description && (
+        <CardContent className="py-1 px-6">
+          <p className="text-xs text-muted-foreground line-clamp-2">
             {category.description}
-          </CardDescription>
-        )}
-      </CardContent>
+          </p>
+        </CardContent>
+      )}
 
-      <CardFooter className="pt-2 flex items-center justify-between">
-        <Badge variant={category.isActive ? "default" : "secondary"}>
+      <CardFooter className="pt-3 pb-4 px-6 flex items-center justify-between">
+        <Badge variant={category.isActive ? "default" : "secondary"} className="text-xs">
           {category.isActive ? "Active" : "Inactive"}
         </Badge>
-        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-          <Grid3X3 className="w-4 h-4" />
+        <div className="flex items-center gap-1 text-xs text-muted-foreground group-hover:text-primary transition-colors">
           <span>View Products</span>
+          <ChevronRight className="w-3.5 h-3.5" />
         </div>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function CategorySkeletonCard() {
+  return (
+    <Card className="overflow-hidden animate-pulse border-border/60">
+      <div className="h-1 bg-muted rounded-t-lg" />
+      <CardHeader className="pt-5 pb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 bg-muted rounded-xl shrink-0" />
+          <div className="space-y-2 flex-1">
+            <div className="h-4 bg-muted rounded w-32" />
+            <div className="h-3 bg-muted rounded w-20" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardFooter className="pt-3 pb-4">
+        <div className="h-5 bg-muted rounded w-14" />
       </CardFooter>
     </Card>
   );
@@ -118,155 +145,129 @@ export function CategorySystem() {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
 
-  // Use the categories hook for data fetching
   const { data: categories = [], isLoading, error, refetch } = useCategories();
-
-  // Use mutation hooks for CRUD operations
   const deleteCategoryMutation = useDeleteCategory();
+
+  const activeCount = categories.filter((c) => c.isActive).length;
 
   const handleCategoryClick = (categoryId: string) => {
     router.push(`/admin/inventory/${categoryId}`);
   };
 
-  const handleCreateNew = () => {
-    setEditingCategory(null);
-    setShowForm(true);
-  };
-
-  const handleEdit = (category: Category) => {
-    setEditingCategory(category);
-    setShowForm(true);
-  };
-
-  const handleFormClose = () => {
-    setShowForm(false);
-    setEditingCategory(null);
-  };
-
-  const handleFormSuccess = (category: Category) => {
-    console.log("Category saved successfully:", category);
-    // The cache will be updated automatically by the hooks
-  };
-
-  const handleDeleteClick = (category: Category) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete the category "${category.name}"? This action cannot be undone.`
-      )
-    ) {
-      handleDeleteConfirm(category);
-    }
-  };
-
-  const handleDeleteConfirm = async (category: Category) => {
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
     try {
-      await deleteCategoryMutation.mutateAsync(category.id);
-      console.log(`Category "${category.name}" deleted successfully`);
-    } catch (error) {
-      console.error("Error deleting category:", error);
-      alert("Failed to delete category. Please try again.");
+      await deleteCategoryMutation.mutateAsync(deleteTarget.id);
+      toast.success(`"${deleteTarget.name}" deleted`);
+    } catch {
+      toast.error("Failed to delete category. Please try again.");
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold text-destructive mb-2">
-            Error Loading Categories
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            {error instanceof Error
-              ? error.message
-              : "Failed to load categories"}
-          </p>
-          <Button onClick={() => refetch()}>Try Again</Button>
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="p-4 rounded-full bg-destructive/10 mb-4">
+          <AlertCircle className="w-8 h-8 text-destructive" />
         </div>
+        <h3 className="text-lg font-semibold mb-1">Failed to load categories</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          {error instanceof Error ? error.message : "An unexpected error occurred"}
+        </p>
+        <Button onClick={() => refetch()}>Try Again</Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header Actions */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <LayoutGrid className="w-6 h-6 text-primary" />
             Product Categories
           </h2>
-          <p className="text-muted-foreground">
-            Organize your products by categories. Click on a category to manage
-            its products.
+          <p className="text-sm text-muted-foreground mt-1">
+            {isLoading
+              ? "Loading…"
+              : `${categories.length} ${categories.length === 1 ? "category" : "categories"} · ${activeCount} active`}
           </p>
         </div>
-        <Button onClick={handleCreateNew}>
-          <Plus className="w-4 h-4 mr-2" />
+        <Button onClick={() => { setEditingCategory(null); setShowForm(true); }} className="gap-2">
+          <Plus className="w-4 h-4" />
           New Category
         </Button>
       </div>
 
-      {/* Categories Grid */}
+      {/* Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, index) => (
-            <Card key={index} className="animate-pulse">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-muted rounded-lg" />
-                  <div className="space-y-2">
-                    <div className="h-4 bg-muted rounded w-24" />
-                    <div className="h-3 bg-muted rounded w-16" />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="h-3 bg-muted rounded w-full" />
-                  <div className="h-3 bg-muted rounded w-2/3" />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <div className="h-5 bg-muted rounded w-16" />
-              </CardFooter>
-            </Card>
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, i) => <CategorySkeletonCard key={i} />)}
         </div>
       ) : categories.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="text-center">
-            <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Categories Found</h3>
-            <p className="text-muted-foreground mb-4">
-              Get started by creating your first product category.
-            </p>
-            <Button onClick={handleCreateNew}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Category
-            </Button>
+        <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-2xl">
+          <div className="p-4 rounded-full bg-muted mb-4">
+            <Package className="w-10 h-10 text-muted-foreground" />
           </div>
+          <h3 className="text-lg font-semibold mb-1">No categories yet</h3>
+          <p className="text-sm text-muted-foreground mb-5 max-w-xs">
+            Create your first product category to start organising your inventory.
+          </p>
+          <Button onClick={() => { setEditingCategory(null); setShowForm(true); }} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Create First Category
+          </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {categories.map((category) => (
             <CategoryCard
               key={category.id}
               category={category}
-              onEdit={handleEdit}
-              onDelete={handleDeleteClick}
+              onEdit={(c) => { setEditingCategory(c); setShowForm(true); }}
+              onDelete={setDeleteTarget}
               onClick={handleCategoryClick}
             />
           ))}
         </div>
       )}
 
-      {/* Category Form Dialog */}
+      {/* Category Form */}
       <CategoryForm
         category={editingCategory}
         isOpen={showForm}
-        onClose={handleFormClose}
-        onSuccess={handleFormSuccess}
+        onClose={() => { setShowForm(false); setEditingCategory(null); }}
       />
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-destructive" />
+              Delete &ldquo;{deleteTarget?.name}&rdquo;?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the category and cannot be undone.
+              Products in this category will not be deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              {deleteCategoryMutation.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

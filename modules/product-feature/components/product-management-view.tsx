@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Search,
+  Plus,
+  ArrowLeft,
+  Package,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,6 +42,7 @@ export function ProductManagementView({
   businessId,
   categoryId,
 }: ProductManagementViewProps) {
+  const router = useRouter();
   const deleteProductMutation = useDeleteProduct();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -49,7 +58,7 @@ export function ProductManagementView({
       (product) =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.nameAr?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase()),
     ) || [];
 
   const handleEdit = (product: Product) => {
@@ -76,10 +85,25 @@ export function ProductManagementView({
     }
   };
 
+  const activeCount = products.filter((p) => p.isActive).length;
+  const inactiveCount = products.length - activeCount;
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-lg">Loading products...</div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-muted rounded w-48" />
+          <div className="flex gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-20 bg-muted rounded-xl flex-1" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-64 bg-muted rounded-xl" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -87,11 +111,26 @@ export function ProductManagementView({
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
+        {/* Back + header */}
+        <div className="flex items-center gap-3 mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push("/admin/inventory")}
+            className="gap-1.5 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            All Categories
+          </Button>
+        </div>
+
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{categoryName} Products</h1>
-            <p className="text-muted-foreground">
-              Manage your products, add new items, and update details.
+            <h1 className="text-3xl font-bold mb-1">
+              {categoryName}&nbsp;Products
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Manage products, add new items, and update details.
             </p>
           </div>
 
@@ -102,6 +141,33 @@ export function ProductManagementView({
             <Plus className="h-4 w-4" />
             Add Product
           </Button>
+        </div>
+
+        {/* Stats row */}
+        <div className="mt-6 grid grid-cols-3 gap-3 max-w-sm">
+          <div className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2">
+            <Package className="w-4 h-4 text-muted-foreground" />
+            <div>
+              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-lg font-bold leading-none">
+                {products.length}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2">
+            <CheckCircle2 className="w-4 h-4 text-green-500" />
+            <div>
+              <p className="text-xs text-muted-foreground">Active</p>
+              <p className="text-lg font-bold leading-none">{activeCount}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2">
+            <XCircle className="w-4 h-4 text-muted-foreground" />
+            <div>
+              <p className="text-xs text-muted-foreground">Inactive</p>
+              <p className="text-lg font-bold leading-none">{inactiveCount}</p>
+            </div>
+          </div>
         </div>
 
         <div className="mt-6">
