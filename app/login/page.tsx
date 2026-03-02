@@ -69,8 +69,7 @@ export default function LoginPage() {
               <Command className="size-6" />
             </div>
             <div className="grid flex-1 text-left text-base leading-tight">
-              <span className="truncate font-semibold text-lg">Lazaza</span>
-              <span className="truncate text-sm font-medium">POS</span>
+              <span className="truncate font-semibold text-lg">FlexiPOS</span>
             </div>
           </Link>
         </div>
