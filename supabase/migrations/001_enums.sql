@@ -4,43 +4,61 @@
 -- Run this FIRST before any table creation
 -- ============================================================
 
-CREATE TYPE IF NOT EXISTS public.role AS ENUM (
-  'superadmin',
-  'admin',
-  'manager',
-  'staff'
-);
+DO $$ BEGIN
+  CREATE TYPE public.role AS ENUM (
+    'superadmin',
+    'admin',
+    'manager',
+    'staff'
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE IF NOT EXISTS public.order_status AS ENUM (
-  'completed',
-  'canceled',
-  'modified'
-);
+DO $$ BEGIN
+  CREATE TYPE public.order_status AS ENUM (
+    'completed',
+    'canceled',
+    'modified'
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE IF NOT EXISTS public.payment_method AS ENUM (
-  'cash',
-  'card',
-  'mixed',
-  'delivery'
-);
+DO $$ BEGIN
+  CREATE TYPE public.payment_method AS ENUM (
+    'cash',
+    'card',
+    'mixed',
+    'delivery'
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE IF NOT EXISTS public.delivery_platform AS ENUM (
-  'keeta',
-  'hunger_station',
-  'jahez'
-);
+DO $$ BEGIN
+  CREATE TYPE public.delivery_platform AS ENUM (
+    'keeta',
+    'hunger_station',
+    'jahez'
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE IF NOT EXISTS public.modification_type AS ENUM (
-  'item_added',
-  'item_removed',
-  'quantity_changed',
-  'item_replaced',
-  'multiple_changes'
-);
+DO $$ BEGIN
+  CREATE TYPE public.modification_type AS ENUM (
+    'item_added',
+    'item_removed',
+    'quantity_changed',
+    'item_replaced',
+    'multiple_changes'
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE IF NOT EXISTS public.report_type AS ENUM (
-  'eod',
-  'sales',
-  'weekly',
-  'monthly'
-);
+DO $$ BEGIN
+  CREATE TYPE public.report_type AS ENUM (
+    'eod',
+    'sales',
+    'weekly',
+    'monthly'
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
