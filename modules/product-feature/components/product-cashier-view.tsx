@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductCashierCard } from "./product-cashier-card";
 import { useSearchStore } from "@/hooks/useSearchStore";
 import type { Product } from "../services/product-supabase-service";
+import { useStockStore } from "@/modules/stock/store/stock-store";
+import { useCartStore } from "@/modules/cart/store/cart-store";
 
 interface ProductCashierViewProps {
   products: Product[];
@@ -17,6 +20,18 @@ export function ProductCashierView({
   error,
 }: ProductCashierViewProps) {
   const { filterProducts } = useSearchStore();
+  const initializeStock = useStockStore((s) => s.initializeStock);
+
+  // Seed the global stock store whenever the product list changes (fresh from DB).
+  // We pass the current cart snapshot so already-in-cart quantities are offset.
+  // We deliberately do NOT re-run on cart changes — the store handles those
+  // incrementally via addItem / removeItem / updateQuantity.
+  useEffect(() => {
+    if (products.length === 0) return;
+    const cartItems = useCartStore.getState().cart.items;
+    initializeStock(products, cartItems);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products]);
 
   // Filter products using the global search store
   const filteredProducts = filterProducts(products);

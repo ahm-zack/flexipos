@@ -2,7 +2,7 @@
 
 import { DynamicDesktopAdminNavbar } from "@/components/dynamic-desktop-admin-navbar";
 import { MobileAdminNavbar } from "@/components/mobile-admin-navbar";
-import { CartPanelWithCustomer } from "@/components/cart-panel-with-customer";
+import { CartPanel } from "@/modules/cart";
 import { useCurrentUserOptimized } from "@/hooks/use-current-user-optimized";
 import { CreatedOrderReciptModal } from "@/modules/providers/CreatedOrderReciptsModal";
 import { usePathname } from "next/navigation";
@@ -32,12 +32,12 @@ export function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
         avatar: undefined,
       }
     : loading
-    ? {
-        name: "Loading...",
-        email: "...",
-        avatar: undefined,
-      }
-    : null;
+      ? {
+          name: "Loading...",
+          email: "...",
+          avatar: undefined,
+        }
+      : null;
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-black/40">
@@ -83,7 +83,7 @@ export function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
             <div className="w-[20rem] xl:w-[24rem] 2xl:w-[26rem] p-2 pl-0 min-w-[18rem]">
               <div className="h-full bg-card shadow-lg overflow-hidden rounded-2xl">
                 <div className="h-full overflow-y-auto">
-                  <CartPanelWithCustomer />
+                  <CartPanel sidebarMode />
                 </div>
               </div>
             </div>

@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Cart, CartItem, CartItemModifier } from "../types/cart.types";
+import {
+    useStockStore,
+    getProductIdFromItemId,
+} from "@/modules/stock/store/stock-store";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -83,6 +87,11 @@ export const useCartStore = create<CartStore>()(
                         newItems = [...state.cart.items, { ...incoming, quantity: qty }];
                     }
 
+                    // Decrement global stock (no-op for unlimited products)
+                    const productId =
+                        payload.productId ?? getProductIdFromItemId(payload.id);
+                    useStockStore.getState().decrementStock(productId, qty);
+
                     const newCart = recalcTotals({ ...state.cart, items: newItems });
                     const shouldAutoOpen = wasEmpty && !state.isOpen;
                     return {
@@ -93,6 +102,16 @@ export const useCartStore = create<CartStore>()(
 
             removeItem: (itemId) =>
                 set((state) => {
+                    const removedItem = state.cart.items.find((i) => i.id === itemId);
+                    if (removedItem) {
+                        const productId =
+                            removedItem.productId ??
+                            getProductIdFromItemId(removedItem.id);
+                        // Restore stock when item is fully removed
+                        useStockStore
+                            .getState()
+                            .incrementStock(productId, removedItem.quantity);
+                    }
                     const newItems = state.cart.items.filter((i) => i.id !== itemId);
                     const newCart = recalcTotals({ ...state.cart, items: newItems });
                     return {
@@ -103,18 +122,55 @@ export const useCartStore = create<CartStore>()(
 
             updateQuantity: (itemId, quantity) =>
                 set((state) => {
+                    const existingItem = state.cart.items.find(
+                        (i) => i.id === itemId,
+                    );
+
+                    if (!existingItem) {
+                        return state;
+                    }
+
+                    const productId =
+                        existingItem.productId ??
+                        getProductIdFromItemId(existingItem.id);
+                    const stockStore = useStockStore.getState();
+
                     if (quantity <= 0) {
-                        const newItems = state.cart.items.filter((i) => i.id !== itemId);
-                        const newCart = recalcTotals({ ...state.cart, items: newItems });
+                        // Fully removing: restore all of this item's stock
+                        stockStore.incrementStock(
+                            productId,
+                            existingItem.quantity,
+                        );
+                        const newItems = state.cart.items.filter(
+                            (i) => i.id !== itemId,
+                        );
+                        const newCart = recalcTotals({
+                            ...state.cart,
+                            items: newItems,
+                        });
                         return {
                             cart: newCart,
-                            isOpen: newCart.items.length === 0 ? false : state.isOpen,
+                            isOpen:
+                                newCart.items.length === 0
+                                    ? false
+                                    : state.isOpen,
                         };
                     }
+
+                    // Partial change: sync the delta
+                    const diff = quantity - existingItem.quantity;
+                    if (diff > 0) {
+                        stockStore.decrementStock(productId, diff);
+                    } else if (diff < 0) {
+                        stockStore.incrementStock(productId, -diff);
+                    }
+
                     const newItems = state.cart.items.map((i) =>
                         i.id === itemId ? { ...i, quantity } : i,
                     );
-                    return { cart: recalcTotals({ ...state.cart, items: newItems }) };
+                    return {
+                        cart: recalcTotals({ ...state.cart, items: newItems }),
+                    };
                 }),
 
             clearCart: () => set({ cart: EMPTY_CART, isOpen: false }),

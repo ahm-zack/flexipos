@@ -31,11 +31,13 @@ import {
 import { useCart } from "../hooks/use-cart";
 import { PriceDisplay, SaudiRiyalSymbol } from "@/components/currency";
 import { cn } from "@/lib/utils";
-import { ApiOrder, useCreateOrder } from "@/modules/orders-feature";
+import { useCreateOrder } from "@/modules/orders-feature";
+import type { Order as ReceiptOrder } from "@/lib/orders";
 import { useUpdateCustomerPurchases } from "@/modules/customers-feature";
 import { customerService } from "@/lib/supabase-queries/customer-client-service";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { useBusinessId } from "@/hooks/useBusinessId";
 import { useState, useEffect } from "react";
 import { RestaurantReceipt } from "@/components/restaurant-receipt";
 import { Dialog } from "@radix-ui/react-dialog";
@@ -49,13 +51,15 @@ import { ParkedOrder, useParkedOrders } from "@/hooks/use-parked-orders";
 
 interface CartPanelProps {
   className?: string;
+  /** When true the panel renders inline (no fixed overlay, always visible) */
+  sidebarMode?: boolean;
 }
 
 export function ReceiptModal({
   order,
   onClose,
 }: {
-  order: ApiOrder;
+  order: ReceiptOrder;
   onClose: () => void;
 }) {
   return (
@@ -63,7 +67,7 @@ export function ReceiptModal({
       <RestaurantReceipt
         order={{
           ...order,
-          customerName: order.customerName || undefined,
+          customerName: order.customerName ?? undefined,
         }}
         onClose={onClose}
       />
@@ -71,7 +75,7 @@ export function ReceiptModal({
   );
 }
 
-export function CartPanel({ className }: CartPanelProps) {
+export function CartPanel({ className, sidebarMode }: CartPanelProps) {
   const {
     cart,
     isOpen,
@@ -130,6 +134,7 @@ export function CartPanel({ className }: CartPanelProps) {
   const createOrder = useCreateOrder();
   const updateCustomerPurchases = useUpdateCustomerPurchases();
   const { user: currentUser, loading: userLoading } = useCurrentUser();
+  const { businessId } = useBusinessId();
   // Using imported customerService singleton
 
   // Event discount store
@@ -183,7 +188,10 @@ export function CartPanel({ className }: CartPanelProps) {
       if (customerPhone.length >= 4) {
         setIsSearching(true);
         try {
-          const customer = await customerService.searchByPhone(customerPhone);
+          const customer = await customerService.searchByPhone(
+            customerPhone,
+            businessId ?? "",
+          );
           if (customer) {
             setCustomerName(customer.name);
             setCustomerAddress(customer.address || "");
@@ -211,7 +219,7 @@ export function CartPanel({ className }: CartPanelProps) {
 
     const timeoutId = setTimeout(searchCustomer, 500); // Debounce
     return () => clearTimeout(timeoutId);
-  }, [customerPhone]);
+  }, [customerPhone, businessId]);
 
   const clearCustomerData = () => {
     setCustomerPhone("");
@@ -405,9 +413,11 @@ export function CartPanel({ className }: CartPanelProps) {
 
             if (isExistingCustomer) {
               // Find existing customer by phone to get ID
-              const existingCustomer =
-                await customerService.searchByPhone(customerPhone);
-              customerId = existingCustomer?.id;
+              const existingCustomer = await customerService.searchByPhone(
+                customerPhone,
+                businessId ?? "",
+              );
+              customerId = existingCustomer?.id ?? null;
             } else {
               // Create new customer
               const newCustomer = await customerService.createCustomer(
@@ -416,6 +426,7 @@ export function CartPanel({ className }: CartPanelProps) {
                   name: customerName,
                   address: customerAddress || undefined,
                 },
+                businessId ?? "",
                 currentUser.id,
               );
               customerId = newCustomer.id;
@@ -444,51 +455,49 @@ export function CartPanel({ className }: CartPanelProps) {
         setMixedCashAmount(0);
         setMixedCardAmount(0);
         closeCart();
-        // Convert the order data to ApiOrder format for the PDF
-        const apiOrder: ApiOrder = {
+        // Build the receipt order in the camelCase shape RestaurantReceipt expects
+        const apiOrder: ReceiptOrder = {
           id: data.id,
           orderNumber: data.orderNumber,
-          dailySerial: data.dailySerial,
-          customerName: data.customerName || null,
+          dailySerial: data.dailySerial ?? undefined,
+          customerName: data.customerName ?? undefined,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          items: data.items as any[],
+          items: (data.items as any[]).map((item: any) => ({
+            ...item,
+            // Cart items use `price`; receipt type expects `unitPrice` + `totalPrice`
+            unitPrice: item.unitPrice ?? item.price ?? 0,
+            totalPrice:
+              item.totalPrice ??
+              (item.unitPrice ?? item.price ?? 0) * (item.quantity ?? 1),
+          })),
           totalAmount:
             typeof data.totalAmount === "string"
               ? parseFloat(data.totalAmount)
               : data.totalAmount,
           paymentMethod: data.paymentMethod,
-          deliveryPlatform: data.deliveryPlatform,
+          deliveryPlatform: data.deliveryPlatform ?? undefined,
           status: data.status,
-          discountType: data.discountType,
-          discountValue: data.discountValue,
-          discountAmount: data.discountAmount,
-          // Add event discount fields for receipt display
-          eventDiscountName: data.eventDiscountName,
-          eventDiscountPercentage: data.eventDiscountPercentage,
-          eventDiscountAmount: data.eventDiscountAmount,
-          // Add payment tracking fields for receipt display
-          cashAmount: data.cashAmount,
-          cardAmount: data.cardAmount,
-          cashReceived: data.cashReceived,
-          changeAmount: data.changeAmount,
-          createdAt:
-            typeof data.createdAt === "string"
-              ? data.createdAt
-              : data.createdAt,
-          updatedAt:
-            typeof data.updatedAt === "string"
-              ? data.updatedAt
-              : data.updatedAt,
+          discountType: (data.discountType ?? undefined) as
+            | "percentage"
+            | "amount"
+            | undefined,
+          discountValue: data.discountValue ?? undefined,
+          discountAmount: data.discountAmount ?? undefined,
+          eventDiscountName: data.eventDiscountName ?? undefined,
+          eventDiscountPercentage: data.eventDiscountPercentage ?? undefined,
+          eventDiscountAmount: data.eventDiscountAmount ?? undefined,
+          cashAmount: data.cashAmount ?? undefined,
+          cardAmount: data.cardAmount ?? undefined,
+          cashReceived: data.cashReceived ?? undefined,
+          changeAmount: data.changeAmount ?? undefined,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
           createdBy: data.createdBy,
         };
         // Import and trigger PDF download
         const { downloadReceiptPDF } =
           await import("@/components/restaurant-receipt");
-        await downloadReceiptPDF({
-          ...apiOrder,
-          customerName:
-            apiOrder.customerName === null ? undefined : apiOrder.customerName,
-        });
+        await downloadReceiptPDF({ ...apiOrder });
         console.log("Order created and PDF downloaded:", data);
       },
       onError: (error) => {
@@ -546,23 +555,29 @@ export function CartPanel({ className }: CartPanelProps) {
     processOrder(cashAmount, cardAmount, mixedCashReceived, mixedChangeAmount);
   };
 
-  if (!isOpen) return null;
+  if (!sidebarMode && !isOpen) return null;
 
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
-        onClick={closeCart}
-      />
+      {/* Backdrop - overlay mode only */}
+      {!sidebarMode && (
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+          onClick={closeCart}
+        />
+      )}
 
       {/* Cart Panel */}
       <div
         className={cn(
-          "fixed top-0 right-0 h-full w-full max-w-md bg-background border-l shadow-2xl z-50",
-          "transform transition-transform duration-300 ease-in-out",
+          sidebarMode
+            ? "flex flex-col h-full"
+            : cn(
+                "fixed top-0 right-0 h-full w-full max-w-md bg-background border-l shadow-2xl z-50",
+                "transform transition-transform duration-300 ease-in-out",
+                isOpen ? "translate-x-0" : "translate-x-full",
+              ),
           "flex flex-col",
-          isOpen ? "translate-x-0" : "translate-x-full",
           className,
         )}
       >

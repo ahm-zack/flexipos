@@ -3,6 +3,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/utils/supabase/client';
 import { useBusinessContext } from '@/modules/providers/components/business-provider';
 import type { Database } from '@/database.types';
+import { productKeys } from '@/modules/product-feature/hooks/useProducts';
+import { getProductIdFromItemId } from '@/modules/stock/store/stock-store';
 
 // Use database-generated types for consistency
 export type Order = Database['public']['Tables']['orders']['Row'];
@@ -42,7 +44,9 @@ export type ApiOrder = OrderWithItems;
 
 // Cart item interface for dynamic products
 export interface CartItem {
-    id: string; // Product ID from menu_items table
+    id: string; // Product ID from menu_items table (may have __modifier suffix)
+    /** Raw product id — stable even when id has a modifier suffix */
+    productId?: string;
     name: string;
     nameAr?: string;
     price: number;
@@ -126,6 +130,31 @@ export function useCreateOrder() {
 
             if (error) throw new Error(error.message);
 
+            // ── Deduct stock from DB ──────────────────────────────────────
+            // Group cart items by product id, skip products with NULL stock
+            // (NULL = unlimited, tracked products have a real number).
+            const stockAdjustMap: Record<string, number> = {};
+            for (const item of orderData.items) {
+                const pid = item.productId ?? getProductIdFromItemId(item.id);
+                stockAdjustMap[pid] = (stockAdjustMap[pid] ?? 0) + item.quantity;
+            }
+            for (const [productId, qty] of Object.entries(stockAdjustMap)) {
+                const { data: product } = await supabase
+                    .from('products')
+                    .select('stock_quantity')
+                    .eq('id', productId)
+                    .single();
+                if (product?.stock_quantity != null) {
+                    await supabase
+                        .from('products')
+                        .update({
+                            stock_quantity: Math.max(0, product.stock_quantity - qty),
+                        })
+                        .eq('id', productId);
+                }
+            }
+            // ─────────────────────────────────────────────────────────────
+
             // Convert database response to client-friendly format
             return {
                 id: createdOrder.id,
@@ -154,7 +183,9 @@ export function useCreateOrder() {
             };
         },
         onSuccess: () => {
+            // Refresh orders list and product stock quantities in the UI
             queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({ queryKey: productKeys.lists() });
         },
     });
 }

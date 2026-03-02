@@ -23,7 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/modules/cart/hooks/use-cart";
-import { CartPanelWithCustomer } from "@/components/cart-panel-with-customer";
+import { CartPanel } from "@/modules/cart";
 import { useCategories } from "@/hooks/useCategories";
 
 interface MobileAdminNavbarProps {
@@ -374,7 +374,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
             {activeDropdown === "cart" && (
               <div className="p-0 overflow-hidden rounded-2xl border border-border">
                 <div className="max-h-[85vh] overflow-y-auto">
-                  <CartPanelWithCustomer />
+                  <CartPanel sidebarMode />
                 </div>
               </div>
             )}

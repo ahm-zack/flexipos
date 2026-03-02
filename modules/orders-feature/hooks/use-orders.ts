@@ -162,57 +162,6 @@ export function useOrder(id: string) {
   });
 }
 
-export function useCreateOrder() {
-  const queryClient = useQueryClient();
-  const { businessId } = useBusinessContext();
-
-  return useMutation<Order, Error, CreateOrderInput>({
-    mutationFn: async (input) => {
-      if (!businessId) throw new Error('No business context');
-      const supabase = createClient();
-
-      // Get next serial atomically — each business has independent serial starting at 1
-      const { data: serial, error: serialError } = await supabase
-        .rpc('get_next_order_serial', { p_business_id: businessId });
-      if (serialError) throw new Error(serialError.message);
-
-      const orderNumber = String(serial as number);
-
-      const { data, error } = await supabase
-        .from('orders')
-        .insert({
-          business_id: businessId,
-          order_number: orderNumber,
-          created_by: input.createdBy,
-          customer_name: input.customerName ?? null,
-          items: input.items as unknown as Database['public']['Tables']['orders']['Insert']['items'],
-          total_amount: input.totalAmount,
-          payment_method: input.paymentMethod,
-          delivery_platform: input.deliveryPlatform ?? null,
-          discount_type: input.discountType ?? null,
-          discount_value: input.discountValue ?? null,
-          discount_amount: input.discountAmount ?? null,
-          event_discount_name: input.eventDiscountName ?? null,
-          event_discount_percentage: input.eventDiscountPercentage ?? null,
-          event_discount_amount: input.eventDiscountAmount ?? null,
-          cash_amount: input.cashAmount ?? null,
-          card_amount: input.cardAmount ?? null,
-          cash_received: input.cashReceived ?? null,
-          change_amount: input.changeAmount ?? null,
-          status: 'completed',
-        })
-        .select()
-        .single();
-
-      if (error) throw new Error(error.message);
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
-    },
-  });
-}
-
 export function useUpdateOrder() {
   const queryClient = useQueryClient();
   const { businessId } = useBusinessContext();

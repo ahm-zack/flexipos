@@ -7,6 +7,11 @@ export interface CartItemModifier {
 
 export interface CartItem {
   id: string;
+  /**
+   * The raw product id (stable, no modifier suffix).
+   * Used for stock tracking across modifier variants.
+   */
+  productId?: string;
   name: string;
   price: number;
   quantity: number;

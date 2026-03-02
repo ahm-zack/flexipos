@@ -16,6 +16,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useCart } from "@/modules/cart/hooks/use-cart";
+import { useStockStore } from "@/modules/stock/store/stock-store";
 import { PriceDisplay } from "@/components/currency";
 import { toast } from "sonner";
 import { getReliableImageUrl } from "@/lib/image-utils";
@@ -62,20 +63,17 @@ export function ModifierSelectionDialog({
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const { addItem, cart } = useCart();
+  const { addItem } = useCart();
 
-  // Stock calculations
-  // stockQuantity: null/undefined = unlimited; 0 = out of stock; N = max N
-  const stock = item.stockQuantity;
+  // Stock calculations — driven by the global stock store so the number
+  // already reflects how many are in the cart (decremented on addItem).
+  // Falls back to the prop when the store hasn't been initialised yet.
+  const stockQuantities = useStockStore((s) => s.quantities);
+  const stock =
+    item.id in stockQuantities ? stockQuantities[item.id] : item.stockQuantity;
   const isOutOfStock = stock === 0;
-  const isTracked = stock != null; // true when it's a real number (not null/undefined)
-  // How many of this item are already in the cart (any modifier variant)
-  const alreadyInCart = cart.items
-    .filter((i) => i.id === item.id || i.id.startsWith(`${item.id}-`))
-    .reduce((sum, i) => sum + i.quantity, 0);
-  const maxAddable = isTracked
-    ? Math.max(0, (stock as number) - alreadyInCart)
-    : Infinity;
+  const isTracked = stock != null;
+  const maxAddable = isTracked ? Math.max(0, stock as number) : Infinity;
 
   useEffect(() => {
     if (open) {
@@ -129,6 +127,7 @@ export function ModifierSelectionDialog({
 
     const cartItem: Omit<CartItem, "quantity"> = {
       id: stableId,
+      productId: item.id, // stable product id for stock tracking
       name: item.name,
       price: item.price,
       category: item.category,
