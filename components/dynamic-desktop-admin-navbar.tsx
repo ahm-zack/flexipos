@@ -158,7 +158,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
             </div>
 
             {/* User Avatar - Moved to top bar */}
-            <DropdownMenu>
+            <DropdownMenu dir={locale === "ar" ? "rtl" : "ltr"}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
@@ -178,7 +178,6 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
               <DropdownMenuContent
                 className="w-56"
                 align="end"
-                dir={locale === "ar" ? "rtl" : "ltr"}
               >
                 {user && (
                   <>
