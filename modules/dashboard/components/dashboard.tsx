@@ -256,9 +256,7 @@ function EmptyState() {
       </div>
       <div>
         <p className="text-base font-semibold">{t("noDataYet")}</p>
-        <p className="text-sm text-muted-foreground mt-1">
-          {t("noDataHint")}
-        </p>
+        <p className="text-sm text-muted-foreground mt-1">{t("noDataHint")}</p>
       </div>
     </div>
   );
