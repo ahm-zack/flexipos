@@ -37,7 +37,7 @@ import { useUpdateCustomerPurchases } from "@/modules/customers-feature";
 import { customerService } from "@/lib/supabase-queries/customer-client-service";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { useBusinessId } from "@/hooks/useBusinessId";
+import { useBusiness, useBusinessId } from "@/hooks/useBusinessId";
 import { useState, useEffect } from "react";
 import { RestaurantReceipt } from "@/components/restaurant-receipt";
 import { Dialog } from "@radix-ui/react-dialog";
@@ -49,6 +49,7 @@ import { ParkOrderDialog } from "@/components/park-order-dialog";
 import { ParkedOrdersPanel } from "@/components/parked-orders-panel";
 import { ParkedOrder, useParkedOrders } from "@/hooks/use-parked-orders";
 import { useTranslations } from "next-intl";
+import { toRestaurantConfig } from "@/lib/business-profile";
 
 interface CartPanelProps {
   className?: string;
@@ -65,6 +66,8 @@ export function ReceiptModal({
   order: ReceiptOrder;
   onClose: () => void;
 }) {
+  const { business } = useBusiness();
+
   return (
     <Dialog>
       <RestaurantReceipt
@@ -72,6 +75,7 @@ export function ReceiptModal({
           ...order,
           customerName: order.customerName ?? undefined,
         }}
+        restaurantInfo={toRestaurantConfig(business)}
         onClose={onClose}
       />
     </Dialog>
@@ -139,6 +143,8 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
   const updateCustomerPurchases = useUpdateCustomerPurchases();
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const { businessId } = useBusinessId();
+  const { business } = useBusiness();
+  const restaurantInfo = toRestaurantConfig(business);
   // Using imported customerService singleton
 
   // Event discount store
@@ -503,7 +509,7 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
         // Import and trigger PDF download
         const { downloadReceiptPDF } =
           await import("@/components/restaurant-receipt");
-        await downloadReceiptPDF({ ...apiOrder });
+        await downloadReceiptPDF({ ...apiOrder }, restaurantInfo);
         console.log("Order created and PDF downloaded:", data);
       },
       onError: (error) => {

@@ -1,15 +1,28 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import {
+  normalizeBusinessProfile,
+  type BusinessProfile,
+  type RawBusinessProfile,
+} from "@/lib/business-profile";
 
 interface BusinessContextType {
   businessId: string | null;
   businessName: string | null;
+  business: BusinessProfile | null;
   user: User | null;
   loading: boolean;
   error: string | null;
+  refreshBusiness: () => Promise<void>;
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(
@@ -32,112 +45,104 @@ interface BusinessProviderProps {
 
 export function BusinessProvider({ children }: BusinessProviderProps) {
   const [businessId, setBusinessId] = useState<string | null>(null);
-  const [businessName, setBusinessName] = useState<string | null>(null);
+  const [business, setBusiness] = useState<BusinessProfile | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchBusinessData = useCallback(async () => {
     const supabase = createClient();
 
-    async function fetchBusinessData() {
-      try {
-        setLoading(true);
-        setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
-        // Get current user
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
 
-        if (!currentUser) {
-          console.log("No authenticated user found");
-          setUser(null);
-          setBusinessId(null);
-          setBusinessName(null);
-          setError("User not authenticated");
-          return;
-        }
+      if (!currentUser) {
+        console.log("No authenticated user found");
+        setUser(null);
+        setBusinessId(null);
+        setBusiness(null);
+        setError("User not authenticated");
+        return;
+      }
 
-        console.log("User authenticated:", {
-          userId: currentUser.id,
-          email: currentUser.email,
-        });
+      console.log("User authenticated:", {
+        userId: currentUser.id,
+        email: currentUser.email,
+      });
 
-        setUser(currentUser);
+      setUser(currentUser);
 
-        // Get user's business relationship
-        const { data: businessUser, error: businessError } = await supabase
-          .from("business_users")
-          .select(
-            `
+      const { data: businessUser, error: businessError } = await supabase
+        .from("business_users")
+        .select(
+          `
             business_id,
             role,
-            businesses:business_id (
-              id,
-              name,
-              settings
-            )
+            businesses:business_id (*)
           `,
-          )
-          .eq("user_id", currentUser.id)
-          .eq("is_active", true)
-          .single();
+        )
+        .eq("user_id", currentUser.id)
+        .eq("is_active", true)
+        .single();
 
-        if (businessError) {
-          console.error("Error fetching business data:", {
-            error: businessError,
-            code: businessError.code,
-            message: businessError.message,
-            details: businessError.details,
-            hint: businessError.hint,
-            userId: currentUser.id,
-          });
+      if (businessError) {
+        console.error("Error fetching business data:", {
+          error: businessError,
+          code: businessError.code,
+          message: businessError.message,
+          details: businessError.details,
+          hint: businessError.hint,
+          userId: currentUser.id,
+        });
 
-          // If no business_users record found, show error
-          if (businessError.code === "PGRST116") {
-            console.error(
-              "No business association found for user. Please complete signup or contact support.",
-            );
-            setBusinessId(null);
-            setBusinessName(null);
-            setError("No business found. Please complete your business setup.");
-            return;
-          }
-
-          setError(
-            `Failed to load business information: ${businessError.message}`,
+        if (businessError.code === "PGRST116") {
+          console.error(
+            "No business association found for user. Please complete signup or contact support.",
           );
+          setBusinessId(null);
+          setBusiness(null);
+          setError("No business found. Please complete your business setup.");
           return;
         }
 
-        if (businessUser && businessUser.businesses) {
-          setBusinessId(businessUser.business_id);
-          const business = businessUser.businesses as {
-            id: string;
-            name: string;
-            settings: unknown;
-          };
-          setBusinessName(business.name);
-          console.log("Business loaded successfully:", {
-            businessId: businessUser.business_id,
-            businessName: business.name,
-          });
-        } else {
-          console.error(
-            "No business relationship found for user. Data may be corrupted.",
-          );
-          setBusinessId(null);
-          setBusinessName(null);
-          setError("Business data not found. Please contact support.");
-        }
-      } catch (err) {
-        console.error("Error in fetchBusinessData:", err);
-        setError("Failed to initialize business context");
-      } finally {
-        setLoading(false);
+        setError(`Failed to load business information: ${businessError.message}`);
+        return;
       }
+
+      if (businessUser && businessUser.businesses) {
+        setBusinessId(businessUser.business_id);
+        const normalizedBusiness = normalizeBusinessProfile(
+          businessUser.businesses as RawBusinessProfile,
+        );
+        setBusiness(normalizedBusiness);
+        console.log("Business loaded successfully:", {
+          businessId: businessUser.business_id,
+          businessName: normalizedBusiness?.name,
+        });
+        return;
+      }
+
+      console.error(
+        "No business relationship found for user. Data may be corrupted.",
+      );
+      setBusinessId(null);
+      setBusiness(null);
+      setError("Business data not found. Please contact support.");
+    } catch (err) {
+      console.error("Error in fetchBusinessData:", err);
+      setError("Failed to initialize business context");
+    } finally {
+      setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const supabase = createClient();
 
     fetchBusinessData();
 
@@ -148,21 +153,23 @@ export function BusinessProvider({ children }: BusinessProviderProps) {
       if (event === "SIGNED_OUT") {
         setUser(null);
         setBusinessId(null);
-        setBusinessName(null);
+        setBusiness(null);
       } else if (event === "SIGNED_IN" && session?.user) {
         fetchBusinessData();
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchBusinessData]);
 
   const value: BusinessContextType = {
     businessId,
-    businessName,
+    businessName: business?.name ?? null,
+    business,
     user,
     loading,
     error,
+    refreshBusiness: fetchBusinessData,
   };
 
   return (

@@ -19,6 +19,7 @@ import {
   Sun,
   Languages,
   LogOut,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { useCart } from "@/modules/cart/hooks/use-cart";
 import { CartPanel } from "@/modules/cart";
 import { useCategories } from "@/hooks/useCategories";
+import { useBusiness } from "@/hooks/useBusinessId";
 import { createClient } from "@/utils/supabase/client";
 
 interface MobileAdminNavbarProps {
@@ -45,9 +47,11 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("dashboard");
+  const { businessName } = useBusiness();
   const [activeDropdown, setActiveDropdown] = useState<
     "menu" | "avatar" | "cart" | null
   >(null);
+  const brandName = businessName || "FlexiPOS";
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -113,7 +117,7 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                 <Command className="size-5" />
               </div>
               <span className="font-semibold text-lg bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-                Lazaza
+                {brandName}
               </span>
             </Link>
 
@@ -299,6 +303,19 @@ export function MobileAdminNavbar({ user }: MobileAdminNavbarProps) {
                 )}
 
                 <div className="space-y-1">
+                  <Link
+                    href="/admin/settings"
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-colors w-full ${
+                      pathname?.startsWith("/admin/settings")
+                        ? "bg-primary/10 text-primary"
+                        : "hover:bg-primary/10 hover:text-primary"
+                    }`}
+                    onClick={closeDropdowns}
+                  >
+                    <Settings className="size-4" />
+                    <span>{t("nav.settings")}</span>
+                  </Link>
+
                   <Link
                     href="/admin/orders"
                     className={`flex items-center gap-3 p-3 rounded-lg transition-colors w-full ${

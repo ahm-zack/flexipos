@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Grid3X3,
   Languages,
+  Settings,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -29,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
 import { useLocale, useTranslations } from "next-intl";
+import { useBusiness } from "@/hooks/useBusinessId";
 import { useCategories } from "@/hooks/useCategories";
 import { logout } from "@/app/logout/actions";
 
@@ -47,7 +49,9 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
   const locale = useLocale();
   const t = useTranslations("dashboard");
   const tMenu = useTranslations("menu");
+  const { businessName } = useBusiness();
   const [isMenuExpanded, setIsMenuExpanded] = React.useState(false);
+  const brandName = businessName || "FlexiPOS";
 
   const logOut = () => {
     logout();
@@ -99,7 +103,7 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                 <Command className="size-4" />
               </div>
               <span className="font-bold text-lg hidden xl:block">
-                FlexiPOS
+                {brandName}
               </span>
             </Link>
 
@@ -189,6 +193,20 @@ export function DynamicDesktopAdminNavbar({ user }: ModernAdminNavbarProps) {
                     <DropdownMenuSeparator />
                   </>
                 )}
+
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/admin/settings"
+                    className={`flex items-center gap-2 ${
+                      pathname?.startsWith("/admin/settings")
+                        ? "bg-primary/10 text-primary"
+                        : "hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
+                    }`}
+                  >
+                    <Settings className="size-4" />
+                    {t("nav.settings")}
+                  </Link>
+                </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
                   <Link

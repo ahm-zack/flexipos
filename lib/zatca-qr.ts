@@ -200,8 +200,8 @@ export function validateZATCAData(invoiceData: ZATCAInvoiceData): { valid: boole
 
 // Default configuration for restaurants
 export const DEFAULT_RESTAURANT_CONFIG = {
-  sellerName: 'مؤسسة لزازة للتجارة', // Update this with your restaurant name
-  vatRegistrationNumber: '000000000000000', // Update this with your VAT registration number
+  sellerName: 'Business Name',
+  vatRegistrationNumber: '',
   vatRate: 0.15, // 15% VAT rate in Saudi Arabia
 } as const;
 

@@ -179,7 +179,7 @@ export const useCartStore = create<CartStore>()(
             toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
         }),
         {
-            name: "lazaza-cart",
+            name: "flexipos-cart",
             // Only persist the cart items, not the open/close UI state
             partialize: (state) => ({ cart: state.cart }),
         },

@@ -9,6 +9,10 @@ import {
   RESTAURANT_CONFIG,
   type RestaurantConfig,
 } from "@/lib/restaurant-config";
+import {
+  canGenerateZatcaQr,
+  getZatcaSellerName,
+} from "@/lib/business-profile";
 import { Button } from "./ui/button";
 import type { Modifier } from "@/lib/schemas";
 import { Download, X } from "lucide-react";
@@ -58,6 +62,7 @@ export function RestaurantReceipt({
 
   // Merge with default configuration
   const config = { ...RESTAURANT_CONFIG, ...restaurantInfo };
+  const shouldShowQr = React.useMemo(() => canGenerateZatcaQr(config), [config]);
 
   // Calculate totals
   const totals: TotalCalculations = React.useMemo(() => {
@@ -75,9 +80,14 @@ export function RestaurantReceipt({
   // Generate QR Code
   useEffect(() => {
     const generateQR = async () => {
+      if (!shouldShowQr) {
+        setQrCodeDataURL("");
+        return;
+      }
+
       try {
         const zatcaData: ZATCAInvoiceData = {
-          sellerName: config.name,
+          sellerName: getZatcaSellerName(config),
           vatRegistrationNumber: config.vatNumber,
           timestamp: new Date(order.createdAt),
           invoiceTotal: order.totalAmount,
@@ -93,11 +103,12 @@ export function RestaurantReceipt({
         setQrCodeDataURL(qrCode);
       } catch (error) {
         console.error("Failed to generate QR code:", error);
+        setQrCodeDataURL("");
       }
     };
 
     generateQR();
-  }, [order, config.name, config.vatNumber, totals.vatAmount]);
+  }, [config, order, shouldShowQr, totals.vatAmount]);
 
   // Silent PDF download handler
   const handleDownloadPDF = async () => {
@@ -383,24 +394,39 @@ const RestaurantHeader = ({ config }: { config: RestaurantConfig }) => (
     >
       ★ {config.name.toUpperCase()} ★
     </div>
-    <div style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-      {config.nameAr}
-    </div>
-    <div
-      style={{ fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.25rem" }}
-    >
-      {config.address}
-    </div>
-    <div
-      style={{ fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.25rem" }}
-    >
-      {config.addressAr}
-    </div>
-    <div
-      style={{ fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.5rem" }}
-    >
-      CR: {config.crNumber}
-    </div>
+    {config.nameAr.trim() ? (
+      <div style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+        {config.nameAr}
+      </div>
+    ) : null}
+    {config.address.trim() ? (
+      <div
+        style={{ fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.25rem" }}
+      >
+        {config.address}
+      </div>
+    ) : null}
+    {config.addressAr.trim() ? (
+      <div
+        style={{ fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.25rem" }}
+      >
+        {config.addressAr}
+      </div>
+    ) : null}
+    {config.crNumber.trim() ? (
+      <div
+        style={{ fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.25rem" }}
+      >
+        CR: {config.crNumber}
+      </div>
+    ) : null}
+    {config.vatNumber.trim() ? (
+      <div
+        style={{ fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.5rem" }}
+      >
+        VAT: {config.vatNumber}
+      </div>
+    ) : null}
   </div>
 );
 

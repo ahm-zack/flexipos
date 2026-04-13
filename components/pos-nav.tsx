@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 // Using emoji icons for a colorful menu
+import { useBusiness } from "@/hooks/useBusinessId";
 import { UserInfo } from "./user-info";
 import { useCurrentUserOptimized } from "@/hooks/use-current-user-optimized";
 
@@ -25,6 +26,8 @@ const navItems = [
 export function POSNav() {
   const pathname = usePathname();
   const { user } = useCurrentUserOptimized();
+  const { businessName } = useBusiness();
+  const brandName = businessName || "FlexiPOS";
   // Group menu items by type for better organization
   const menuGroups = [
     {
@@ -55,7 +58,7 @@ export function POSNav() {
           href="/"
           className="text-2xl font-bold text-sidebar-foreground tracking-tight"
         >
-          LAZAZA
+          {brandName}
         </Link>
       </div>
       <div className="flex-1 overflow-y-auto py-4">

@@ -99,7 +99,7 @@ export async function generateReceiptPDF(
     //     htmlEl.style.width = '100%';
         
     //     // Header/Restaurant Name - Thermal receipt header
-    //     if (textContent.includes('★') || textContent.includes('LAZAZA') || textContent.includes('مؤسسة')) {
+    //     if (textContent.includes('★') || textContent.includes('VAT') || textContent.includes('مؤسسة')) {
     //       htmlEl.style.fontSize = '14px'; // Slightly larger for header
     //       htmlEl.style.fontWeight = '700';
     //       htmlEl.style.textAlign = 'center';
@@ -217,7 +217,7 @@ export async function generateReceiptPDF(
     //     htmlEl.getAttribute('class')?.includes('center') ||
     //     htmlEl.getAttribute('class')?.includes('text-center') ||
     //     textContent.includes('★') ||
-    //     textContent.includes('LAZAZA') ||
+    //     textContent.includes('VAT') ||
     //     textContent.includes('مؤسسة') ||
     //     textContent.includes('Receipt') ||
     //     textContent.includes('Invoice') ||

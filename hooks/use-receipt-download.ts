@@ -2,8 +2,12 @@ import { useCallback } from "react";
 import { downloadReceiptPDF } from "@/components/restaurant-receipt";
 import { Order } from "@/lib/orders";
 import { RESTAURANT_CONFIG, type RestaurantConfig } from "@/lib/restaurant-config";
+import { useBusiness } from "@/hooks/useBusinessId";
+import { toRestaurantConfig } from "@/lib/business-profile";
 
 export function useReceiptDownload() {
+  const { business } = useBusiness();
+
   const downloadReceipt = useCallback(
     async (
       order: Order,
@@ -15,7 +19,11 @@ export function useReceiptDownload() {
       try {
         await downloadReceiptPDF(
           order,
-          { ...RESTAURANT_CONFIG, ...options?.restaurantInfo },
+          {
+            ...RESTAURANT_CONFIG,
+            ...toRestaurantConfig(business),
+            ...options?.restaurantInfo,
+          },
           options?.cashierName
         );
       } catch (error) {
@@ -23,7 +31,7 @@ export function useReceiptDownload() {
         throw error;
       }
     },
-    []
+    [business]
   );
 
   return { downloadReceipt };

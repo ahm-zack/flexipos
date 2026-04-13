@@ -25,6 +25,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useBusiness } from "@/hooks/useBusinessId";
 import Link from "next/link";
 
 const data = {
@@ -85,6 +86,9 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
+  const { businessName } = useBusiness();
+  const brandName = businessName || "FlexiPOS";
+
   return (
     <Sidebar variant="inset" className="text-base" {...props}>
       <SidebarHeader>
@@ -99,7 +103,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
               </div>
               <Link href="/">
                 <div className="grid flex-1 text-left text-base leading-tight">
-                  <span className="truncate font-semibold text-lg">Lazaza</span>
+                  <span className="truncate font-semibold text-lg">{brandName}</span>
                   <span className="truncate text-sm font-medium">POS</span>
                 </div>
               </Link>

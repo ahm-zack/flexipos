@@ -15,6 +15,44 @@ export const CreateUserSchema = z.object({
 });
 export type CreateUser = z.infer<typeof CreateUserSchema>;
 
+const optionalTrimmedString = z.preprocess((value) => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}, z.string().optional());
+
+const optionalEmailString = z.preprocess((value) => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}, z.string().email('Please enter a valid email address').optional());
+
+export const BusinessSettingsSchema = z.object({
+  name: z.string().trim().min(1, 'Business name is required'),
+  nameAr: optionalTrimmedString,
+  address: optionalTrimmedString,
+  addressAr: optionalTrimmedString,
+  phone: optionalTrimmedString,
+  email: optionalEmailString,
+  website: optionalTrimmedString,
+  vatNumber: z.preprocess((value) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }, z.string().regex(/^\d{15}$/, 'VAT number must be 15 digits').optional()),
+  crNumber: optionalTrimmedString,
+});
+export type BusinessSettingsInput = z.infer<typeof BusinessSettingsSchema>;
+
 // Modifier zod schema — used by modifier components and restaurant receipt
 export const ModifierSchema = z.object({
   id: z.string().uuid(),

@@ -30,6 +30,8 @@ import { useOrders } from "../hooks/use-orders";
 import { Dialog } from "@/components/ui/dialog";
 import { RestaurantReceipt } from "@/components/restaurant-receipt";
 import { useTranslations } from "next-intl";
+import { useBusiness } from "@/hooks/useBusinessId";
+import { toRestaurantConfig } from "@/lib/business-profile";
 // Using database types directly with snake_case field names
 
 // Type for saved modifiers in order items
@@ -42,6 +44,8 @@ interface SavedModifier {
 
 export function OrdersList() {
   const t = useTranslations("orders");
+  const { business } = useBusiness();
+  const restaurantInfo = useMemo(() => toRestaurantConfig(business), [business]);
   const {
     // Context
     filters,
@@ -566,6 +570,7 @@ export function OrdersList() {
         {printingOrderId && printOrderData && (
           <RestaurantReceipt
             order={printOrderData}
+            restaurantInfo={restaurantInfo}
             onClose={handleClosePrint}
           />
         )}
