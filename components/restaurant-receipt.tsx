@@ -15,8 +15,8 @@ import {
 } from "@/lib/business-profile";
 import { Button } from "./ui/button";
 import type { Modifier } from "@/lib/schemas";
-import { Download, X } from "lucide-react";
-import { generateReceiptPDF } from "@/lib/receipt-pdf-service";
+import { Printer, X } from "lucide-react";
+import { printElement } from "@/lib/print-utils";
 import { vatUtils, calculateVATBreakdown } from "@/lib/vat-config";
 
 // Helper function to format delivery platform names
@@ -40,6 +40,7 @@ interface RestaurantReceiptProps {
   cashierName?: string;
   onClose?: () => void;
   showModal?: boolean;
+  autoPrint?: boolean;
 }
 
 interface TotalCalculations {
@@ -55,10 +56,11 @@ export function RestaurantReceipt({
   cashierName,
   onClose,
   showModal = true,
+  autoPrint = false,
 }: RestaurantReceiptProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
+  const hasTriggeredAutoPrintRef = useRef<string | null>(null);
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>("");
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Merge with default configuration
   const config = { ...RESTAURANT_CONFIG, ...restaurantInfo };
@@ -110,25 +112,49 @@ export function RestaurantReceipt({
     generateQR();
   }, [config, order, shouldShowQr, totals.vatAmount]);
 
-  // Silent PDF download handler
-  const handleDownloadPDF = async () => {
+  const handlePrint = React.useCallback(() => {
     if (!receiptRef.current) return;
 
-    try {
-      setIsGeneratingPDF(true);
-      await generateReceiptPDF(receiptRef.current, {
-        filename: `receipt-ORD-${order.orderNumber}.pdf`,
-        silent: true,
-        widthMM: 80,
-      });
-    } catch (error) {
-      console.error("Failed to generate PDF:", error);
-      // Fallback to print dialog
-      window.print();
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  };
+    printElement(receiptRef.current, {
+      title: `Receipt - Order #${order.dailySerial || order.orderNumber}`,
+      paperWidth: config.receiptWidth || "80mm",
+      fontSize: "12px",
+    });
+
+    // Legacy silent PDF flow kept here for later reuse.
+    // try {
+    //   setIsGeneratingPDF(true);
+    //   await generateReceiptPDF(receiptRef.current, {
+    //     filename: `receipt-ORD-${order.orderNumber}.pdf`,
+    //     silent: true,
+    //     widthMM: 80,
+    //   });
+    // } catch (error) {
+    //   console.error("Failed to generate PDF:", error);
+    //   window.print();
+    // } finally {
+    //   setIsGeneratingPDF(false);
+    // }
+  }, [config.receiptWidth, order.dailySerial, order.orderNumber]);
+
+  useEffect(() => {
+    hasTriggeredAutoPrintRef.current = null;
+  }, [order.id]);
+
+  useEffect(() => {
+    if (!showModal || !autoPrint || !receiptRef.current) return;
+    if (shouldShowQr && !qrCodeDataURL) return;
+
+    const autoPrintKey = `${order.id}:${shouldShowQr ? "with-qr" : "without-qr"}`;
+    if (hasTriggeredAutoPrintRef.current === autoPrintKey) return;
+
+    hasTriggeredAutoPrintRef.current = autoPrintKey;
+    const timeoutId = window.setTimeout(() => {
+      handlePrint();
+    }, 150);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [autoPrint, handlePrint, order.id, qrCodeDataURL, shouldShowQr, showModal]);
 
   // Print handler - direct print dialog without opening new tab
   // const handlePrint = () => {
@@ -344,13 +370,12 @@ export function RestaurantReceipt({
         >
           <div className="flex gap-2">
             <Button
-              onClick={handleDownloadPDF}
-              disabled={isGeneratingPDF}
+              onClick={handlePrint}
               className="flex items-center gap-2"
               size="sm"
             >
-              <Download className="w-4 h-4" />
-              {isGeneratingPDF ? "Generating..." : "Print Invoice"}
+              <Printer className="w-4 h-4" />
+              Print Invoice
             </Button>
 
             {/* <Button
@@ -943,13 +968,20 @@ export async function downloadReceiptPDF(
     ) as HTMLElement;
     if (receiptElement) {
       console.log(
-        "[downloadReceiptPDF] Found .receipt-content, generating PDF..."
+        "[downloadReceiptPDF] Found .receipt-content, opening browser print..."
       );
-      await generateReceiptPDF(receiptElement, {
-        filename: `receipt-${order.orderNumber}.pdf`,
-        silent: true,
-        widthMM: 80,
+      printElement(receiptElement, {
+        title: `Receipt - Order #${order.dailySerial || order.orderNumber}`,
+        paperWidth: config?.receiptWidth || RESTAURANT_CONFIG.receiptWidth || "80mm",
+        fontSize: "12px",
       });
+
+      // Legacy silent PDF export kept here for later reuse.
+      // await generateReceiptPDF(receiptElement, {
+      //   filename: `receipt-${order.orderNumber}.pdf`,
+      //   silent: true,
+      //   widthMM: 80,
+      // });
     } else {
       console.error(
         "[downloadReceiptPDF] .receipt-content not found in tempContainer!"

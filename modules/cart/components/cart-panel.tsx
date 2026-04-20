@@ -77,6 +77,7 @@ export function ReceiptModal({
         }}
         restaurantInfo={toRestaurantConfig(business)}
         onClose={onClose}
+        autoPrint
       />
     </Dialog>
   );
@@ -138,6 +139,8 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
 
   // Delivery platform dialog state
   const [showDeliveryPlatform, setShowDeliveryPlatform] = useState(false);
+  const [createdReceiptOrder, setCreatedReceiptOrder] =
+    useState<ReceiptOrder | null>(null);
 
   const createOrder = useCreateOrder();
   const updateCustomerPurchases = useUpdateCustomerPurchases();
@@ -506,11 +509,13 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
           updatedAt: data.updatedAt,
           createdBy: data.createdBy,
         };
-        // Import and trigger PDF download
-        const { downloadReceiptPDF } =
-          await import("@/components/restaurant-receipt");
-        await downloadReceiptPDF({ ...apiOrder }, restaurantInfo);
-        console.log("Order created and PDF downloaded:", data);
+        // Legacy silent PDF download kept here for later reuse.
+        // const { downloadReceiptPDF } =
+        //   await import("@/components/restaurant-receipt");
+        // await downloadReceiptPDF({ ...apiOrder }, restaurantInfo);
+
+        setCreatedReceiptOrder(apiOrder);
+        console.log("Order created and browser print opened:", data);
       },
       onError: (error) => {
         toast.error(t("toasts.orderCreateFailed", { error: error.message }));
@@ -571,6 +576,13 @@ export function CartPanel({ className, sidebarMode, onClose }: CartPanelProps) {
 
   return (
     <>
+      {createdReceiptOrder && (
+        <ReceiptModal
+          order={createdReceiptOrder}
+          onClose={() => setCreatedReceiptOrder(null)}
+        />
+      )}
+
       {/* Backdrop - overlay mode only */}
       {!sidebarMode && (
         <div

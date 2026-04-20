@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +32,7 @@ import {
   Zap,
   ArrowLeft,
   Calendar,
+  Printer,
   XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -535,16 +536,32 @@ function HistoryRow({
 // ─── Main dashboard ───────────────────────────────────────────────────────────
 export function EODReportDashboard() {
   const t = useTranslations("reports");
+  const commonT = useTranslations("common");
   const [selectedReport, setSelectedReport] = useState<SavedEODReport | null>(
     null,
   );
   const [view, setView] = useState<"generate" | "history">("generate");
   const [historyPage, setHistoryPage] = useState(1);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const preview = useSmartEODPreview();
   const generate = useGenerateEODReport();
   const history = useEODReportHistory(historyPage);
   const deleteReport = useDeleteEODReport();
+
+  useEffect(() => {
+    if (!isPrinting || !selectedReport) return;
+
+    const handleAfterPrint = () => setIsPrinting(false);
+    const timeoutId = window.setTimeout(() => window.print(), 150);
+
+    window.addEventListener("afterprint", handleAfterPrint);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener("afterprint", handleAfterPrint);
+    };
+  }, [isPrinting, selectedReport]);
 
   const handleGenerate = () => {
     generate.mutate(undefined, {
@@ -606,14 +623,24 @@ export function EODReportDashboard() {
         <div className="space-y-5">
           {selectedReport ? (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedReport(null)}
-                className="gap-1.5 -ml-2"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" /> {t("back")}
-              </Button>
+              <div className="flex items-center justify-between gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedReport(null)}
+                  className="gap-1.5 -ml-2"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" /> {t("back")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsPrinting(true)}
+                  className="gap-1.5"
+                >
+                  <Printer className="h-3.5 w-3.5" /> {commonT("print")}
+                </Button>
+              </div>
               <ReportView report={selectedReport} />
             </>
           ) : (
@@ -764,14 +791,24 @@ export function EODReportDashboard() {
         <div className="space-y-4">
           {selectedReport ? (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedReport(null)}
-                className="gap-1.5 -ml-2"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" /> {t("backToHistory")}
-              </Button>
+              <div className="flex items-center justify-between gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedReport(null)}
+                  className="gap-1.5 -ml-2"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" /> {t("backToHistory")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsPrinting(true)}
+                  className="gap-1.5"
+                >
+                  <Printer className="h-3.5 w-3.5" /> {commonT("print")}
+                </Button>
+              </div>
               <ReportView report={selectedReport} />
             </>
           ) : (
@@ -841,6 +878,26 @@ export function EODReportDashboard() {
               )}
             </>
           )}
+        </div>
+      )}
+
+      {isPrinting && selectedReport && (
+        <div className="fixed inset-0 z-50 overflow-auto bg-white p-6">
+          <div className="mx-auto max-w-[210mm]">
+            <ReportView report={selectedReport} />
+          </div>
+          <div className="fixed top-4 right-4 flex gap-2 print:hidden">
+            <Button onClick={() => window.print()} size="sm" className="gap-1.5">
+              <Printer className="h-4 w-4" /> {commonT("print")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPrinting(false)}
+            >
+              {t("close")}
+            </Button>
+          </div>
         </div>
       )}
     </div>

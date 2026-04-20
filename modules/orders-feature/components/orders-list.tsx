@@ -572,6 +572,7 @@ export function OrdersList() {
             order={printOrderData}
             restaurantInfo={restaurantInfo}
             onClose={handleClosePrint}
+            autoPrint
           />
         )}
       </Dialog>

@@ -1,4 +1,5 @@
 import type { EODReportData, PaymentBreakdown, BestSellingItem, DeliveryPlatformBreakdown } from './schemas';
+import { printElement } from './print-utils';
 
 // Utility functions for safe data handling
 export const safeGetString = (value: unknown): string => {
@@ -297,21 +298,24 @@ export const generateEODReportPDF = async (
 
         document.body.appendChild(tempDiv);
 
-        // Import and use the PDF service
-        const { generateReceiptPDF } = await import("@/lib/receipt-pdf-service");
-
-        // Generate filename with timestamp
-        const startDate = reportData.startDateTime || new Date().toISOString();
-        const timestamp = new Date(startDate)
-            .toISOString()
-            .split("T")[0]
-            .replace(/-/g, "");
-        const filename = customFilename || `receipt-ORD-${timestamp}.pdf`;
-
-        await generateReceiptPDF(tempDiv, {
-            filename,
-            widthMM: format === "thermal" ? 80 : 210, // 80mm for thermal, A4 width for A4
+        printElement(tempDiv, {
+            title: customFilename || 'End of Day Report',
+            paperWidth: format === 'thermal' ? '80mm' : '210mm',
+            fontSize: format === 'thermal' ? '11px' : '12px',
         });
+
+        // Legacy silent PDF export kept here for later reuse.
+        // const { generateReceiptPDF } = await import("@/lib/receipt-pdf-service");
+        // const startDate = reportData.startDateTime || new Date().toISOString();
+        // const timestamp = new Date(startDate)
+        //     .toISOString()
+        //     .split("T")[0]
+        //     .replace(/-/g, "");
+        // const filename = customFilename || `receipt-ORD-${timestamp}.pdf`;
+        // await generateReceiptPDF(tempDiv, {
+        //     filename,
+        //     widthMM: format === "thermal" ? 80 : 210,
+        // });
 
         // Clean up
         document.body.removeChild(tempDiv);
